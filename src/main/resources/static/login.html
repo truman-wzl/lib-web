@@ -1,10 +1,623 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书管理系统 - 登录</title>
+    <!-- 引入 Bootstrap 5 CSS 用于快速美化 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+        .login-container {
+            max-width: 400px;
+            width: 100%;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        #message {
+            min-height: 24px; /* 为提示信息预留空间 */
+        }
+    </style>
 </head>
 <body>
-$END$
+<div class="container d-flex justify-content-center">
+    <div class="login-container">
+        <!-- 页面标题 -->
+        <div class="login-header">
+            <h2>图书管理系统</h2>
+            <p class="text-muted">请登录您的账户</p>
+        </div>
+
+        <!-- 登录表单 -->
+        <form id="loginForm">
+            <!-- 用户名输入框 -->
+            <div class="mb-3">
+                <label for="username" class="form-label">用户名</label>
+                <input type="text" class="form-control" id="username" name="username" placeholder="请输入用户名" required>
+            </div>
+
+            <!-- 密码输入框 -->
+            <div class="mb-4">
+                <label for="password" class="form-label">密码</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="请输入密码" required>
+            </div>
+
+            <!-- 登录按钮 -->
+            <button type="submit" class="btn btn-primary w-100 mb-3" id="loginBtn">
+                <span id="btnText">登录</span>
+                <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+            </button>
+
+            <!-- 在登录按钮之后的提示信息和注册链接部分 -->
+            <div id="message" class="text-center mb-2"></div>
+            <div class="d-flex justify-content-between">
+                <div>
+                    <a href="register.html" class="text-decoration-none">还没有账户？去注册</a>
+                </div>
+                <div>
+                    <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">
+                        忘记密码？
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 引入 Bootstrap JS (用于交互组件) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // 当页面DOM加载完成后执行
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+        const messageDiv = document.getElementById('message');
+
+        // 处理表单提交事件
+        loginForm.addEventListener('submit', async function(event) {
+            event.preventDefault(); // 阻止表单默认提交行为（页面跳转）
+
+            // 1. 获取输入的用户名和密码
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            // 2. 简单的客户端验证
+            if (!username || !password) {
+                showMessage('请输入用户名和密码！', 'danger');
+                return;
+            }
+
+            // 3. 准备发送给后端的数据
+            const requestData = {
+                username: username,
+                password: password
+            };
+
+            // 4. 显示"登录中"状态，禁用按钮防止重复提交
+            setLoadingState(true);
+
+            try {
+                // 5. 调用后端登录API
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json' // 告诉后端我们发送的是JSON
+                    },
+                    body: JSON.stringify(requestData) // 将JS对象转为JSON字符串
+                });
+
+                // 6. 解析后端返回的JSON数据
+                const result = await response.json();
+
+                // 7. 根据后端返回的 success 字段判断登录结果
+                if (result.success) {
+                    showMessage(`登录成功！欢迎回来，${result.data.username}。正在跳转...`, 'success');
+                    // 登录成功后，跳转到系统首页
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                } else {
+                    // 登录失败，显示后端返回的错误信息
+                    showMessage(`登录失败：${result.message}`, 'danger');
+                    setLoadingState(false); // 恢复按钮状态
+                }
+
+            } catch (error) {
+                // 8. 处理网络错误或API未响应等情况
+                console.error('登录请求失败:', error);
+                showMessage('网络错误或服务器未响应，请稍后重试。', 'danger');
+                setLoadingState(false);
+            }
+        });
+
+        // 显示提示信息的函数
+        function showMessage(text, type) {
+            messageDiv.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${text}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>`;
+        }
+
+        // 设置登录按钮加载状态的函数
+        function setLoadingState(isLoading) {
+            if (isLoading) {
+                btnText.textContent = '登录中...';
+                btnSpinner.classList.remove('d-none');
+                loginBtn.disabled = true;
+            } else {
+                btnText.textContent = '登录';
+                btnSpinner.classList.add('d-none');
+                loginBtn.disabled = false;
+            }
+        }
+    });
+</script>
+
+<!-- 忘记密码模态框 -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="forgotPasswordModalLabel">找回密码</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 步骤1：输入邮箱 -->
+                <div id="step1" class="step active">
+                    <div class="mb-3">
+                        <label for="resetEmail" class="form-label">请输入注册邮箱</label>
+                        <input type="email" class="form-control" id="resetEmail" placeholder="请输入您注册时使用的邮箱">
+                    </div>
+                </div>
+
+                <!-- 步骤2：输入验证码 -->
+                <div id="step2" class="step" style="display: none;">
+                    <div class="mb-3">
+                        <label for="resetCode" class="form-label">验证码</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="resetCode" placeholder="请输入6位验证码" maxlength="6">
+                            <button class="btn btn-outline-secondary" type="button" id="sendCodeBtn" onclick="sendResetCode()">发送验证码</button>
+                        </div>
+                        <div class="form-text text-muted">验证码已发送到您的邮箱，请输入6位数字验证码</div>
+                    </div>
+                </div>
+
+                <!-- 步骤3：设置新密码 -->
+                <div id="step3" class="step" style="display: none;">
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">新密码</label>
+                        <input type="password" class="form-control" id="newPassword" placeholder="请输入新密码（至少7位）">
+                        <div class="form-text text-muted">密码长度至少7位，建议包含字母、数字和特殊字符</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">确认新密码</label>
+                        <input type="password" class="form-control" id="confirmPassword" placeholder="请再次输入新密码">
+                    </div>
+                </div>
+
+                <div id="resetMessage" class="alert d-none mt-3"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="prevBtn" onclick="prevStep()" style="display: none;">上一步</button>
+                <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextStep()">下一步</button>
+                <button type="button" class="btn btn-success" id="resetBtn" onclick="handleResetAction()" style="display: none;">验证验证码</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 忘记密码功能
+    let currentStep = 1;
+    let countdownTimer = null; // 添加计时器变量
+    let resetEmail = ''; // 保存邮箱
+    let isEmailRegistered = false; // 标记邮箱是否已注册
+
+    async function nextStep() {
+        if (currentStep === 1) {
+            const email = document.getElementById('resetEmail').value.trim();
+            if (!email || !validateEmail(email)) {
+                showResetMessage('请输入有效的邮箱地址', 'danger');
+                return;
+            }
+
+            resetEmail = email; // 保存邮箱
+
+            // 禁用下一步按钮，防止重复点击
+            const nextBtn = document.getElementById('nextBtn');
+            const originalText = nextBtn.innerHTML;
+            nextBtn.disabled = true;
+            nextBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 验证中';
+
+            try {
+                const response = await fetch('/api/auth/forgot-password/send-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+
+                const result = await response.json();
+
+                // 恢复按钮状态
+                nextBtn.disabled = false;
+                nextBtn.innerHTML = originalText;
+
+                if (result.success) {
+                    // 检查后端是否真的发送了验证码
+                    if (result.message === "验证码已发送到邮箱，请查收") {
+                        // 邮箱已注册，真的发送了验证码
+                        isEmailRegistered = true;
+                        showResetMessage('验证码已发送到邮箱，请查收', 'success');
+
+                        // 切换到步骤2
+                        document.getElementById('step1').style.display = 'none';
+                        document.getElementById('step2').style.display = 'block';
+                        document.getElementById('prevBtn').style.display = 'inline-block';
+                        document.getElementById('nextBtn').style.display = 'none';
+                        document.getElementById('resetBtn').style.display = 'inline-block';
+                        currentStep = 2;
+
+                        // 开始倒计时
+                        startCountdown();
+                    } else if (result.message === "如果邮箱已注册，验证码将发送到您的邮箱") {
+                        // 邮箱未注册，但后端返回了假成功
+                        isEmailRegistered = false;
+                        showResetMessage('该邮箱未注册，请输入已注册的邮箱', 'danger');
+                    } else {
+                        showResetMessage(result.message, 'info');
+                    }
+                } else {
+                    // 服务器返回了错误
+                    showResetMessage('发送失败: ' + result.message, 'danger');
+
+                    // 特殊处理：如果错误是服务器内部错误，但用户可能已收到验证码
+                    if (result.message && result.message.includes("服务器内部错误")) {
+                        // 询问用户是否已收到验证码
+                        setTimeout(() => {
+                            const userChoice = confirm("服务器响应异常，但验证码可能已发送。您是否已收到验证码？\n\n点击'确定'继续验证，点击'取消'重新发送。");
+                            if (userChoice) {
+                                // 用户确认已收到验证码，继续下一步
+                                isEmailRegistered = true;
+                                document.getElementById('step1').style.display = 'none';
+                                document.getElementById('step2').style.display = 'block';
+                                document.getElementById('prevBtn').style.display = 'inline-block';
+                                document.getElementById('nextBtn').style.display = 'none';
+                                document.getElementById('resetBtn').style.display = 'inline-block';
+                                currentStep = 2;
+                                showResetMessage('请检查邮箱并输入验证码', 'info');
+                            }
+                        }, 1500);
+                    }
+                }
+            } catch (error) {
+                // 恢复按钮状态
+                nextBtn.disabled = false;
+                nextBtn.innerHTML = originalText;
+                showResetMessage('网络错误，请稍后重试', 'danger');
+            }
+        }
+    }
+
+    function prevStep() {
+        if (currentStep === 2) {
+            document.getElementById('step1').style.display = 'block';
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('prevBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+            document.getElementById('resetBtn').style.display = 'none';
+            document.getElementById('resetBtn').textContent = '验证验证码';
+            currentStep = 1;
+
+            // 清空验证码输入框
+            document.getElementById('resetCode').value = '';
+        } else if (currentStep === 3) {
+            document.getElementById('step2').style.display = 'block';
+            document.getElementById('step3').style.display = 'none';
+            document.getElementById('prevBtn').style.display = 'inline-block';
+            document.getElementById('resetBtn').style.display = 'inline-block';
+            document.getElementById('resetBtn').textContent = '验证验证码';
+            currentStep = 2;
+
+            // 清空密码输入框
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }
+    }
+
+    // 倒计时函数
+    function startCountdown() {
+        const sendCodeBtn = document.getElementById('sendCodeBtn');
+        let countdown = 60;
+
+        // 清除之前的计时器
+        if (countdownTimer) {
+            clearInterval(countdownTimer);
+        }
+
+        countdownTimer = setInterval(() => {
+            sendCodeBtn.textContent = `${countdown}秒后重新发送`;
+            sendCodeBtn.disabled = true;
+            countdown--;
+
+            if (countdown < 0) {
+                clearInterval(countdownTimer);
+                sendCodeBtn.textContent = '发送验证码';
+                sendCodeBtn.disabled = false;
+            }
+        }, 1000);
+    }
+
+    async function sendResetCode() {
+        const email = resetEmail;
+        const sendCodeBtn = document.getElementById('sendCodeBtn');
+
+        sendCodeBtn.disabled = true;
+        sendCodeBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 发送中';
+
+        try {
+            const response = await fetch('/api/auth/forgot-password/send-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                // 检查后端是否真的发送了验证码
+                if (result.message === "验证码已发送到邮箱，请查收") {
+                    // 真正的成功，开始倒计时
+                    showResetMessage('验证码已发送到邮箱，请查收', 'success');
+                    startCountdown();
+                } else if (result.message === "如果邮箱已注册，验证码将发送到您的邮箱") {
+                    // 邮箱不存在，显示提示
+                    showResetMessage('该邮箱未注册，请输入已注册的邮箱', 'danger');
+                    // 重置按钮状态
+                    setTimeout(() => {
+                        sendCodeBtn.disabled = false;
+                        sendCodeBtn.textContent = '发送验证码';
+                    }, 1000);
+                } else {
+                    showResetMessage(result.message, 'info');
+                    setTimeout(() => {
+                        sendCodeBtn.disabled = false;
+                        sendCodeBtn.textContent = '发送验证码';
+                    }, 1000);
+                }
+            } else {
+                // 服务器返回了错误
+                showResetMessage('发送失败: ' + result.message, 'danger');
+
+                // 特殊处理：如果错误信息包含网络相关，提示用户可能已发送
+                if (result.message && result.message.includes("网络") ||
+                    result.message.includes("连接") ||
+                    result.message.includes("超时")) {
+                    setTimeout(() => {
+                        showResetMessage('网络不稳定，如未收到验证码请重新发送', 'warning');
+                    }, 2000);
+                }
+
+                sendCodeBtn.disabled = false;
+                sendCodeBtn.textContent = '发送验证码';
+            }
+        } catch (error) {
+            showResetMessage('网络错误，请稍后重试', 'danger');
+            sendCodeBtn.disabled = false;
+            sendCodeBtn.textContent = '发送验证码';
+        }
+    }
+
+    // 验证验证码
+    async function verifyResetCode(code) {
+        try {
+            const response = await fetch('/api/auth/forgot-password/verify-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: resetEmail,
+                    code: code
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                showResetMessage('验证码验证成功，请设置新密码', 'success');
+                return true;
+            } else {
+                showResetMessage('验证码错误: ' + result.message, 'danger');
+                return false;
+            }
+        } catch (error) {
+            showResetMessage('网络错误，请稍后重试', 'danger');
+            return false;
+        }
+    }
+
+    // 修改handleResetAction函数
+    async function handleResetAction() {
+        if (currentStep === 2) {
+            // 当前是步骤2，验证验证码
+            const code = document.getElementById('resetCode').value.trim();
+            if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+                showResetMessage('请输入6位数字验证码', 'danger');
+                return;
+            }
+
+            // 验证验证码
+            const isValid = await verifyResetCode(code);
+            if (isValid) {
+                showResetMessage('验证码验证成功，请设置新密码', 'success');
+
+                // 清空验证码输入框
+                document.getElementById('resetCode').value = '';
+
+                // 切换到步骤3（设置新密码）
+                document.getElementById('step2').style.display = 'none';
+                document.getElementById('step3').style.display = 'block';
+                document.getElementById('resetBtn').textContent = '重置密码';
+                document.getElementById('prevBtn').style.display = 'inline-block';
+                currentStep = 3;
+
+                return true;
+            } else {
+                return false;
+            }
+
+        } else if (currentStep === 3) {
+            // 当前是步骤3，重置密码
+            await resetPassword();
+        }
+    }
+
+    // 修改resetPassword函数，移除验证码参数
+    async function resetPassword() {
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        // 验证密码
+        if (newPassword.length < 7) {
+            showResetMessage('密码长度不能少于7位', 'danger');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            showResetMessage('两次输入的密码不一致', 'danger');
+            return;
+        }
+
+        // 重置按钮状态
+        const resetBtn = document.getElementById('resetBtn');
+        const originalText = resetBtn.innerHTML;
+        resetBtn.disabled = true;
+        resetBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 重置中';
+
+        // 重置密码（不发送验证码）
+        try {
+            const response = await fetch('/api/auth/forgot-password/reset', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: resetEmail,
+                    newPassword: newPassword,
+                    confirmPassword: confirmPassword
+                })
+            });
+
+            const result = await response.json();
+
+            // 恢复按钮状态
+            resetBtn.disabled = false;
+            resetBtn.innerHTML = originalText;
+
+            if (result.success) {
+                showResetMessage('密码重置成功！请使用新密码登录', 'success');
+                // 重置表单并关闭模态框
+                setTimeout(() => {
+                    resetForm();
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+                    modal.hide();
+
+                    // 清空登录表单
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
+                }, 2000);
+            } else {
+                showResetMessage('重置失败: ' + result.message, 'danger');
+
+                // 如果是验证过期，回到步骤1
+                if (result.message.includes("验证已过期") || result.message.includes("请重新获取验证码")) {
+                    showResetMessage('验证已过期，请重新开始', 'warning');
+                    setTimeout(() => {
+                        resetForm();
+                    }, 1500);
+                }
+            }
+        } catch (error) {
+            // 恢复按钮状态
+            resetBtn.disabled = false;
+            resetBtn.innerHTML = originalText;
+            showResetMessage('网络错误，请稍后重试', 'danger');
+        }
+    }
+
+    function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    }
+
+    function showResetMessage(message, type) {
+        const messageDiv = document.getElementById('resetMessage');
+        messageDiv.textContent = message;
+        messageDiv.className = `alert alert-${type} mt-3`;
+        messageDiv.classList.remove('d-none');
+
+        // 3秒后自动隐藏
+        if (type === 'success') {
+            setTimeout(() => {
+                messageDiv.classList.add('d-none');
+            }, 3000);
+        }
+    }
+
+    // 重置表单函数
+    function resetForm() {
+        document.getElementById('resetEmail').value = '';
+        document.getElementById('resetCode').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+
+        // 重置到步骤1
+        document.getElementById('step1').style.display = 'block';
+        document.getElementById('step2').style.display = 'none';
+        document.getElementById('step3').style.display = 'none';
+
+        // 重置按钮
+        document.getElementById('prevBtn').style.display = 'none';
+        document.getElementById('nextBtn').style.display = 'inline-block';
+        document.getElementById('resetBtn').style.display = 'none';
+        document.getElementById('resetBtn').textContent = '验证验证码';
+
+        currentStep = 1;
+        resetEmail = '';
+        isEmailRegistered = false;
+
+        // 隐藏消息
+        document.getElementById('resetMessage').classList.add('d-none');
+
+        // 重置发送验证码按钮
+        const sendCodeBtn = document.getElementById('sendCodeBtn');
+        sendCodeBtn.textContent = '发送验证码';
+        sendCodeBtn.disabled = false;
+
+        // 停止计时器
+        if (countdownTimer) {
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+        }
+    }
+
+    // 模态框关闭时重置状态
+    document.getElementById('forgotPasswordModal').addEventListener('hidden.bs.modal', function () {
+        resetForm();
+    });
+</script>
 </body>
 </html>

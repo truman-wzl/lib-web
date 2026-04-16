@@ -1,0 +1,668 @@
+// 图书管理模块（简化版，移除了分类管理功能）
+(function() {
+    const MODULE_ID = 'book-manage';
+
+    // 注册模块
+    window.registerModule(MODULE_ID, {
+        render: render,
+        onDestroy: cleanup
+    });
+
+    // 模块状态
+    let state = {
+        currentPage: 1,
+        pageSize: 10,
+        searchParams: {}
+    };
+
+    /**
+     * 渲染模块
+     */
+    function render() {
+        const content = `
+            <div class="book-manage-module">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">📚 图书管理</h4>
+                        <button class="btn btn-sm btn-success" id="addBookBtn">
+                            <span>+ 添加图书</span>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <!-- 搜索区域 -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="searchBookname" placeholder="书名">
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" class="form-control" id="searchAuthor" placeholder="作者">
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="searchCategory">
+                                    <option value="">全部分类</option>
+                                    <!-- 分类将通过JS动态加载 -->
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary w-100" id="searchBtn">搜索</button>
+                            </div>
+                        </div>
+
+                        <!-- 图书表格 -->
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>书名</th>
+                                        <th>作者</th>
+                                        <th>出版社</th>        <!-- 新增列 -->
+                                        <th>分类</th>
+                                        <th>总数/可借</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bookTableBody">
+                                    <!-- 图书数据将通过JS动态加载 -->
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                                            <span class="ms-2">加载中...</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- 分页 -->
+                        <nav>
+                            <ul class="pagination justify-content-center" id="pagination">
+                                <!-- 分页将通过JS动态生成 -->
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+
+                <!-- 添加/编辑图书模态框 -->
+                <div class="modal fade" id="bookModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalTitle">添加图书</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="bookForm">
+                                    <input type="hidden" id="bookId">
+                                    <div class="mb-3">
+                                        <label class="form-label">书名 *</label>
+                                        <input type="text" class="form-control" id="bookname" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">作者</label>
+                                        <input type="text" class="form-control" id="author">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">出版社</label>
+                                        <input type="text" class="form-control" id="publisher">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">分类</label>
+                                        <select class="form-select" id="categoryId" required>
+                                            <option value="">请选择分类</option>
+                                        </select>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">总数量 *</label>
+                                                <input type="number" class="form-control" id="totalNumber" min="0" value="1" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">可借数量 *</label>
+                                                <input type="number" class="form-control" id="canBorrow" min="0" value="1" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                <button type="button" class="btn btn-primary" id="saveBookBtn">保存</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('moduleContent').innerHTML = content;
+
+        // 初始化模块
+        initModule();
+    }
+
+    /**
+     * 初始化模块
+     */
+    async function initModule() {
+        // 加载分类下拉框
+        await loadCategories();
+
+        // 加载图书数据
+        loadBooks();
+
+        // 绑定事件
+        bindEvents();
+    }
+
+    /**
+     * 加载分类到下拉框
+     */
+    async function loadCategories() {
+        const categorySelect = document.getElementById('categoryId');
+        const searchCategorySelect = document.getElementById('searchCategory');
+
+        console.log('🔍 开始加载分类数据...');
+
+        if (!categorySelect) {
+            console.error('找不到分类下拉框元素: #categoryId');
+            return;
+        }
+
+        try {
+            // 强制不缓存
+            const timestamp = Date.now();
+            const response = await fetch(`/api/categories?_=${timestamp}`);
+            console.log('分类API响应状态:', response.status);
+
+            const result = await response.json();
+            console.log('分类API返回数据:', result);
+
+            if (result.success && result.data) {
+                // 清空下拉框
+                categorySelect.innerHTML = '<option value="">请选择分类</option>';
+                if (searchCategorySelect) {
+                    searchCategorySelect.innerHTML = '<option value="">全部分类</option>';
+                }
+
+                // 填充分类，排除id为5的分类
+                let loadedCount = 0;
+                result.data.forEach(category => {
+                    // 直接通过ID过滤，排除ID为5的分类
+                    if (category.categoryId !== 5) {
+                        const optionHTML = `<option value="${category.categoryId}">${category.categoryName}</option>`;
+                        categorySelect.innerHTML += optionHTML;
+
+                        if (searchCategorySelect) {
+                            searchCategorySelect.innerHTML += `<option value="${category.categoryId}">${category.categoryName}</option>`;
+                        }
+                        loadedCount++;
+                    } else {
+                        console.log(`过滤掉中转分类: ID=${category.categoryId}, 名称=${category.categoryName}`);
+                    }
+                });
+
+                console.log(`成功加载 ${loadedCount} 个分类，已过滤ID=5的中转分类`);
+            } else {
+                console.error('分类API返回失败:', result.message);
+            }
+        } catch (error) {
+            console.error('加载分类失败:', error);
+        }
+    }
+    /**
+     * 加载图书数据
+     */
+    async function loadBooks() {
+        const tbody = document.getElementById('bookTableBody');
+
+        // 显示加载状态
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-4">
+                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                    <span class="ms-2">加载中...</span>
+                </td>
+            </tr>
+        `;
+
+        try {
+            // 构建查询参数
+            const params = new URLSearchParams({
+                page: state.currentPage - 1,
+                size: state.pageSize
+            });
+
+            // 只添加有值的搜索参数
+            if (state.searchParams.bookname) {
+                params.append('bookname', state.searchParams.bookname);
+            }
+            if (state.searchParams.author) {
+                params.append('author', state.searchParams.author);
+            }
+            if (state.searchParams.categoryId) {
+                params.append('categoryId', state.searchParams.categoryId);
+            }
+
+            // 如果是全部分类，categoryId为空，我们不传递这个参数
+            // 这样后端就会查询所有分类的图书
+
+            console.log('请求URL:', `/api/books/search?${params}`);
+            const response = await fetch(`/api/books/search?${params}`);
+            const result = await response.json();
+
+            if (result.success) {
+                renderBooks(result.data);
+                renderPagination(result.totalPages, result.currentPage);
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('加载图书失败:', error);
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-danger">
+                        加载失败: ${error.message}
+                    </td>
+                </tr>
+            `;
+
+            // 在控制台显示更多错误信息
+            console.error('详细错误信息:', {
+                searchParams: state.searchParams,
+                error: error
+            });
+        }
+    }
+    /**
+     * 渲染图书表格
+     */
+    function renderBooks(books) {
+        const tbody = document.getElementById('bookTableBody');
+
+        if (books.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">  <!-- colspan改为7 -->
+                        暂无图书数据
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        let html = '';
+        books.forEach(book => {
+            // 处理出版社字段：如果为空则显示"暂无出版社信息"
+            const publisherDisplay = book.publisher ? book.publisher : '暂无出版社信息';
+
+            html += `
+                <tr>
+                    <td>${book.bookId}</td>
+                    <td>${book.bookname}</td>
+                    <td>${book.author || '-'}</td>
+                    <td>${publisherDisplay}</td>  <!-- 新增出版社列 -->
+                    <td>${book.category ? book.category.categoryName : '-'}</td>
+                    <td>
+                        <span class="badge bg-secondary">${book.totalNumber}</span> /
+                        <span class="badge ${book.canBorrow > 0 ? 'bg-success' : 'bg-danger'}">${book.canBorrow}</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1 edit-btn" data-id="${book.bookId}">编辑</button>
+                        <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${book.bookId}">删除</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
+
+        // 绑定行内按钮事件
+        bindRowEvents();
+    }
+    /**
+     * 渲染分页
+     */
+    function renderPagination(totalPages, currentPage) {
+        const pagination = document.getElementById('pagination');
+
+        if (totalPages <= 1) {
+            pagination.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+
+        // 上一页
+        html += `
+            <li class="page-item ${currentPage === 0 ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${currentPage}">上一页</a>
+            </li>
+        `;
+
+        // 页码
+        for (let i = 0; i < totalPages; i++) {
+            html += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" data-page="${i + 1}">${i + 1}</a>
+                </li>
+            `;
+        }
+
+        // 下一页
+        html += `
+            <li class="page-item ${currentPage === totalPages - 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${currentPage + 2}">下一页</a>
+            </li>
+        `;
+
+        pagination.innerHTML = html;
+
+        // 绑定分页事件
+        pagination.querySelectorAll('.page-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = parseInt(this.getAttribute('data-page'));
+                if (!isNaN(page)) {
+                    state.currentPage = page;
+                    loadBooks();
+                }
+            });
+        });
+    }
+
+    /**
+     * 绑定事件
+     */
+    function bindEvents() {
+        // 搜索按钮
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            state.searchParams = {
+                bookname: document.getElementById('searchBookname').value,
+                author: document.getElementById('searchAuthor').value,
+                categoryId: document.getElementById('searchCategory').value || null
+            };
+            state.currentPage = 1;
+            loadBooks();
+        });
+
+        // 添加图书按钮
+        document.getElementById('addBookBtn').addEventListener('click', () => {
+            showBookModal();
+        });
+
+        // 保存图书按钮
+        document.getElementById('saveBookBtn').addEventListener('click', saveBook);
+
+        // 表单提交
+        document.getElementById('bookForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveBook();
+        });
+    }
+
+    /**
+     * 绑定行内按钮事件
+     */
+    function bindRowEvents() {
+        // 编辑按钮
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const bookId = this.getAttribute('data-id');
+                await loadBookForEdit(bookId);
+            });
+        });
+
+        // 删除按钮
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const bookId = this.getAttribute('data-id');
+                deleteBook(bookId);
+            });
+        });
+    }
+
+    /**
+     * 显示添加/编辑模态框
+     */
+    /**
+     * 显示添加/编辑模态框
+     */
+    function showBookModal(book = null) {
+        const modal = new bootstrap.Modal(document.getElementById('bookModal'));
+        const form = document.getElementById('bookForm');
+
+        document.getElementById('modalTitle').textContent = book ? '编辑图书' : '添加图书';
+
+        // 清空表单
+        form.reset();
+
+        // 清空隐藏的警告信息
+        const existingNote = document.getElementById('transferNote');
+        if (existingNote) {
+            existingNote.remove();
+        }
+
+        if (book) {
+            // 编辑模式：填充数据
+            document.getElementById('bookId').value = book.bookId;
+            document.getElementById('bookname').value = book.bookname;
+            document.getElementById('author').value = book.author || '';
+            document.getElementById('publisher').value = book.publisher || '';
+            document.getElementById('totalNumber').value = book.totalNumber;
+            document.getElementById('canBorrow').value = book.canBorrow;
+
+            // 特别处理：如果图书分类是5（中转类），不设置分类值
+            if (book.category && book.category.categoryId === 5) {
+                console.warn('图书属于中转分类（ID=5），不设置分类值，需要用户重新选择');
+                // 显示提示信息
+                const categoryGroup = document.querySelector('label[for="categoryId"]').parentNode;
+                const note = document.createElement('div');
+                note.id = 'transferNote';
+                note.className = 'alert alert-warning mt-2 p-2 small';
+                note.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i> 此图书当前属于中转分类，请为其选择一个新的分类';
+                categoryGroup.appendChild(note);
+            } else if (book.category) {
+                // 正常分类，设置选中
+                document.getElementById('categoryId').value = book.category.categoryId;
+            }
+        }
+
+        // 加载分类（会自动过滤ID=5的分类）
+        loadCategories();
+
+        // 模态框显示后检查
+        const modalElement = document.getElementById('bookModal');
+        modalElement.addEventListener('shown.bs.modal', function() {
+            // 再次确保分类5被过滤
+            const categorySelect = document.getElementById('categoryId');
+            if (categorySelect) {
+                for (let i = 0; i < categorySelect.options.length; i++) {
+                    if (categorySelect.options[i].value === '5') {
+                        console.log('发现分类5，立即移除');
+                        categorySelect.remove(i);
+                        break;
+                    }
+                }
+            }
+        });
+
+        modal.show();
+    }
+
+    /**
+     * 加载图书信息用于编辑
+     */
+    async function loadBookForEdit(bookId) {
+        try {
+            const response = await fetch(`/api/books/${bookId}`);
+            const result = await response.json();
+
+            if (result.success) {
+                showBookModal(result.data);
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('加载图书信息失败:', error);
+            alert('加载图书信息失败: ' + error.message);
+        }
+    }
+
+    /**
+     * 保存图书
+     */
+    async function saveBook() {
+        const saveBtn = document.getElementById('saveBookBtn');
+        const originalText = saveBtn.innerHTML;
+
+        // 保存原始按钮文本
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> 处理中...';
+        saveBtn.disabled = true;
+
+        const selectedCategoryId = parseInt(document.getElementById('categoryId').value);
+
+        // 检查是否选择了分类5
+        if (selectedCategoryId === 5) {
+            alert('不能选择中转分类（ID=5），请选择其他分类');
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+            return;
+        }
+
+        const bookData = {
+            bookname: document.getElementById('bookname').value,
+            author: document.getElementById('author').value,
+            publisher: document.getElementById('publisher').value,
+            category: { categoryId: selectedCategoryId },
+            totalNumber: parseInt(document.getElementById('totalNumber').value),
+            canBorrow: parseInt(document.getElementById('canBorrow').value)
+        };
+
+        const bookId = document.getElementById('bookId').value;
+        if (bookId) {
+            bookData.bookId = parseInt(bookId);
+        }
+
+        try {
+            const response = await fetch('/api/books', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(bookData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // 关闭模态框
+                const modalElement = document.getElementById('bookModal');
+                if (modalElement) {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) modal.hide();
+                }
+
+                // 重新加载图书列表
+                loadBooks();
+
+                // 显示成功提示
+                if (typeof Toast !== 'undefined') {
+                    Toast.success('图书保存成功！');
+                } else {
+                    alert('保存成功！');
+                }
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('保存图书失败:', error);
+            if (typeof Toast !== 'undefined') {
+                Toast.error('保存失败: ' + error.message);
+            } else {
+                alert('保存失败: ' + error.message);
+            }
+        } finally {
+            // 恢复按钮状态
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }
+    }
+
+    /**
+     * 删除图书
+     */
+    async function deleteBook(bookId) {
+        if (!confirm('确定要删除这本图书吗？此操作不可恢复。')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/books/${bookId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // 重新加载图书列表
+                loadBooks();
+                alert('删除成功！');
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('删除图书失败:', error);
+            alert('删除失败: ' + error.message);
+        }
+    }
+
+    /**
+     * 清理模块资源
+     */
+    function cleanup() {
+        console.log('清理图书管理模块资源');
+    }
+    // 在book-manage.js的顶部添加
+    (function ensureTransferCategoryFiltered() {
+        console.log('🔧 确保中转分类被过滤');
+
+        // 存储原始函数
+        const originalLoadCategories = window.loadCategories || function() {};
+
+        // 重写函数
+        window.loadCategories = async function() {
+            console.log('🚀 执行过滤版本的loadCategories');
+
+            const result = await originalLoadCategories();
+
+            // 额外清理：确保没有漏网之鱼
+            setTimeout(() => {
+                cleanTransferCategoryFromSelects();
+            }, 200);
+
+            return result;
+        };
+
+        // 清理所有select中的中转分类
+        function cleanTransferCategoryFromSelects() {
+            const selects = document.querySelectorAll('select');
+            selects.forEach(select => {
+                for (let i = 0; i < select.options.length; i++) {
+                    const option = select.options[i];
+                    if (option.text === '5中转类5' || option.value === '5') {
+                        console.log(`清理下拉框: 移除 ${option.text}`);
+                        select.remove(i);
+                        i--; // 调整索引
+                    }
+                }
+            });
+        }
+
+        // 立即执行一次清理
+        setTimeout(cleanTransferCategoryFromSelects, 1000);
+    })();
+})();

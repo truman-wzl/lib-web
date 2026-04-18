@@ -27,38 +27,6 @@ class ProfileManager {
                         </div>
                     </div>
                 </div>
-
-                <!-- 修改密码模态框 -->
-                <div class="modal fade" id="changePasswordModal">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">修改密码</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <form id="change-password-form">
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label class="form-label">原密码</label>
-                                        <input type="password" class="form-control" name="oldPassword" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">新密码</label>
-                                        <input type="password" class="form-control" name="newPassword" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">确认新密码</label>
-                                        <input type="password" class="form-control" name="confirmPassword" required>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                                    <button type="submit" class="btn btn-primary">确认修改</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
             </div>
         `;
     }
@@ -181,15 +149,6 @@ class ProfileManager {
                             </tr>
                         </tbody>
                     </table>
-
-                    <div class="d-flex gap-2 mt-4">
-                        <button class="btn btn-primary" id="change-password-btn" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
-                            <i class="fas fa-key me-1"></i>修改密码
-                        </button>
-                        <button class="btn btn-outline-secondary" onclick="location.reload()">
-                            <i class="fas fa-sync me-1"></i>刷新
-                        </button>
-                    </div>
                 </div>
             </div>
         `;
@@ -227,47 +186,6 @@ class ProfileManager {
                     document.getElementById('username-display').textContent = newUsername;
                     document.getElementById('username-form').style.display = 'none';
                     alert('用户名修改成功');
-                } else {
-                    alert('修改失败: ' + result.message);
-                }
-            } catch (error) {
-                alert('网络错误，请重试');
-            }
-        });
-
-        // 修改密码
-        document.getElementById('change-password-form')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-
-            const oldPassword = formData.get('oldPassword');
-            const newPassword = formData.get('newPassword');
-            const confirmPassword = formData.get('confirmPassword');
-
-            if (!oldPassword || !newPassword) {
-                alert('请填写完整信息');
-                return;
-            }
-
-            if (newPassword !== confirmPassword) {
-                alert('两次输入的新密码不一致');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/auth/change-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ oldPassword, newPassword })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    alert('密码修改成功');
-                    e.target.reset();
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
-                    modal.hide();
                 } else {
                     alert('修改失败: ' + result.message);
                 }

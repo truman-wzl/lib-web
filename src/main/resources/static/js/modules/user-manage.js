@@ -298,52 +298,25 @@
                             <td><small>${lastLoginTime}</small></td>  <!-- 新增列 -->
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <!-- 编辑按钮（对所有状态显示） -->
-                                    <button type="button" class="btn btn-outline-primary edit-user"
-                                            data-id="${user.userId}"
-                                            title="编辑">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
+                                    ${user.status === 'CANCELLED'
+                                        ? '<span class="badge bg-secondary">已注销</span>'
+                                        : `
+                                            <!-- 锁定/解锁按钮（合并为一个） -->
+                                            <button type="button" class="btn btn-sm ${user.status === 'LOCKED' ? 'btn-outline-success' : 'btn-outline-warning'} toggle-lock-btn"
+                                                    data-id="${user.userId}"
+                                                    data-current-status="${user.status}"
+                                                    title="${user.status === 'LOCKED' ? '点击解锁' : '点击锁定'}">
+                                                <i class="fas ${user.status === 'LOCKED' ? 'fa-unlock' : 'fa-lock'}"></i>
+                                            </button>
 
-                                    <!-- 根据状态显示不同按钮 -->
-                                    ${user.status === 'ACTIVE'
-                                        ? `
-                                            <!-- 正常状态：显示锁定和注销按钮 -->
-                                            <button type="button" class="btn btn-outline-warning lock-user"
+                                            <!-- 注销按钮 -->
+                                            <button type="button" class="btn btn-sm btn-outline-danger cancel-user-btn"
                                                     data-id="${user.userId}"
-                                                    title="锁定">
-                                                <i class="fas fa-lock"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-danger cancel-user"
-                                                    data-id="${user.userId}"
-                                                    title="注销">
+                                                    title="注销用户">
                                                 <i class="fas fa-user-times"></i>
                                             </button>
                                         `
-                                        : user.status === 'LOCKED'
-                                        ? `
-                                            <!-- 锁定状态：显示解锁和注销按钮 -->
-                                            <button type="button" class="btn btn-outline-success unlock-user"
-                                                    data-id="${user.userId}"
-                                                    title="解锁">
-                                                <i class="fas fa-unlock"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-danger cancel-user"
-                                                    data-id="${user.userId}"
-                                                    title="注销">
-                                                <i class="fas fa-user-times"></i>
-                                            </button>
-                                        `
-                                        : user.status === 'CANCELLED'
-                                        ? `
-                                            <!-- 已注销状态：只显示恢复按钮 -->
-                                            <button type="button" class="btn btn-outline-success restore-user"
-                                                    data-id="${user.userId}"
-                                                    title="恢复">
-                                                <i class="fas fa-undo"></i>
-                                            </button>
-                                        `
-                                        : ''}
+                                    }
                                 </div>
                             </td>
                         </tr>
@@ -418,9 +391,11 @@
             paginationEl.innerHTML = paginationHtml;
         },
 
-        // 切换用户状态
-        toggleUserStatus: function(userId, newStatus, username) {
-            const action = newStatus === 'ACTIVE' ? '启用' : '停用';
+        // ==== 新增：锁定/解锁切换功能 ====
+        toggleUserLock: function(userId, currentStatus, username) {
+            const newStatus = currentStatus === 'LOCKED' ? 'ACTIVE' : 'LOCKED';
+            const action = newStatus === 'ACTIVE' ? '解锁' : '锁定';
+
             if (!confirm(`确定要${action}用户 "${username}" 吗？`)) {
                 return;
             }
@@ -445,27 +420,61 @@
             });
         },
 
-        // 删除用户
-        deleteUser: function(userId, username) {
-            if (!confirm(`确定要删除用户 "${username}" 吗？此操作不可撤销！`)) {
+        // ==== 新增：注销功能 ====
+        cancelUser: function(userId, username) {
+            if (!confirm(`⚠️ 确定要注销用户 "${username}" 吗？\n\n注意：\n1. 注销后用户将无法登录\n2. 此操作不可恢复\n3. 用户需要重新注册才能再次使用`)) {
                 return;
             }
 
-            fetch(`/api/admin/users/${userId}`, {
-                method: 'DELETE'
+            //const reason = prompt('请输入注销原因（可选）：', '管理员注销');
+
+            fetch(`/api/admin/users/${userId}/status`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    status: 'CANCELLED',
+                    //reason: reason || '管理员注销'
+                })
             })
             .then(response => response.json())
             .then(data => {
                 if (data && data.success) {
-                    alert('删除成功');
+                    alert('用户已成功注销！');
                     this.loadUserList(this.currentPage, this.searchKeyword);
                 } else {
-                    alert(`删除失败: ${data?.message || '未知错误'}`);
+                    alert(`注销失败: ${data?.message || '未知错误'}`);
                 }
             })
             .catch(error => {
-                console.error('删除失败:', error);
-                alert('删除失败: ' + error.message);
+                console.error('注销失败:', error);
+                alert('注销失败: ' + error.message);
+            });
+        },
+
+        // 切换用户状态
+        toggleUserStatus: function(userId, newStatus, username) {
+            const action = newStatus === 'ACTIVE' ? '启用' : '停用';
+            if (!confirm(`确定要${action}用户 "${username}" 吗？`)) {
+                return;
+            }
+
+            fetch(`/api/admin/users/${userId}/status`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({status: newStatus})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.success) {
+                    alert(`${action}成功`);
+                    this.loadUserList(this.currentPage, this.searchKeyword);
+                } else {
+                    alert(`${action}失败: ${data?.message || '未知错误'}`);
+                }
+            })
+            .catch(error => {
+                console.error(`${action}失败:`, error);
+                alert(`${action}失败: ${error.message}`);
             });
         },
 
@@ -499,6 +508,25 @@
                     this.loadUserList(1);
                 });
             }
+            // 绑定锁定/解锁按钮事件
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('.toggle-lock-btn')) {
+                    e.preventDefault();
+                    const button = e.target.closest('.toggle-lock-btn');
+                    const userId = button.getAttribute('data-id');
+                    const currentStatus = button.getAttribute('data-current-status');
+                    const username = button.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
+                    this.toggleUserLock(userId, currentStatus, username);
+                }
+
+                if (e.target.closest('.cancel-user-btn')) {
+                    e.preventDefault();
+                    const button = e.target.closest('.cancel-user-btn');
+                    const userId = button.getAttribute('data-id');
+                    const username = button.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
+                    this.cancelUser(userId, username);
+                }
+            });
         },
 
         // 显示错误信息

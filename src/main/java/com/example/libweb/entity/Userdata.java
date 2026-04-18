@@ -37,6 +37,11 @@ public class Userdata {
     @Column(name = "create_time")
     private Date createTime = new Date();
 
+    // ==== 新增最后登录时间字段 ====
+    @Column(name = "LAST_LOGIN_TIME")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date lastLoginTime;  // 最后登录时间，默认为null
+
     // 构造器
     public Userdata() {}
 
@@ -64,4 +69,7 @@ public class Userdata {
     public void setStatus(String status) { this.status = status; }
     public Date getCreateTime() { return createTime; }
     public void setCreateTime(Date createTime) { this.createTime = createTime; }
+    // ==== 新增最后登录时间的Getter和Setter ====
+    public Date getLastLoginTime() {return lastLoginTime;}
+    public void setLastLoginTime(Date lastLoginTime) {this.lastLoginTime = lastLoginTime;}
 }

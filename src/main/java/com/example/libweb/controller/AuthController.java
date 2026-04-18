@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -88,6 +89,14 @@ public class AuthController {
 
             // 调用业务层服务，执行核心登录逻辑
             Userdata user = userService.login(username, password);
+
+
+            // ==== 修改：使用专用方法更新最后登录时间 ====
+            Date lastLoginTime = new Date();
+            userdataRepository.updateLastLoginTime(user.getUserId(), lastLoginTime);
+
+            // 可选：设置到返回对象中
+            user.setLastLoginTime(lastLoginTime);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);

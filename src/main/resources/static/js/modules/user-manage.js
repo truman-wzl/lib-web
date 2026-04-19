@@ -13,6 +13,142 @@
         pageSize: 10,
         searchKeyword: '',
 
+        // ==== 新增：获取认证Token ====
+        getAuthToken: function() {
+            // 尝试从多种位置获取token
+            const token = localStorage.getItem('authToken') ||
+                          localStorage.getItem('token') ||
+                          sessionStorage.getItem('authToken') ||
+                          sessionStorage.getItem('token') ||
+                          '';
+
+            console.log('🔐 获取认证token:', token ? '找到token' : '未找到token');
+            return token;
+        },
+
+        // ==== 新增：加载用户统计信息 ====
+        loadUserStats: function() {
+            console.log('📈 开始加载用户统计信息...');
+
+            const token = this.getAuthToken();
+
+            // 准备请求头
+            const headers = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            };
+
+            // 如果有token，添加到请求头
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            } else {
+                console.warn('⚠️ 未找到认证token，可能以未登录状态访问统计接口');
+            }
+
+            // 发送统计请求
+            fetch('/api/admin/users/stats', {
+                method: 'GET',
+                headers: headers,
+                credentials: 'include'  // 包含cookie，如果使用session
+            })
+            .then(response => {
+                console.log('📊 统计接口响应状态:', response.status, response.statusText);
+
+                if (response.status === 401) {
+                    console.warn('❌ 未授权访问统计接口 (401)');
+                    this.updateUserStats({totalUsers: '未授权'});
+                    return null;
+                }
+
+                if (response.status === 403) {
+                    console.warn('⛔ 权限不足 (403)');
+                    this.updateUserStats({totalUsers: '无权限'});
+                    return null;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP错误 ${response.status}: ${response.statusText}`);
+                }
+
+                return response.json();
+            })
+            .then(data => {
+                if (!data) {
+                    // 401/403 已处理
+                    return;
+                }
+
+                console.log('📈 用户统计接口返回数据:', data);
+
+                if (data && data.success && data.data) {
+                    // 成功获取统计信息
+                    this.updateUserStats(data.data);
+                } else {
+                    // 接口返回失败
+                    console.error('❌ 获取用户统计失败:', data?.message || '未知错误');
+                    this.updateUserStats({totalUsers: '加载失败'});
+                }
+            })
+            .catch(error => {
+                console.error('❌ 加载用户统计信息失败:', error);
+
+                // 如果统计接口失败，尝试从用户列表数据获取统计
+                setTimeout(() => {
+                    this.fallbackToUserListStats();
+                }, 1000);
+            });
+        },
+
+        // ==== 新增：更新用户统计显示 ====
+        updateUserStats: function(stats) {
+            console.log('🔄 更新用户统计显示:', stats);
+
+            const totalUsersEl = document.getElementById('totalUsers');
+            if (!totalUsersEl) {
+                console.warn('⚠️ 未找到totalUsers元素');
+                return;
+            }
+
+            if (stats.totalUsers !== undefined && stats.totalUsers !== null) {
+                // 更新总数显示
+                totalUsersEl.textContent = stats.totalUsers;
+                totalUsersEl.className = 'text-primary fw-bold';
+
+                // 记录统计信息
+                console.log(`✅ 用户统计更新成功: ${stats.totalUsers} 个用户`);
+            } else {
+                // 统计信息无效
+                console.warn('⚠️ 统计信息无效:', stats);
+                totalUsersEl.textContent = 'N/A';
+                totalUsersEl.className = 'text-muted';
+            }
+        },
+
+        // ==== 新增：备用方案 - 从用户列表获取统计 ====
+        fallbackToUserListStats: function() {
+            console.log('🔄 尝试从用户列表数据获取统计...');
+
+            // 在用户列表加载成功后，会通过renderUserTable更新统计
+            // 这里只是确保界面不会一直显示0
+            const totalUsersEl = document.getElementById('totalUsers');
+            if (totalUsersEl && totalUsersEl.textContent === '0') {
+                totalUsersEl.textContent = '...';
+                totalUsersEl.className = 'text-warning';
+            }
+        },
+
+        // ==== 新增：显示登录提示 ====
+        showLoginPrompt: function() {
+            if (confirm('您的登录已过期，需要重新登录。\n\n点击确定前往登录页面')) {
+                // 跳转到登录页
+                if (window.location.pathname.includes('index.html')) {
+                    window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.href);
+                } else {
+                    window.location.href = '../login.html';
+                }
+            }
+        },
+
         // 模块的render函数（被core.js调用）
         render: function() {
             console.log('🚀 开始渲染用户管理模块');
@@ -41,8 +177,12 @@
 
             console.log('✅ UI渲染成功');
 
-            // 2. 加载数据
-            console.log('📥 加载用户数据...');
+            // ==== 新增：先加载用户统计信息 ====
+            console.log('📈 加载用户统计信息...');
+            this.loadUserStats();
+
+            // 2. 加载用户列表
+            console.log('📥 加载用户列表数据...');
             this.loadUserList();
 
             // 3. 绑定事件
@@ -94,7 +234,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-4 text-end">
-                                    <small class="text-muted">共 <span id="totalUsers">0</span> 个用户</small>
+                                    <small class="text-muted">共 <span id="totalUsers" class="text-primary fw-bold">0</span> 个用户</small>
                                 </div>
                             </div>
                         </div>
@@ -195,6 +335,20 @@
                 .then(data => {
                     if (data && data.success) {
                         this.renderUserTable(data);
+
+                        // ==== 新增：用户列表加载成功后，也更新右上角的统计显示 ====
+                        // 如果统计接口失败，可以用列表的总数作为备用
+                        const total = data.data?.total || 0;
+                        const totalUsersEl = document.getElementById('totalUsers');
+                        if (totalUsersEl && (totalUsersEl.textContent === '0' ||
+                            totalUsersEl.textContent === '...' ||
+                            totalUsersEl.textContent === '加载失败' ||
+                            totalUsersEl.textContent === 'N/A')) {
+                            console.log('📈 使用用户列表数据更新统计显示:', total);
+                            totalUsersEl.textContent = total;
+                            totalUsersEl.className = 'text-info fw-bold';
+                        }
+
                     } else {
                         throw new Error(data?.message || '获取用户列表失败');
                     }
@@ -410,6 +564,12 @@
                 if (data && data.success) {
                     alert(`${action}成功`);
                     this.loadUserList(this.currentPage, this.searchKeyword);
+
+                    // ==== 新增：操作成功后重新加载统计 ====
+                    setTimeout(() => {
+                        this.loadUserStats();
+                    }, 500);
+
                 } else {
                     alert(`${action}失败: ${data?.message || '未知错误'}`);
                 }
@@ -441,6 +601,12 @@
                 if (data && data.success) {
                     alert('用户已成功注销！');
                     this.loadUserList(this.currentPage, this.searchKeyword);
+
+                    // ==== 新增：操作成功后重新加载统计 ====
+                    setTimeout(() => {
+                        this.loadUserStats();
+                    }, 500);
+
                 } else {
                     alert(`注销失败: ${data?.message || '未知错误'}`);
                 }
@@ -468,6 +634,12 @@
                 if (data && data.success) {
                     alert(`${action}成功`);
                     this.loadUserList(this.currentPage, this.searchKeyword);
+
+                    // ==== 新增：操作成功后重新加载统计 ====
+                    setTimeout(() => {
+                        this.loadUserStats();
+                    }, 500);
+
                 } else {
                     alert(`${action}失败: ${data?.message || '未知错误'}`);
                 }
@@ -485,6 +657,10 @@
             if (searchBtn) {
                 searchBtn.addEventListener('click', () => {
                     const keyword = document.getElementById('searchInput')?.value || '';
+
+                    // ==== 新增：搜索时也重新加载统计 ====
+                    console.log('🔍 搜索用户，重新加载统计...');
+                    this.loadUserStats();
                     this.loadUserList(1, keyword);
                 });
             }
@@ -495,6 +671,10 @@
                 searchInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
                         const keyword = searchInput.value || '';
+
+                        // ==== 新增：搜索时也重新加载统计 ====
+                        console.log('🔍 搜索用户（回车），重新加载统计...');
+                        this.loadUserStats();
                         this.loadUserList(1, keyword);
                     }
                 });
@@ -504,10 +684,18 @@
             const refreshBtn = document.getElementById('refreshBtn');
             if (refreshBtn) {
                 refreshBtn.addEventListener('click', () => {
-                    if (searchInput) searchInput.value = '';
+                    if (searchInput) {
+                        searchInput.value = '';
+                        this.searchKeyword = '';
+                    }
+
+                    // ==== 新增：刷新时也重新加载统计 ====
+                    console.log('🔄 刷新用户数据和统计...');
+                    this.loadUserStats();
                     this.loadUserList(1);
                 });
             }
+
             // 绑定锁定/解锁按钮事件
             document.addEventListener('click', (e) => {
                 if (e.target.closest('.toggle-lock-btn')) {

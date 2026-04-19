@@ -278,38 +278,5 @@ public class AdminController {
         }
     }
 
-    /**
-     * 删除用户
-     * 接口：DELETE /api/admin/users/{userId}
-     */
-    @DeleteMapping("/users/{userId}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
-        try {
-            // 检查用户是否存在
-            if (!userdataRepository.existsById(userId)) {
-                Map<String, Object> errorResponse = new HashMap<>();
-                errorResponse.put("success", false);
-                errorResponse.put("message", "用户不存在，ID: " + userId);
-                return ResponseEntity.badRequest().body(errorResponse);
-            }
 
-            // 删除用户
-            userdataRepository.deleteById(userId);
-
-            // 构建响应
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "用户删除成功");
-            response.put("data", Map.of("deletedUserId", userId));
-
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "删除用户失败: " + e.getMessage());
-            return ResponseEntity.status(500).body(errorResponse);
-        }
-    }
 }

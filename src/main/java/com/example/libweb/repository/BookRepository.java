@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
@@ -76,5 +77,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     @Modifying
     @Query("UPDATE Book b SET b.canBorrow = b.canBorrow - 1 WHERE b.bookId = :bookId AND b.canBorrow > 0")
     int decrementCanBorrow(@Param("bookId") Long bookId);
-
+    // 根据书名、作者、出版社查找图书（用于判断是否已存在）
+    Optional<Book> findByBooknameAndAuthorAndPublisher(String bookname, String author, String publisher);
 }

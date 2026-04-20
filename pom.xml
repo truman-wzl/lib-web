@@ -64,6 +64,18 @@
             <version>21.14.0.0</version> <!-- 此版本兼容Oracle 11g-->
             <scope>runtime</scope>
         </dependency>
+        <!-- 在pom.xml的dependencies部分添加 -->
+        <!-- Apache POI for Excel处理 -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>5.2.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.3</version>
+        </dependency>
     </dependencies>
 
     <build>

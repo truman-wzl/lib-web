@@ -239,8 +239,238 @@ window.dispatchEvent(new CustomEvent('module-system-ready', {
 }));
 
 console.log('✅ 模块系统已就绪');
+// ========================================
+// 消息泡泡管理器 - 动态样式和功能
+// ========================================
 
+(function() {
+    'use strict';
+
+    // 检查是否已有消息泡泡管理器
+    if (window.MessageBadgeManager) {
+        return;
+    }
+
+    // 消息泡泡管理器
+    // 在core.js中简化MessageBadgeManager
+    window.MessageBadgeManager = {
+        // 只需保留核心功能
+        updateBadge: function(count) {
+            console.log('🔄 updateBadge被调用，参数:', count, '类型:', typeof count);
+
+            // 确保count是数字
+            const unreadCount = parseInt(count) || 0;
+            console.log(`📊 更新泡泡显示，未读消息数: ${unreadCount}`);
+
+            // 查找泡泡元素
+            let badge = document.getElementById('message-notification-badge') ||
+                        document.querySelector('.message-badge');
+
+            if (!badge) {
+                console.warn('⚠️ 泡泡元素不存在，尝试重新创建...');
+
+                // 尝试重新创建泡泡
+                const messageLink = document.querySelector('a[data-module="message"]');
+                if (messageLink) {
+                    badge = document.createElement('span');
+                    badge.className = 'message-badge';
+                    badge.id = 'message-notification-badge';
+                    badge.style.cssText = `
+                        position: absolute;
+                        top: 0;
+                        right: 0;
+                        background: #ff4757;
+                        color: white;
+                        font-size: 10px;
+                        font-weight: bold;
+                        padding: 1px 5px;
+                        border-radius: 8px;
+                        min-width: 16px;
+                        height: 16px;
+                        text-align: center;
+                        line-height: 14px;
+                        display: ${unreadCount > 0 ? 'block' : 'none'};
+                        z-index: 1000;
+                        border: 1px solid white;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+                    `;
+                    badge.textContent = unreadCount;
+                    messageLink.style.position = 'relative';
+                    messageLink.appendChild(badge);
+                    console.log('✅ 重新创建泡泡');
+                } else {
+                    console.error('❌ 无法创建泡泡：找不到消息菜单项');
+                    return;
+                }
+            }
+
+            // 更新泡泡
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.style.display = 'block';
+                badge.style.opacity = '1';
+                badge.style.visibility = 'visible';
+                badge.style.transform = 'scale(1)';
+
+                console.log(`✅ 显示泡泡，数量: ${badge.textContent}`);
+            } else {
+                badge.style.display = 'none';
+                console.log('📭 隐藏泡泡，无未读消息');
+            }
+
+            // 添加动画效果
+            if (unreadCount > 0) {
+                badge.style.animation = 'none';
+                setTimeout(() => {
+                    badge.style.animation = 'badgePulse 0.6s ease-in-out';
+                }, 10);
+            }
+        },
+        // 定期检查函数
+        startPeriodicCheck: function() {
+            // 每30秒检查一次
+            setInterval(() => {
+                this.checkUnreadCount();
+            }, 30000);
+        },
+
+        // 修改checkUnreadCount方法
+        checkUnreadCount: async function() {
+            console.log('🔍 开始检查未读消息...');
+
+            try {
+                const response = await fetch('/api/messages/unread-count', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('📡 API响应状态:', response.status);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('📊 API返回数据:', data);
+
+                    // 🔥 关键修复：使用正确的字段名
+                    let unreadCount = 0;
+
+                    // 从您的截图看，API返回的是 {success: true, unreadCount: 1}
+                    if (data.unreadCount !== undefined && data.unreadCount !== null) {
+                        unreadCount = parseInt(data.unreadCount) || 0;
+                        console.log(`✅ 使用unreadCount字段: ${unreadCount}`);
+                    }
+                    // 如果API返回的是 {success: true, count: 1}
+                    else if (data.count !== undefined && data.count !== null) {
+                        unreadCount = parseInt(data.count) || 0;
+                        console.log(`✅ 使用count字段: ${unreadCount}`);
+                    }
+                    // 如果API返回的是 {success: true, data: 1}
+                    else if (data.data !== undefined && data.data !== null) {
+                        unreadCount = parseInt(data.data) || 0;
+                        console.log(`✅ 使用data字段: ${unreadCount}`);
+                    }
+                    // 如果API返回的是其他格式
+                    else {
+                        console.warn('⚠️ API返回格式不明确，尝试查找数值字段...');
+                        console.log('数据所有字段:', Object.keys(data));
+
+                        // 遍历所有字段，寻找数字类型的值
+                        for (let key in data) {
+                            if (typeof data[key] === 'number') {
+                                unreadCount = data[key];
+                                console.log(`🔍 使用字段 ${key}: ${unreadCount}`);
+                                break;
+                            }
+                        }
+                    }
+
+                    console.log(`🎯 最终未读数量: ${unreadCount}`);
+                    this.updateBadge(unreadCount);
+
+                } else {
+                    console.warn(`⚠️ API请求失败: ${response.status}`);
+                    this.updateBadge(0);
+                }
+            } catch (error) {
+                console.error('❌ 获取未读消息失败:', error);
+                this.updateBadge(0);
+            }
+        }
+    };
+})();
 // 导出到全局
 window.loadModule = loadModule;
 window.registerModule = registerModule;
 window.safeRegisterModule = safeRegisterModule;
+
+// 自动初始化
+window.MessageBadgeManager.init();
+
+// 监听菜单渲染完成事件
+window.addEventListener('menu-rendered', function(event) {
+    console.log('📁 收到菜单渲染完成事件，准备初始化泡泡', event.detail);
+
+    // 确保用户已登录
+    if (!window.AppState.currentUser) {
+        console.log('👤 用户未登录，跳过泡泡初始化');
+        return;
+    }
+
+    // 延迟初始化，确保DOM完全加载
+    setTimeout(() => {
+        console.log('🎯 检查泡泡管理器状态...');
+
+        // 检查泡泡是否存在
+        const existingBadge = document.querySelector('.message-badge');
+        if (existingBadge) {
+            console.log('✅ 泡泡已存在，跳过重新初始化');
+            return;
+        }
+
+        console.log('🎯 初始化消息泡泡管理器');
+
+        // 重新初始化
+        if (window.MessageBadgeManager) {
+            // 如果已有定时器，先清理
+            if (window.MessageBadgeManager.checkInterval) {
+                clearInterval(window.MessageBadgeManager.checkInterval);
+                window.MessageBadgeManager.checkInterval = null;
+            }
+
+            // 重新设置泡泡
+            window.MessageBadgeManager.setupBadge();
+
+            // 立即检查一次未读消息
+            setTimeout(() => {
+                if (window.MessageBadgeManager.checkUnreadCount) {
+                    window.MessageBadgeManager.checkUnreadCount();
+                }
+            }, 1000);
+        }
+    }, 300);
+});
+
+// 监听页面切换事件
+document.addEventListener('pageChange', function(event) {
+    if (event.detail && event.detail.module === 'message') {
+        console.log('📨 切换到消息页面，刷新泡泡');
+        setTimeout(() => {
+            if (window.MessageBadgeManager && window.MessageBadgeManager.checkUnreadCount) {
+                window.MessageBadgeManager.checkUnreadCount();
+            }
+        }, 1000);
+    }
+});
+
+// 监听消息状态变化事件
+document.addEventListener('message-read', function() {
+    console.log('📩 收到消息已读事件，更新泡泡');
+    setTimeout(() => {
+        if (window.MessageBadgeManager && window.MessageBadgeManager.checkUnreadCount) {
+            window.MessageBadgeManager.checkUnreadCount();
+        }
+    }, 500);
+});

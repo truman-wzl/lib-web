@@ -3,15 +3,38 @@ package com.example.libweb.controller;
 import com.example.libweb.entity.Category;
 import com.example.libweb.repository.BookRepository;
 import com.example.libweb.repository.CategoryRepository;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
+import java.io.InputStream;
+import java.util.*;
+
+// 原有的import保持不变，添加以下import：
+
+// POI相关导入
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+
+// Spring文件上传
+import org.springframework.web.multipart.MultipartFile;
+
+// Java IO
+import java.io.InputStream;
+import java.io.IOException;
+import jakarta.servlet.http.HttpServletResponse;
+
+// 其他Java类
+import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-
+import java.util.HashMap;
 /**
  * 分类管理控制器
  * 专注处理与“图书分类”相关的所有HTTP API。
@@ -27,10 +50,22 @@ public class CategoryController {
     private CategoryRepository categoryRepository;
 
     // ==================== 1. 查询：获取所有分类 ====================
+    // ==================== 1. 查询：获取所有分类 ====================
     @GetMapping
-    public ResponseEntity<?> getAllCategories() {
+    public ResponseEntity<?> getAllCategories(
+            @RequestParam(value = "keyword", required = false) String keyword) {  // 添加keyword参数
+
         try {
-            List<Category> categories = categoryRepository.findAll();
+            List<Category> categories;
+
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                // 如果有搜索关键字，执行模糊搜索
+                categories = categoryRepository.findByCategoryNameContaining(keyword.trim());
+            } else {
+                // 没有关键字，返回所有分类
+                categories = categoryRepository.findAll();
+            }
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("data", categories);
@@ -207,5 +242,257 @@ public class CategoryController {
             errorResponse.put("message", "删除分类时发生系统错误");
             return ResponseEntity.internalServerError().body(errorResponse);
         }
+    }
+    //批量导入新分类
+    @PostMapping("/import")
+    public ResponseEntity<?> importCategories(@RequestParam("file") MultipartFile file) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // 1. 验证文件
+            if (file.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "文件不能为空");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // 2. 验证文件类型
+            String fileName = file.getOriginalFilename();
+            if (fileName == null || !(fileName.endsWith(".xlsx") || fileName.endsWith(".xls"))) {
+                response.put("success", false);
+                response.put("message", "仅支持Excel文件（.xlsx, .xls）");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // 3. 解析Excel
+            List<Map<String, Object>> dataRows = new ArrayList<>();
+            List<Map<String, Object>> errors = new ArrayList<>();
+            int totalRows = 0;
+            int successCount = 0;
+
+            try (InputStream inputStream = file.getInputStream()) {
+                Workbook workbook = null;
+
+                // 根据文件扩展名创建不同的Workbook对象
+                if (fileName.endsWith(".xlsx")) {
+                    workbook = new XSSFWorkbook(inputStream);
+                } else if (fileName.endsWith(".xls")) {
+                    workbook = new HSSFWorkbook(inputStream);
+                }
+
+                if (workbook == null) {
+                    response.put("success", false);
+                    response.put("message", "无法读取Excel文件");
+                    return ResponseEntity.badRequest().body(response);
+                }
+
+                try {
+                    // 获取第一个工作表
+                    Sheet sheet = workbook.getSheetAt(0);
+                    totalRows = sheet.getPhysicalNumberOfRows();
+
+                    if (totalRows <= 1) {  // 只有表头或没有数据
+                        response.put("success", false);
+                        response.put("message", "Excel文件没有数据行");
+                        return ResponseEntity.badRequest().body(response);
+                    }
+
+                    // 验证表头
+                    Row headerRow = sheet.getRow(0);
+                    if (headerRow == null ||
+                            !"category_name".equalsIgnoreCase(getCellStringValue(headerRow.getCell(0))) ||
+                            !"is_protected".equalsIgnoreCase(getCellStringValue(headerRow.getCell(1)))) {
+                        response.put("success", false);
+                        response.put("message", "Excel表头格式不正确，请使用正确的模板格式（第一行：category_name, is_protected）");
+                        return ResponseEntity.badRequest().body(response);
+                    }
+
+                    // 4. 处理每一行数据
+                    for (int i = 1; i < totalRows; i++) {  // 从第2行开始，第1行是表头
+                        Row row = sheet.getRow(i);
+                        int rowNum = i + 1;  // Excel行号（从1开始）
+
+                        // 跳过空行
+                        if (row == null) {
+                            continue;
+                        }
+
+                        // 获取单元格值
+                        String categoryName = getCellStringValue(row.getCell(0));
+                        String isProtectedStr = getCellStringValue(row.getCell(1));
+
+                        // 验证数据
+                        List<String> validationErrors = validateCategoryRow(categoryName, isProtectedStr, rowNum);
+
+                        if (!validationErrors.isEmpty()) {
+                            // 如果有验证错误，添加到错误列表
+                            for (String error : validationErrors) {
+                                errors.add(createError(rowNum, error));
+                            }
+                            continue;
+                        }
+
+                        // 转换为boolean
+                        boolean isProtected = false;
+                        if (isProtectedStr != null && !isProtectedStr.trim().isEmpty()) {
+                            isProtectedStr = isProtectedStr.trim().toLowerCase();
+                            isProtected = isProtectedStr.equals("true") || isProtectedStr.equals("1") || isProtectedStr.equals("是");
+                        }
+
+                        // 检查分类是否已存在 - 使用Optional处理
+                        java.util.Optional<Category> existingCategoryOpt = categoryRepository.findByCategoryName(categoryName);
+                        if (existingCategoryOpt.isPresent()) {
+                            // 分类已存在，跳过
+                            errors.add(createError(rowNum, "分类已存在，跳过：" + categoryName));
+                            continue;
+                        }
+
+                        // 创建新的分类
+                        Category category = new Category();
+                        category.setCategoryName(categoryName);
+                        category.setIsProtected(isProtected);
+                        category.setCreateTime(new Date());
+
+                        // 保存到数据库
+                        try {
+                            categoryRepository.save(category);
+                            successCount++;
+
+                            // 记录成功的数据
+                            Map<String, Object> rowData = new HashMap<>();
+                            rowData.put("row", rowNum);
+                            rowData.put("categoryName", categoryName);
+                            rowData.put("isProtected", isProtected);
+                            dataRows.add(rowData);
+
+                        } catch (Exception e) {
+                            errors.add(createError(rowNum, "保存到数据库失败：" + e.getMessage()));
+                        }
+                    }
+                } finally {
+                    // 确保关闭workbook
+                    if (workbook != null) {
+                        workbook.close();
+                    }
+                }
+
+            } catch (Exception e) {
+                response.put("success", false);
+                response.put("message", "解析Excel文件失败：" + e.getMessage());
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // 5. 返回结果
+            int dataCount = totalRows - 1;  // 减去表头行
+            int failedCount = errors.size();
+
+            response.put("success", true);
+            response.put("message", String.format("导入完成。共处理%d条数据，成功%d条，失败%d条",
+                    dataCount, successCount, failedCount));
+            response.put("data", Map.of(
+                    "total", dataCount,
+                    "success", successCount,
+                    "failed", failedCount,
+                    "errors", errors,
+                    "importedData", dataRows
+            ));
+
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            // 业务逻辑错误
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            // 系统错误
+            response.put("success", false);
+            response.put("message", "导入失败：" + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    /**
+     * 获取单元格的字符串值
+     */
+    private String getCellStringValue(Cell cell) {
+        if (cell == null) {
+            return "";
+        }
+
+        // 使用getCellType()方法，注意：POI 4.0+使用CellType枚举
+        if (cell.getCellType() == CellType.STRING) {
+            return cell.getStringCellValue().trim();
+        } else if (cell.getCellType() == CellType.NUMERIC) {
+            // 如果是布尔型的数字（1或0），转换为true/false
+            double numValue = cell.getNumericCellValue();
+            if (numValue == 1.0) {
+                return "true";
+            } else if (numValue == 0.0) {
+                return "false";
+            }
+            // 否则返回整数形式
+            return String.valueOf((int) numValue);
+        } else if (cell.getCellType() == CellType.BOOLEAN) {
+            return String.valueOf(cell.getBooleanCellValue());
+        } else if (cell.getCellType() == CellType.FORMULA) {
+            // 对于公式单元格，尝试获取计算结果
+            try {
+                CellType resultType = cell.getCachedFormulaResultType();
+                if (resultType == CellType.STRING) {
+                    return cell.getStringCellValue().trim();
+                } else if (resultType == CellType.NUMERIC) {
+                    return String.valueOf(cell.getNumericCellValue());
+                } else if (resultType == CellType.BOOLEAN) {
+                    return String.valueOf(cell.getBooleanCellValue());
+                } else {
+                    return cell.getCellFormula();
+                }
+            } catch (Exception e) {
+                return cell.getCellFormula();
+            }
+        } else if (cell.getCellType() == CellType.BLANK) {
+            return "";
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * 验证单行数据
+     */
+    private List<String> validateCategoryRow(String categoryName, String isProtectedStr, int rowNum) {
+        List<String> errors = new ArrayList<>();
+
+        // 验证分类名称
+        if (categoryName == null || categoryName.trim().isEmpty()) {
+            errors.add("分类名称不能为空");
+        } else if (categoryName.length() > 50) {
+            errors.add("分类名称不能超过50个字符");
+        }
+
+        // 验证是否受保护字段
+        if (isProtectedStr == null || isProtectedStr.trim().isEmpty()) {
+            errors.add("is_protected字段不能为空");
+        } else {
+            isProtectedStr = isProtectedStr.trim().toLowerCase();
+            // 允许的值：true, false, 1, 0, 是, 否
+            if (!isProtectedStr.equals("true") && !isProtectedStr.equals("false") &&
+                    !isProtectedStr.equals("1") && !isProtectedStr.equals("0") &&
+                    !isProtectedStr.equals("是") && !isProtectedStr.equals("否")) {
+                errors.add("is_protected字段值无效，必须是true/false、1/0、是/否");
+            }
+        }
+
+        return errors;
+    }
+
+    /**
+     * 创建错误信息
+     */
+    private Map<String, Object> createError(int row, String reason) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("row", row);
+        error.put("reason", reason);
+        return error;
     }
 }

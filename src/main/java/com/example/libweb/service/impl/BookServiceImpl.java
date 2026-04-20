@@ -136,4 +136,16 @@ public class BookServiceImpl implements BookService {
     public List<Book> getAllBooks() {
         return bookRepository.findAll();
     }
+    // BookServiceImpl.java
+    @Override
+    public Optional<Book> findByBooknameAndAuthorAndPublisher(String bookname, String author, String publisher) {
+        // 这里需要实现
+        // 如果BookRepository有这个方法，直接调用
+        return bookRepository.findByBooknameAndAuthorAndPublisher(bookname, author, publisher);
+    }
+
+    @Override
+    public List<Book> saveAll(List<Book> books) {
+        return bookRepository.saveAll(books);
+    }
 }

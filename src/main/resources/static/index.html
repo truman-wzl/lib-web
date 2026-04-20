@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <!-- Font Awesome 图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap 5 Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <style>
         :root { --sidebar-width: 250px; }
         .sidebar {
@@ -147,13 +149,23 @@
 
 <!-- 引入 Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Chart.js 图表库 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <!-- 引入应用核心JS -->
 <script src="js/app/core.js"></script>
 <script src="js/app/auth.js"></script>
 <script src="js/app/menu.js"></script>
 <script src="js/app/toast.js"></script> <!-- 新增 -->
-
+<!-- 导入所有模块文件（保持现有注册逻辑不变） -->
+<script src="js/modules/stats-manage.js"></script>
+<script src="js/modules/user-manage.js"></script>
+<script src="js/modules/book-manage.js"></script>
+<script src="js/modules/category-manage.js"></script>
+<script src="js/modules/borrow-manage.js"></script>
+<script src="js/modules/book-query.js"></script>
+<script src="js/modules/my-borrow.js"></script>
+<script src="js/modules/profile.js"></script>
 <script>
     /**
      * 主初始化函数

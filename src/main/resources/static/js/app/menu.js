@@ -4,6 +4,7 @@ const menuConfig = {
         { id: 'book-query', name: '🔍 图书查询', group: '用户功能' },
         { id: 'my-borrow', name: '📖 我的借阅', group: '用户功能' },
         { id: 'profile', name: '👤 个人中心', group: '用户功能' },
+        { id: 'message', name: 'ℹ️ 系统消息', group: '用户功能' },
         { id: 'stats-manage', name: '📈 数据统计', group: '公共功能' }
     ],
     ADMIN: [
@@ -39,24 +40,77 @@ function renderSidebarMenu() {
     });
 
     sidebar.innerHTML = html;
-
     // 绑定菜单点击事件
     sidebar.querySelectorAll('.menu-item').forEach(item => {
         item.addEventListener('click', function(e) {
             e.preventDefault();
             const moduleId = this.getAttribute('data-module');
 
-            // 更新URL，支持浏览器前进后退
             const url = new URL(window.location);
             url.searchParams.set('module', moduleId);
             window.history.pushState({}, '', url);
 
-            // 加载模块
             window.loadModule(moduleId);
         });
     });
-}
 
+    // ✅ 在菜单渲染完成后立即添加泡泡
+    setTimeout(() => {
+        addMessageBadgeToMenu();
+
+        // 立即检查未读消息
+        if (window.MessageBadgeManager && window.MessageBadgeManager.checkUnreadCount) {
+            setTimeout(() => {
+                window.MessageBadgeManager.checkUnreadCount();
+                window.MessageBadgeManager.startPeriodicCheck();
+            }, 1000);
+        }
+    }, 100);
+}
+// menu.js 中添加函数
+function addMessageBadgeToMenu() {
+    const messageLink = document.querySelector('a[data-module="message"]');
+    if (!messageLink) {
+        console.warn('未找到消息菜单项，无法添加泡泡');
+        return false;
+    }
+
+    // 移除已有的泡泡
+    const existingBadge = messageLink.querySelector('.message-badge');
+    if (existingBadge) {
+        existingBadge.remove();
+    }
+
+    // 创建泡泡
+    const badge = document.createElement('span');
+    badge.className = 'message-badge';
+    badge.id = 'message-notification-badge';
+    badge.style.cssText = `
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        background: #ff4757;
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 1px 4px;
+        border-radius: 8px;
+        min-width: 16px;
+        height: 16px;
+        text-align: center;
+        line-height: 14px;
+        display: none;
+        z-index: 1000;
+        border: 1px solid white;
+    `;
+    badge.textContent = '0';
+
+    // 确保菜单项是相对定位
+    messageLink.style.position = 'relative';
+    messageLink.appendChild(badge);
+
+    return badge;
+}
 /**
  * 检查模块ID是否有效
  */

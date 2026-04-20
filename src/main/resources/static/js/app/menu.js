@@ -10,7 +10,7 @@ const menuConfig = {
         { id: 'book-manage', name: '📚 图书管理', group: '管理功能' },
         { id: 'user-manage', name: '👥 用户管理', group: '管理功能' },
         { id: 'borrow-manage', name: '📊 借阅管理', group: '管理功能' },
-        { id: 'stats', name: '📈 数据统计', group: '管理功能' }
+        { id: 'stats-manage', name: '📈 数据统计', group: '管理功能' }
     ]
 };
 

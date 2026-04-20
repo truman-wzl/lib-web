@@ -148,8 +148,25 @@ async function loadModule(moduleName) {
     // 执行模块渲染
     if (ModuleRegistry[moduleName] && typeof ModuleRegistry[moduleName].render === 'function') {
         console.log(`🎨 开始渲染模块: ${moduleName}`);
-        contentArea.innerHTML = ''; // 清空内容
-        ModuleRegistry[moduleName].render();
+            contentArea.innerHTML = ''; // 清空内容
+
+            // ✅ 获取模块返回的HTML
+            const html = ModuleRegistry[moduleName].render();
+            console.log(`📄 模块返回HTML长度: ${typeof html === 'string' ? html.length : '非字符串'}`);
+
+            if (html && typeof html === 'string') {
+                contentArea.innerHTML = html;  // ✅ 设置HTML到页面
+            } else {
+                console.warn(`⚠️ 模块 ${moduleName} 的render函数没有返回字符串`);
+            }
+
+            // ✅ 调用模块的初始化函数
+            if (typeof ModuleRegistry[moduleName].onRender === 'function') {
+                console.log(`🔧 调用模块的onRender函数: ${moduleName}`);
+                ModuleRegistry[moduleName].onRender();
+            } else {
+                console.log(`ℹ️ 模块 ${moduleName} 没有onRender函数`);
+            }
     } else {
         console.error(`❌ 模块${moduleName}未找到render方法`);
         console.log(`ModuleRegistry[${moduleName}]:`, ModuleRegistry[moduleName]);

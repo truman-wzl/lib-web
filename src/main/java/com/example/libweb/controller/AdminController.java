@@ -278,5 +278,179 @@ public class AdminController {
         }
     }
 
+    // 在AdminController类中添加以下方法：
+
+    /**
+     * 分页获取借阅记录（管理员）
+     * 接口：GET /api/admin/borrows
+     * 参数：
+     *   page: 页码，从1开始（默认1）
+     *   size: 每页数量（默认10）
+     *   status: 状态筛选（可选：BORROWED, RETURNED, OVERDUE, RENEWED）
+     */
+    @GetMapping("/borrows")
+    public ResponseEntity<?> getBorrowRecords(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String status) {
+
+        try {
+            // 验证页码
+            if (page < 1) page = 1;
+            if (size < 1) size = 10;
+
+            // 计算起始行和结束行（Oracle ROWNUM分页）
+            int startRow = (page - 1) * size;
+            int endRow = page * size;
+
+            // 查询数据
+            List<Object[]> recordsData = borrowRecordRepository.findAllBorrowRecordsWithInfoPagination(
+                    startRow, endRow, status);
+
+            // 统计总数
+            int total = borrowRecordRepository.countAllBorrowRecordsWithFilter(status);
+
+            // 计算总页数
+            int totalPages = (int) Math.ceil((double) total / size);
+
+            // 处理结果，转换为前端需要的格式
+            List<Map<String, Object>> recordList = recordsData.stream().map(row -> {
+                Map<String, Object> record = new HashMap<>();
+                record.put("recordId", row[0]);
+                record.put("userId", row[1]);
+                record.put("bookId", row[2]);
+
+                // 日期格式化
+                if (row[3] != null) {
+                    record.put("borrowTime", dateFormat.format((Date) row[3]));
+                } else {
+                    record.put("borrowTime", "");
+                }
+
+                if (row[4] != null) {
+                    record.put("dueTime", dateFormat.format((Date) row[4]));
+                } else {
+                    record.put("dueTime", "");
+                }
+
+                if (row[5] != null) {
+                    record.put("returnTime", dateFormat.format((Date) row[5]));
+                } else {
+                    record.put("returnTime", "");
+                }
+
+                record.put("status", row[6]);
+
+                if (row[7] != null) {
+                    record.put("createTime", dateFormat.format((Date) row[7]));
+                } else {
+                    record.put("createTime", "");
+                }
+
+                record.put("username", row[8] != null ? row[8] : "");
+                record.put("realName", row[9] != null ? row[9] : "");
+                record.put("bookname", row[10] != null ? row[10] : "");
+                record.put("author", row[11] != null ? row[11] : "");
+                record.put("publisher", row[12] != null ? row[12] : "");
+                record.put("categoryId", row[13] != null ? row[13] : "");
+
+                return record;
+            }).collect(Collectors.toList());
+
+            // 构建响应
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "获取借阅记录成功");
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("list", recordList);
+            data.put("page", page);
+            data.put("size", size);
+            data.put("total", total);
+            data.put("totalPages", totalPages);
+            data.put("hasNext", page < totalPages);
+            data.put("hasPrevious", page > 1);
+
+            if (status != null) {
+                data.put("status", status);
+            }
+
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "获取借阅记录失败: " + e.getMessage());
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
+
+    /**
+     * 获取借阅统计信息
+     * 接口：GET /api/admin/borrows/stats
+     */
+    @GetMapping("/borrows/stats")
+    public ResponseEntity<?> getBorrowStats() {
+        try {
+            // 统计各状态的数量
+            List<Object[]> statusCounts = borrowRecordRepository.countByStatusGroup();
+
+            // 统计总数
+            int totalBorrowRecords = borrowRecordRepository.countAllBorrowRecordsWithFilter(null);
+
+            // 初始化统计结果
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("total", totalBorrowRecords);
+
+            // 默认值
+            stats.put("borrowed", 0);
+            stats.put("overdue", 0);
+            stats.put("returned", 0);
+            stats.put("renewed", 0);
+
+            // 处理统计结果
+            for (Object[] row : statusCounts) {
+                String status = (String) row[0];
+                Number count = (Number) row[1];
+
+                if (status != null && count != null) {
+                    int countInt = count.intValue();
+
+                    switch (status.toUpperCase()) {
+                        case "BORROWED":
+                            stats.put("borrowed", countInt);
+                            break;
+                        case "OVERDUE":
+                            stats.put("overdue", countInt);
+                            break;
+                        case "RETURNED":
+                            stats.put("returned", countInt);
+                            break;
+                        case "RENEWED":
+                            stats.put("renewed", countInt);
+                            break;
+                    }
+                }
+            }
+
+            // 构建响应
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "获取借阅统计成功");
+            response.put("data", stats);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "获取借阅统计失败: " + e.getMessage());
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
 
 }

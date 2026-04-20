@@ -124,4 +124,41 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
     @Modifying
     @Query("UPDATE BorrowRecord br SET br.dueTime = :newDueTime, br.status = 'RENEWED' WHERE br.recordId = :recordId AND br.userId = :userId AND br.status = 'BORROWED' AND br.dueTime > CURRENT_DATE")
     int renewBorrowRecord(@Param("recordId") Long recordId, @Param("userId") Long userId, @Param("newDueTime") Date newDueTime);
+
+    /**
+     * 管理员：查询所有借阅记录（分页+状态筛选）
+     * 关联USERDATA和BOOK表，获取完整信息
+     */
+    @Query(value = "SELECT br.RECORD_ID, br.USER_ID, br.BOOK_ID, br.BORROW_TIME, " +
+            "br.DUE_TIME, br.RETURN_TIME, br.STATUS, br.CREATE_TIME, " +
+            "u.USERNAME, u.REAL_NAME, b.BOOKNAME, b.AUTHOR, b.PUBLISHER, b.CATEGORY_ID " +
+            "FROM ( " +
+            "  SELECT t.*, ROWNUM as rn FROM ( " +
+            "    SELECT br2.* FROM BORROW_RECORD br2 " +
+            "    WHERE (:status IS NULL OR br2.STATUS = :status) " +
+            "    ORDER BY br2.BORROW_TIME DESC " +
+            "  ) t WHERE ROWNUM <= :endRow " +
+            ") br " +
+            "LEFT JOIN USERDATA u ON br.USER_ID = u.USER_ID " +
+            "LEFT JOIN BOOK b ON br.BOOK_ID = b.BOOK_ID " +
+            "WHERE rn > :startRow", nativeQuery = true)
+    List<Object[]> findAllBorrowRecordsWithInfoPagination(
+            @Param("startRow") int startRow,
+            @Param("endRow") int endRow,
+            @Param("status") String status);
+
+    /**
+     * 管理员：统计所有借阅记录总数（带状态筛选）
+     */
+    @Query(value = "SELECT COUNT(*) FROM BORROW_RECORD " +
+            "WHERE (:status IS NULL OR STATUS = :status)", nativeQuery = true)
+    int countAllBorrowRecordsWithFilter(@Param("status") String status);
+
+    /**
+     * 管理员：统计各状态的数量
+     * 返回状态和对应的数量
+     */
+    @Query(value = "SELECT STATUS, COUNT(*) as count FROM BORROW_RECORD " +
+            "GROUP BY STATUS", nativeQuery = true)
+    List<Object[]> countByStatusGroup();
 }

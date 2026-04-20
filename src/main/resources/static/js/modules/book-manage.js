@@ -24,9 +24,14 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="mb-0">📚 图书管理</h4>
-                        <button class="btn btn-sm btn-success" id="addBookBtn">
-                            <span>+ 添加图书</span>
-                        </button>
+                        <div>
+                            <button class="btn btn-sm btn-primary me-2" id="importBookBtn">
+                                <i class="bi bi-upload"></i> 批量导入
+                            </button>
+                            <button class="btn btn-sm btn-success" id="addBookBtn">
+                                <span>+ 添加图书</span>
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <!-- 搜索区域 -->
@@ -131,6 +136,34 @@
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                                 <button type="button" class="btn btn-primary" id="saveBookBtn">保存</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 图书批量导入模态框 -->
+                <div class="modal fade" id="importBookModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">批量导入图书</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="bookFile" class="form-label">选择Excel文件</label>
+                                    <input class="form-control" type="file" id="bookFile" accept=".xlsx, .xls, .csv">
+                                    <div class="form-text">
+                                        请确保Excel文件格式正确。列顺序：bookname, author, publisher, category_name, total_number, can_borrow
+                                    </div>
+                                </div>
+                                <div id="importResult" style="display: none;">
+                                    <h6>导入结果</h6>
+                                    <div id="resultContent" class="alert"></div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                <button type="button" class="btn btn-primary" id="uploadBookBtn">开始导入</button>
                             </div>
                         </div>
                     </div>
@@ -402,6 +435,28 @@
             e.preventDefault();
             saveBook();
         });
+        // ✅ 确保有批量导入按钮事件绑定
+        const importBtn = document.getElementById('importBookBtn');
+        if (importBtn) {
+            importBtn.addEventListener('click', showImportBookModal);
+        }
+
+        // ✅ 确保有文件选择事件绑定
+        const bookFileInput = document.getElementById('bookFile');
+        if (bookFileInput) {
+            bookFileInput.addEventListener('change', function() {
+                const uploadBtn = document.getElementById('uploadBookBtn');
+                if (uploadBtn) {
+                    uploadBtn.disabled = !this.files.length;
+                }
+            });
+        }
+
+        // ✅ 确保有开始导入按钮事件绑定
+        const uploadBtn = document.getElementById('uploadBookBtn');
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', uploadBookFile);
+        }
     }
 
     /**
@@ -424,10 +479,6 @@
             });
         });
     }
-
-    /**
-     * 显示添加/编辑模态框
-     */
     /**
      * 显示添加/编辑模态框
      */
@@ -492,7 +543,6 @@
 
         modal.show();
     }
-
     /**
      * 加载图书信息用于编辑
      */
@@ -619,7 +669,210 @@
             alert('删除失败: ' + error.message);
         }
     }
+    /**
+     * 显示批量导入图书模态框
+     */
+    function showImportBookModal() {
+        // 检查模态框是否已存在
+        let modalElement = document.getElementById('importBookModal');
 
+        if (!modalElement) {
+            // 如果模态框不存在，创建它
+            const modalHtml = `
+                <div class="modal fade" id="importBookModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title"><i class="bi bi-upload me-2"></i>批量导入图书</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <!-- 分类列表容器（动态加载） -->
+                                <div id="categoryListContainer" class="mb-3"></div>
+
+                                <!-- 文件选择区域 -->
+                                <div class="mb-3">
+                                    <label for="bookFile" class="form-label">选择Excel文件</label>
+                                    <input class="form-control" type="file" id="bookFile" accept=".xlsx, .xls, .csv">
+                                    <div class="form-text">
+                                        <p class="mb-1">支持格式：.xlsx, .xls, .csv</p>
+                                        <p class="mb-0">列顺序：<code>bookname</code>, <code>author</code>, <code>publisher</code>, <code>category_name</code>, <code>total_number</code>, <code>can_borrow</code></p>
+                                    </div>
+                                </div>
+
+                                <!-- 模板下载区域 -->
+                                <div class="mb-4">
+                                    <p class="mb-2"><strong>操作：</strong></p>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" id="downloadBookTemplate" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-download me-1"></i>下载模板
+                                        </button>
+                                        <button type="button" id="downloadCategoryList" class="btn btn-outline-info btn-sm">
+                                            <i class="bi bi-list-check me-1"></i>查看可用分类
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 导入结果区域 -->
+                                <div id="importResult" style="display: none;">
+                                    <hr>
+                                    <h6 class="mb-3"><i class="bi bi-clipboard-data me-1"></i>导入结果</h6>
+                                    <div id="resultContent" class="alert"></div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                <button type="button" class="btn btn-primary" id="uploadBookBtn" disabled>开始导入</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 添加到body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            // 绑定事件
+            bindImportModalEvents();
+        }
+
+        // 重置模态框状态
+        document.getElementById('bookFile').value = '';
+        document.getElementById('importResult').style.display = 'none';
+        document.getElementById('uploadBookBtn').disabled = true;
+
+        // 清除分类列表容器
+        const categoryContainer = document.getElementById('categoryListContainer');
+        if (categoryContainer) {
+            categoryContainer.innerHTML = '';
+        }
+
+        // 显示模态框
+        const modal = new bootstrap.Modal(document.getElementById('importBookModal'));
+        modal.show();
+    }
+    /**
+     * 上传图书文件
+     */
+    /**
+     * 上传图书文件
+     */
+    async function uploadBookFile() {
+        const fileInput = document.getElementById('bookFile');
+        const file = fileInput.files[0];
+        const uploadBtn = document.getElementById('uploadBookBtn');
+
+        if (!file) {
+            alert('请选择要上传的Excel文件');
+            return;
+        }
+
+        // 检查文件类型
+        const fileExt = file.name.split('.').pop().toLowerCase();
+        if (!['xlsx', 'xls', 'csv'].includes(fileExt)) {
+            alert('请选择Excel文件（.xlsx, .xls, .csv）');
+            return;
+        }
+
+        const originalText = uploadBtn.innerHTML;
+
+        // 显示加载状态
+        uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> 上传中...';
+        uploadBtn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/api/books/import', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            // 显示导入结果
+            const resultDiv = document.getElementById('resultContent');
+            const resultContainer = document.getElementById('importResult');
+
+            if (result.success) {
+                resultDiv.className = 'alert alert-success';
+                resultDiv.innerHTML = `
+                    <h6><i class="bi bi-check-circle-fill me-2"></i>导入完成！</h6>
+                    <p><strong>导入统计：</strong></p>
+                    <ul class="mb-2">
+                        <li>总记录数：<strong>${result.data.total}</strong> 条</li>
+                        <li>成功：<span class="text-success"><strong>${result.data.success}</strong> 条</span></li>
+                        <li>失败：<span class="text-danger"><strong>${result.data.failed}</strong> 条</span></li>
+                    </ul>
+                `;
+
+                // 如果有失败记录，显示详细信息
+                if (result.data.errors && result.data.errors.length > 0) {
+                    resultDiv.className = 'alert alert-warning';
+                    resultDiv.innerHTML = `
+                        <h6><i class="bi bi-exclamation-triangle-fill me-2"></i>导入完成，但有失败记录</h6>
+                        <p><strong>导入统计：</strong></p>
+                        <ul class="mb-2">
+                            <li>总记录数：<strong>${result.data.total}</strong> 条</li>
+                            <li>成功：<span class="text-success"><strong>${result.data.success}</strong> 条</span></li>
+                            <li>失败：<span class="text-danger"><strong>${result.data.failed}</strong> 条</span></li>
+                        </ul>
+                        <hr>
+                        <p><strong>失败记录详情：</strong></p>
+                        <div style="max-height: 200px; overflow-y: auto;">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th width="80">行号</th>
+                                        <th>失败原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${result.data.errors.map(error => `
+                                        <tr>
+                                            <td><span class="badge bg-danger">第${error.row}行</span></td>
+                                            <td class="small">${error.reason}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+
+                resultContainer.style.display = 'block';
+
+                // 如果全部成功，3秒后关闭模态框并刷新列表
+                if (result.data.failed === 0) {
+                    setTimeout(() => {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('importBookModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                        // 刷新图书列表
+                        loadBooks();
+                    }, 3000);
+                }
+            } else {
+                resultDiv.className = 'alert alert-danger';
+                resultDiv.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>${result.message || '导入失败'}`;
+                resultContainer.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('上传失败:', error);
+            const resultDiv = document.getElementById('resultContent');
+            const resultContainer = document.getElementById('importResult');
+
+            resultDiv.className = 'alert alert-danger';
+            resultDiv.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>上传失败: ${error.message}`;
+            resultContainer.style.display = 'block';
+        } finally {
+            // 恢复按钮状态
+            uploadBtn.innerHTML = originalText;
+            uploadBtn.disabled = false;
+        }
+    }
     /**
      * 清理模块资源
      */

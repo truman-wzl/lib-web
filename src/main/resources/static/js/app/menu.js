@@ -3,14 +3,15 @@ const menuConfig = {
     USER: [
         { id: 'book-query', name: '🔍 图书查询', group: '用户功能' },
         { id: 'my-borrow', name: '📖 我的借阅', group: '用户功能' },
-        { id: 'profile', name: '👤 个人中心', group: '用户功能' }
+        { id: 'profile', name: '👤 个人中心', group: '用户功能' },
+        { id: 'stats-manage', name: '📈 数据统计', group: '公共功能' }
     ],
     ADMIN: [
         { id: 'category-manage', name: '📂 分类管理', group: '管理功能' }, // 新增
         { id: 'book-manage', name: '📚 图书管理', group: '管理功能' },
         { id: 'user-manage', name: '👥 用户管理', group: '管理功能' },
         { id: 'borrow-manage', name: '📊 借阅管理', group: '管理功能' },
-        { id: 'stats', name: '📈 数据统计', group: '管理功能' }
+        { id: 'stats-manage', name: '📈 数据统计', group: '公共功能' }
     ]
 };
 

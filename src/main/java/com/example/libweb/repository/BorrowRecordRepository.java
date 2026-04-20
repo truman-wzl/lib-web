@@ -161,4 +161,54 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
     @Query(value = "SELECT STATUS, COUNT(*) as count FROM BORROW_RECORD " +
             "GROUP BY STATUS", nativeQuery = true)
     List<Object[]> countByStatusGroup();
+    // 在 BorrowRecordRepository.java 中添加这些方法
+
+    /**
+     * 借阅趋势 - 统计最近7天的借阅次数（不包含今天）
+     * 返回格式：[["2024-10-01", 5], ["2024-10-02", 8], ...]
+     */
+    @Query(value = """
+    SELECT 
+        TO_CHAR(TRUNC(br.BORROW_TIME), 'yyyy-MM-dd') as borrow_date,
+        COUNT(*) as borrow_count
+    FROM BORROW_RECORD br
+    WHERE br.BORROW_TIME >= TRUNC(SYSDATE) - 7
+      AND br.BORROW_TIME < TRUNC(SYSDATE)
+    GROUP BY TRUNC(br.BORROW_TIME)
+    ORDER BY TRUNC(br.BORROW_TIME)
+    """, nativeQuery = true)
+    List<Object[]> findBorrowTrendLast7Days();
+
+    /**
+     * 热门图书TOP5（排除默认分类ID=5）
+     * 返回：图书ID, 图书名称, 作者, 出版社, 借阅次数
+     */
+    @Query(value = """
+    SELECT * FROM (
+        SELECT b.BOOK_ID, b.BOOKNAME, b.AUTHOR, b.PUBLISHER, COUNT(br.RECORD_ID) as borrow_count
+        FROM BORROW_RECORD br
+        JOIN BOOK b ON br.BOOK_ID = b.BOOK_ID
+        WHERE b.CATEGORY_ID != 5
+        GROUP BY b.BOOK_ID, b.BOOKNAME, b.AUTHOR, b.PUBLISHER
+        ORDER BY COUNT(br.RECORD_ID) DESC, b.BOOKNAME
+    ) WHERE ROWNUM <= 5
+    """, nativeQuery = true)
+    List<Object[]> findTop5PopularBooks();
+
+    /**
+     * 热门类别TOP3（排除默认分类ID=5）
+     * 返回：分类ID, 分类名称, 借阅次数
+     */
+    @Query(value = """
+    SELECT * FROM (
+        SELECT c.CATEGORY_ID, c.CATEGORY_NAME, COUNT(br.RECORD_ID) as borrow_count
+        FROM BORROW_RECORD br
+        JOIN BOOK b ON br.BOOK_ID = b.BOOK_ID
+        JOIN CATEGORY c ON b.CATEGORY_ID = c.CATEGORY_ID
+        WHERE c.CATEGORY_ID != 5
+        GROUP BY c.CATEGORY_ID, c.CATEGORY_NAME
+        ORDER BY COUNT(br.RECORD_ID) DESC, c.CATEGORY_NAME
+    ) WHERE ROWNUM <= 3
+    """, nativeQuery = true)
+    List<Object[]> findTop3PopularCategories();
 }

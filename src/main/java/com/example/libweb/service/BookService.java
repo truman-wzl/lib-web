@@ -3,6 +3,8 @@ package com.example.libweb.service;
 import com.example.libweb.entity.Book;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -24,4 +26,7 @@ public interface BookService {
 
     // 获取所有图书（不分页，用于导出等）
     List<Book> getAllBooks();
+    // 添加批量导入需要的方法
+    Optional<Book> findByBooknameAndAuthorAndPublisher(String bookname, String author, String publisher);
+    List<Book> saveAll(List<Book> books);
 }

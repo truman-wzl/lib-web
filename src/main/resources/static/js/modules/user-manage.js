@@ -213,6 +213,9 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4><i class="fas fa-users me-2"></i>用户管理</h4>
                         <div>
+                            <button class="btn btn-success" id="exportUserBtn">
+                                <i class="bi bi-file-excel"></i> 导出Excel
+                            </button>
                             <button class="btn btn-sm btn-primary" id="refreshBtn">
                                 <i class="fas fa-sync-alt me-1"></i>刷新
                             </button>
@@ -497,7 +500,7 @@
             if (currentPage > 1) {
                 paginationHtml += `
                     <li class="page-item">
-                        <a class="page-link" href="#" onclick="userManager.loadUserList(${currentPage - 1}, '${this.searchKeyword}'); return false;">
+                        <a class="page-link" href="#" data-page="${currentPage - 1}">
                             上一页
                         </a>
                     </li>
@@ -521,7 +524,7 @@
                 } else {
                     paginationHtml += `
                         <li class="page-item">
-                            <a class="page-link" href="#" onclick="userManager.loadUserList(${i}, '${this.searchKeyword}'); return false;">
+                            <a class="page-link" href="#" data-page="${i}">
                                 ${i}
                             </a>
                         </li>
@@ -533,7 +536,7 @@
             if (currentPage < totalPages) {
                 paginationHtml += `
                     <li class="page-item">
-                        <a class="page-link" href="#" onclick="userManager.loadUserList(${currentPage + 1}, '${this.searchKeyword}'); return false;">
+                        <a class="page-link" href="#" data-page="${currentPage + 1}">
                             下一页
                         </a>
                     </li>
@@ -695,9 +698,16 @@
                     this.loadUserList(1);
                 });
             }
-
-            // 绑定锁定/解锁按钮事件
+            // 🔴 在这里添加导出按钮绑定（放在刷新按钮事件后面）
+            const exportBtn = document.getElementById('exportUserBtn');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', () => {
+                    this.exportUsersToExcel();
+                });
+            }
+            // 事件委托处理动态生成的元素
             document.addEventListener('click', (e) => {
+                // 处理锁定/解锁按钮
                 if (e.target.closest('.toggle-lock-btn')) {
                     e.preventDefault();
                     const button = e.target.closest('.toggle-lock-btn');
@@ -707,6 +717,7 @@
                     this.toggleUserLock(userId, currentStatus, username);
                 }
 
+                // 处理注销按钮
                 if (e.target.closest('.cancel-user-btn')) {
                     e.preventDefault();
                     const button = e.target.closest('.cancel-user-btn');
@@ -714,9 +725,53 @@
                     const username = button.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
                     this.cancelUser(userId, username);
                 }
+                // 新增：处理分页按钮
+                if (e.target.closest('.page-link')) {
+                    e.preventDefault();
+                    const pageLink = e.target.closest('.page-link');
+                    const page = pageLink.getAttribute('data-page');
+                    if (page) {
+                        this.loadUserList(parseInt(page), this.searchKeyword);
+                    }
+                }
             });
         },
+        // 🔴 在这里添加导出函数（在showErrorMessage之前）
+        // 导出用户数据到Excel
+        exportUsersToExcel: function() {
+            console.log('📤 点击了用户导出按钮');
 
+            if (!window.ExportManager) {
+                alert('导出功能未初始化，请刷新页面重试');
+                return;
+            }
+
+            // 获取当前搜索条件
+            const keyword = document.getElementById('searchInput')?.value || '';
+            console.log('🔍 搜索参数:', { keyword });
+
+            // 构建参数
+            const params = new URLSearchParams();
+            if (keyword && keyword.trim() !== '') {
+                params.append('keyword', keyword.trim());
+            }
+
+            // 构建完整的URL
+            let url = '/api/export/user';
+            if (params.toString()) {
+                url += '?' + params.toString();
+            }
+
+            console.log('🌐 用户导出URL:', url);
+
+            // 生成文件名
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
+            const filename = `用户列表_${dateStr}.xlsx`;
+
+            // 调用通用导出管理器
+            window.ExportManager.exportToExcel(url, '用户数据', filename);
+        },
         // 显示错误信息
         showError: function(message) {
             const tableBody = document.getElementById('userTableBody');

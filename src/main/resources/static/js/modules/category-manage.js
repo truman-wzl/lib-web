@@ -25,6 +25,9 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="mb-0">📂 分类管理</h4>
                         <div>
+                            <button class="btn btn-success" id="exportCategoryBtn">
+                                <i class="bi bi-file-excel"></i> 导出Excel
+                            </button>
                             <button class="btn btn-sm btn-primary me-2" id="importCategoryBtn">
                                 <i class="bi bi-upload"></i> 批量导入
                             </button>
@@ -277,7 +280,11 @@
             document.getElementById('searchKeyword').value = '';
             loadCategories();
         });
-
+        // 🔴 在这里添加导出按钮绑定
+        const exportBtn = document.getElementById('exportCategoryBtn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', exportCategoriesToExcel);
+        }
         // 添加分类按钮
         document.getElementById('addCategoryBtn').addEventListener('click', () => {
             showCategoryModal();
@@ -529,6 +536,43 @@
             uploadBtn.disabled = false;
         }
     }
+
+    // 🔴 在这里添加导出函数（在cleanup函数之前）
+    async function exportCategoriesToExcel() {
+        console.log('📤 点击了分类导出按钮');
+
+        if (!window.ExportManager) {
+            alert('导出功能未初始化，请刷新页面重试');
+            return;
+        }
+
+        // 获取当前搜索条件
+        const keyword = document.getElementById('searchKeyword')?.value || '';
+        console.log('🔍 搜索参数:', { keyword });
+
+        // 构建参数
+        const params = new URLSearchParams();
+        if (keyword && keyword.trim() !== '') {
+            params.append('keyword', keyword.trim());
+        }
+
+        // 构建完整的URL
+        let url = '/api/export/category';
+        if (params.toString()) {
+            url += '?' + params.toString();
+        }
+
+        console.log('🌐 分类导出URL:', url);
+
+        // 生成文件名
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
+        const filename = `分类列表_${dateStr}.xlsx`;
+
+        // 调用通用导出管理器
+        window.ExportManager.exportToExcel(url, '分类数据', filename);
+    }
+
     /**
      * 清理模块资源
      */

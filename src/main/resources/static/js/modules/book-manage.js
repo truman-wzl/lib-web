@@ -25,6 +25,9 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="mb-0">📚 图书管理</h4>
                         <div>
+                            <button class="btn btn-success" id="exportBookBtn">
+                                <i class="bi bi-file-excel"></i> 导出Excel
+                            </button>
                             <button class="btn btn-sm btn-primary me-2" id="importBookBtn">
                                 <i class="bi bi-upload"></i> 批量导入
                             </button>
@@ -426,6 +429,14 @@
         document.getElementById('addBookBtn').addEventListener('click', () => {
             showBookModal();
         });
+        // ✅ 导出Excel按钮（新增）
+        const exportBtn = document.getElementById('exportBookBtn');
+        if (exportBtn) {
+            console.log('✅ 找到导出按钮，绑定事件');
+            exportBtn.addEventListener('click', exportBooksToExcel);
+        } else {
+            console.error('❌ 未找到导出按钮: #exportBookBtn');
+        }
 
         // 保存图书按钮
         document.getElementById('saveBookBtn').addEventListener('click', saveBook);
@@ -458,7 +469,53 @@
             uploadBtn.addEventListener('click', uploadBookFile);
         }
     }
+    // 在bindEvents函数后面添加这个函数
+    async function exportBooksToExcel() {
+        console.log('📤 点击了导出按钮');
 
+        if (!window.ExportManager) {
+            alert('导出功能未初始化，请刷新页面重试');
+            return;
+        }
+
+        // 获取当前搜索条件
+        const bookname = document.getElementById('searchBookname')?.value || '';
+        const author = document.getElementById('searchAuthor')?.value || '';
+        const categoryId = document.getElementById('searchCategory')?.value || '';
+
+        console.log('🔍 搜索参数:', { bookname, author, categoryId });
+
+        // 构建参数
+        const params = new URLSearchParams();
+
+        if (bookname && bookname.trim() !== '') {
+            params.append('bookname', bookname.trim());
+        }
+
+        if (author && author.trim() !== '') {
+            params.append('author', author.trim());
+        }
+
+        if (categoryId && categoryId !== '') {
+            params.append('categoryId', categoryId);
+        }
+
+        // 构建完整的URL
+        let url = '/api/export/book';
+        if (params.toString()) {
+            url += '?' + params.toString();
+        }
+
+        console.log('🌐 导出URL:', url);
+
+        // 生成文件名
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
+        const filename = `图书列表_${dateStr}.xlsx`;
+
+        // 调用通用导出管理器
+        window.ExportManager.exportToExcel(url, '图书数据', filename);
+    }
     /**
      * 绑定行内按钮事件
      */

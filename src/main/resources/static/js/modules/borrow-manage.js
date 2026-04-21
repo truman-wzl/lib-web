@@ -51,6 +51,11 @@
                         <div>
                             <h4 class="mb-0">
                                 <i class="bi bi-book me-2"></i>借阅管理
+                                <div>
+                                    <button class="btn btn-success"id="exportBorrowBtn">
+                                        <i class="bi bi-file-excel"></i> 导出Excel
+                                    </button>
+                                <div>
                             </h4>
                             <p class="text-muted mb-0">管理所有用户的图书借阅记录</p>
                         </div>
@@ -313,8 +318,60 @@
                     self.loadBorrowRecords();
                 });
             }
+            // 添加导出按钮事件绑定
+            this.bindExportEvent();
+        },
+        // 新增：绑定导出按钮事件
+        bindExportEvent: function() {
+            const exportBtn = document.getElementById('exportBorrowBtn');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', () => {
+                    this.exportBorrowRecords();
+                });
+                console.log('✅ 借阅记录导出按钮事件已绑定');
+            } else {
+                console.warn('⚠️ 未找到借阅记录导出按钮');
+            }
         },
 
+        // 新增：导出借阅记录函数
+        exportBorrowRecords: function() {
+            if (!window.ExportManager) {
+                alert('导出功能未初始化，请刷新页面重试');
+                return;
+            }
+
+            // 获取当前筛选条件
+            const searchKeyword = document.getElementById('searchInput') ?
+                document.getElementById('searchInput').value : '';
+            const statusFilter = document.getElementById('statusFilter') ?
+                document.getElementById('statusFilter').value : '';
+
+            // 构建参数
+            const params = new URLSearchParams();
+
+            if (searchKeyword && searchKeyword.trim() !== '') {
+                params.append('keyword', searchKeyword.trim());
+            }
+
+            if (statusFilter && statusFilter !== 'all') {
+                params.append('status', statusFilter);
+            }
+
+            // 构建完整的URL
+            let url = '/api/export/borrow';
+            if (params.toString()) {
+                url += '?' + params.toString();
+            }
+
+            // 生成文件名
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
+            const filename = `借阅记录_${dateStr}.xlsx`;
+
+            // 调用通用导出管理器
+            window.ExportManager.exportToExcel(url, '借阅记录', filename);
+        },
         // 加载借阅记录
         loadBorrowRecords: async function() {
             try {

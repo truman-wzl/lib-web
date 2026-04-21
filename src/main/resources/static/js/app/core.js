@@ -401,6 +401,114 @@ console.log('✅ 模块系统已就绪');
         }
     };
 })();
+
+
+/**
+ * 通用Excel导出管理器
+ */
+class ExportManager {
+    /**
+     * 导出数据到Excel
+     * @param {string} url 导出接口地址
+     * @param {string} moduleName 模块名称（用于提示）
+     * @param {string} filename 导出的文件名
+     */
+    static exportToExcel(url, moduleName, filename) {
+        if (!confirm(`确定要导出${moduleName}吗？`)) {
+            return;
+        }
+
+        try {
+            // 显示加载提示
+            ExportManager.showLoading(`正在导出${moduleName}，请稍候...`);
+
+            // 创建隐藏的a标签触发下载
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            // 延迟隐藏加载提示
+            setTimeout(() => {
+                ExportManager.hideLoading();
+                ExportManager.showMessage(`${moduleName}导出成功！`, 'success');
+            }, 1500);
+
+        } catch (error) {
+            console.error('导出失败:', error);
+            ExportManager.hideLoading();
+            ExportManager.showMessage('导出失败: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * 显示加载提示
+     */
+    static showLoading(message) {
+        // 创建加载提示
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'export-loading';
+        loadingDiv.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        `;
+
+        loadingDiv.innerHTML = `
+            <div style="
+                background: white;
+                padding: 30px;
+                border-radius: 8px;
+                text-align: center;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            ">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3" style="margin-top: 20px;">${message}</p>
+            </div>
+        `;
+
+        document.body.appendChild(loadingDiv);
+    }
+
+    /**
+     * 隐藏加载提示
+     */
+    static hideLoading() {
+        const loading = document.getElementById('export-loading');
+        if (loading) {
+            loading.remove();
+        }
+    }
+
+    /**
+     * 显示消息提示
+     */
+    static showMessage(message, type) {
+        // 使用你现有的消息提示系统
+        if (window.showToast) {
+            window.showToast(message, type);
+        } else if (window.showMessage) {
+            window.showMessage(message, type);
+        } else {
+            alert(message);
+        }
+    }
+}
+
+// 注册到全局
+window.ExportManager = ExportManager;
 // 导出到全局
 window.loadModule = loadModule;
 window.registerModule = registerModule;

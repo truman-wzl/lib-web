@@ -2,6 +2,7 @@ package com.example.libweb.entity;
 
 import jakarta.persistence.*;
 import java.util.Date;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "BORROW_RECORD")
@@ -20,32 +21,30 @@ public class BorrowRecord {
     private Long bookId;
 
     @Column(name = "BORROW_TIME", nullable = false)
-    @Temporal(TemporalType.DATE)
-    private Date borrowTime;
+    private LocalDateTime borrowTime;
 
     @Column(name = "DUE_TIME", nullable = false)
-    @Temporal(TemporalType.DATE)
-    private Date dueTime;
+    private LocalDateTime dueTime;
 
     @Column(name = "RETURN_TIME")
-    @Temporal(TemporalType.DATE)
-    private Date returnTime;
+    private LocalDateTime returnTime;
+
+
 
     @Column(name = "STATUS", nullable = false, length = 20)
     private String status;
 
     @Column(name = "CREATE_TIME", nullable = false)
-    @Temporal(TemporalType.DATE)
-    private Date createTime;
+    private LocalDateTime createTime;
 
     // 构造器
     public BorrowRecord() {
-        this.borrowTime = new Date();
-        this.createTime = new Date();
+        this.borrowTime = LocalDateTime.now();
+        this.createTime = LocalDateTime.now();
         this.status = "BORROWED";
     }
 
-    public BorrowRecord(Long userId, Long bookId, Date dueTime) {
+    public BorrowRecord(Long userId, Long bookId,LocalDateTime dueTime) {
         this();
         this.userId = userId;
         this.bookId = bookId;
@@ -62,21 +61,23 @@ public class BorrowRecord {
     public Long getBookId() { return bookId; }
     public void setBookId(Long bookId) { this.bookId = bookId; }
 
-    public Date getBorrowTime() { return borrowTime; }
-    public void setBorrowTime(Date borrowTime) { this.borrowTime = borrowTime; }
+    // Getter 和 Setter 也要相应修改
+    public LocalDateTime getBorrowTime() { return borrowTime; }
+    public void setBorrowTime(LocalDateTime borrowTime) { this.borrowTime = borrowTime; }
 
-    public Date getDueTime() { return dueTime; }
-    public void setDueTime(Date dueTime) { this.dueTime = dueTime; }
+    public LocalDateTime getDueTime() { return dueTime; }
+    public void setDueTime(LocalDateTime dueTime) { this.dueTime = dueTime; }
 
-    public Date getReturnTime() { return returnTime; }
-    public void setReturnTime(Date returnTime) { this.returnTime = returnTime; }
+    public LocalDateTime getReturnTime() { return returnTime; }
+    public void setReturnTime(LocalDateTime returnTime) { this.returnTime = returnTime; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public Date getCreateTime() { return createTime; }
-    public void setCreateTime(Date createTime) { this.createTime = createTime; }
+    public LocalDateTime getCreateTime() { return createTime; }
+    public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
 
+    // toString 方法也需要修改
     @Override
     public String toString() {
         return "BorrowRecord{" +

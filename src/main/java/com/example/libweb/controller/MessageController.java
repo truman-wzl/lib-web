@@ -107,33 +107,33 @@ public class MessageController {
         return result;
     }
 
-    // 测试接口 - 发送示例消息
-    @PostMapping("/send-test")
-    public Map<String, Object> sendTestMessage(HttpSession session) {
-        Long userId = getCurrentUserId(session);
-
-        if (userId == null) {
-            return createErrorResponse("用户未登录");
-        }
-
-        // 创建测试消息
-        Message message = new Message();
-        message.setUserId(userId);
-        message.setTitle("测试消息");
-        message.setContent("这是一条测试消息，用于测试消息系统功能。\n\n发送时间：" + new Date());
-        message.setMsgType(Message.TYPE_ACHIEVEMENT);
-        message.setStatus(Message.STATUS_UNREAD);
-        message.setCreateTime(new Date());
-
-        Message savedMessage = messageService.sendMessage(message);
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("success", true);
-        result.put("message", "测试消息发送成功");
-        result.put("data", savedMessage);
-
-        return result;
-    }
+//    // 测试接口 - 发送示例消息
+//    @PostMapping("/send-test")
+//    public Map<String, Object> sendTestMessage(HttpSession session) {
+//        Long userId = getCurrentUserId(session);
+//
+//        if (userId == null) {
+//            return createErrorResponse("用户未登录");
+//        }
+//
+//        // 创建测试消息
+//        Message message = new Message();
+//        message.setUserId(userId);
+//        message.setTitle("测试消息");
+//        message.setContent("这是一条测试消息，用于测试消息系统功能。\n\n发送时间：" + new Date());
+//        message.setMsgType(Message.TYPE_ACHIEVEMENT);
+//        message.setStatus(Message.STATUS_UNREAD);
+//        message.setCreateTime(new Date());
+//
+//        Message savedMessage = messageService.sendMessage(message);
+//
+//        Map<String, Object> result = new HashMap<>();
+//        result.put("success", true);
+//        result.put("message", "测试消息发送成功");
+//        result.put("data", savedMessage);
+//
+//        return result;
+//    }
 
     // MessageController.java - 修正 getCurrentUserId 方法
     private Long getCurrentUserId(HttpSession session) {

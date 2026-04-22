@@ -25,7 +25,8 @@
             statusMap: {
                 'BORROWED': { text: '借阅中', class: 'primary' },
                 'RETURNED': { text: '已归还', class: 'success' },
-                'RENEWED': { text: '已续借', class: 'warning' }
+                'RENEWED': { text: '已续借', class: 'warning' },
+                'OVERDUE': { text: '已逾期', class: 'danger' }
             }
         },
 
@@ -378,6 +379,7 @@
                                 <div class="flex-grow-1">
                                     <h6 class="mb-1">${record.bookname || '未知图书'}</h6>
                                     <div class="small text-muted">
+                                        <div><strong>📖 图书编号：</strong> ${record.bookId || 'N/A'}</div>
                                         <div>作者: ${record.author || '-'}</div>
                                         <div>出版社: ${record.publisher || '-'}</div>
                                     </div>
@@ -670,23 +672,65 @@
             const date = new Date(dateString);
             return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
         },
+        // 在 my-borrow.js 中添加这个方法
+        parseDateTime: function(dateTimeStr) {
+            if (!dateTimeStr) return null;
 
+            // 处理 LocalDateTime 格式：yyyy-MM-ddTHH:mm:ss
+            // 如果是完整的 ISO 格式（带时区），直接解析
+            if (dateTimeStr.includes('Z') || dateTimeStr.includes('+')) {
+                return new Date(dateTimeStr);
+            }
+
+            // 对于 LocalDateTime（无时区），假设是 UTC+8（北京时间）
+            // 添加时区信息
+            if (dateTimeStr.includes('T')) {
+                // 格式: 2024-01-15T14:30:00.123
+                return new Date(dateTimeStr + '+08:00');  // 添加北京时间时区
+            }
+
+            // 其他格式，尝试直接解析
+            return new Date(dateTimeStr);
+        },
+        // 修改 isRecordOverdue
         isRecordOverdue: function(record) {
+            // 已归还的记录不算逾期
+            if (record.status === 'RETURNED') {
+                return false;
+            }
+
+            // 如果是已逾期的状态，直接返回true
+            if (record.status === 'OVERDUE') {
+                return true;
+            }
+
+            // 对于借阅中或已续借的记录，判断是否逾期
             if (!record.dueTime) return false;
-            const dueDate = new Date(record.dueTime);
+
+            const dueDate = this.parseDateTime(record.dueTime);
             const now = new Date();
-            return now > dueDate;
+
+            // 只对BORROWED和RENEWED状态的记录判断逾期
+            if (record.status === 'BORROWED' || record.status === 'RENEWED') {
+                return now > dueDate;
+            }
+
+            return false;
         },
 
+        // 修改 getDaysRemaining
         getDaysRemaining: function(record) {
             // 已归还的图书，剩余天数为0
             if (record.status === 'RETURNED') {
                 return 0;
             }
             if (!record.dueTime) return null;
-            const dueDate = new Date(record.dueTime);
+
+            const dueDate = this.parseDateTime(record.dueTime);
             const now = new Date();
             const diffTime = dueDate - now;
+
+            // 返回天数（向上取整）
             return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         },
 

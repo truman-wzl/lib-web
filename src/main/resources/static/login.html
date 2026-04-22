@@ -180,11 +180,15 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- 步骤1：输入邮箱 -->
+                <!-- 步骤1：输入用户名和邮箱 -->
                 <div id="step1" class="step active">
                     <div class="mb-3">
-                        <label for="resetEmail" class="form-label">请输入注册邮箱</label>
-                        <input type="email" class="form-control" id="resetEmail" placeholder="请输入您注册时使用的邮箱">
+                        <label for="resetUsername" class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="resetUsername" placeholder="请输入您的用户名" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="resetEmail" class="form-label">注册邮箱</label>
+                        <input type="email" class="form-control" id="resetEmail" placeholder="请输入您注册时使用的邮箱" required>
                     </div>
                 </div>
 
@@ -230,6 +234,7 @@
     let currentStep = 1;
     let countdownTimer = null; // 添加计时器变量
     let resetEmail = ''; // 保存邮箱
+    let resetUsername = ''; // 新增：保存用户名
     let isEmailRegistered = false; // 标记邮箱是否已注册
 
     async function nextStep() {
@@ -249,10 +254,28 @@
             nextBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 验证中';
 
             try {
+                // 获取用户名和邮箱
+                const username = document.getElementById('resetUsername').value.trim();
+                const email = document.getElementById('resetEmail').value.trim();
+
+                // 简单验证
+                if (!username || !email || !validateEmail(email)) {
+                    showResetMessage('请输入有效的用户名和邮箱地址', 'danger');
+                    return;
+                }
+
+                // 保存到全局变量
+                resetUsername = username;
+                resetEmail = email;
+
+                // 发送请求，同时包含用户名和邮箱
                 const response = await fetch('/api/auth/forgot-password/send-code', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: email })
+                    body: JSON.stringify({
+                        username: username,  // 新增：发送用户名
+                        email: email         // 保留：发送邮箱
+                    })
                 });
 
                 const result = await response.json();
@@ -377,7 +400,10 @@
             const response = await fetch('/api/auth/forgot-password/send-code', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email })
+                body: JSON.stringify({
+                    username: resetUsername,  // 新增：发送用户名
+                    email: resetEmail         // 保留：发送邮箱
+                })
             });
 
             const result = await response.json();
@@ -432,7 +458,8 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    email: resetEmail,
+                    username: resetUsername,  // 新增：发送用户名
+                    email: resetEmail,        // 保留：发送邮箱
                     code: code
                 })
             });
@@ -515,7 +542,8 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    email: resetEmail,
+                    username: resetUsername,  // 新增：发送用户名
+                    email: resetEmail,        // 保留：发送邮箱
                     newPassword: newPassword,
                     confirmPassword: confirmPassword
                 })
@@ -597,6 +625,7 @@
 
         currentStep = 1;
         resetEmail = '';
+        resetUsername = '';  // 新增：清空用户名
         isEmailRegistered = false;
 
         // 隐藏消息

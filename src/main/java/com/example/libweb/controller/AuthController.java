@@ -224,6 +224,14 @@ public class AuthController {
     public ResponseEntity<?> sendResetCode(@RequestBody Map<String, String> data) {
         try {
             String email = data.get("email");
+            String username = data.get("username");  // 新增用户名
+
+            if (username == null || username.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "用户名不能为空"
+                ));
+            }
 
             if (email == null || email.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of(
@@ -232,44 +240,32 @@ public class AuthController {
                 ));
             }
 
-            // 1. 验证邮箱格式
-            if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-                return ResponseEntity.badRequest().body(Map.of(
-                        "success", false,
-                        "message", "邮箱格式不正确"
-                ));
-            }
-
-            // 2. 检查邮箱是否在系统中已注册
-            Optional<Userdata> userOpt = userdataRepository.findByEmail(email);
+            // 1. 验证用户名和邮箱是否匹配
+            Optional<Userdata> userOpt = userdataRepository.findByUsernameAndEmail(username, email);
             if (!userOpt.isPresent()) {
-                // 邮箱未注册，返回假成功
+                // 返回统一提示，不暴露具体信息
                 return ResponseEntity.ok().body(Map.of(
                         "success", true,
-                        "message", "如果邮箱已注册，验证码将发送到您的邮箱"
+                        "message", "如果用户名和邮箱匹配，验证码将发送到您的邮箱"
                 ));
             }
 
-            // 3. 只有已注册的邮箱才真正发送验证码
+            // 2. 发送验证码（同时传入用户名和邮箱）
             try {
-                // 这里确保调用的是正确的方法名
-                String code = emailCodeService.sendCode(email);
-                System.out.println("验证码发送成功，验证码: " + code + ", 邮箱: " + email);
+                String code = emailCodeService.sendCode(email, username);
+                System.out.println("验证码发送成功，验证码: " + code + ", 邮箱: " + email + ", 用户: " + username);
 
                 return ResponseEntity.ok().body(Map.of(
                         "success", true,
                         "message", "验证码已发送到邮箱，请查收"
                 ));
-
             } catch (Exception e) {
-                // 邮件发送过程中的异常
                 e.printStackTrace();
                 return ResponseEntity.status(500).body(Map.of(
                         "success", false,
                         "message", "验证码发送失败: " + e.getMessage()
                 ));
             }
-
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of(
@@ -283,6 +279,7 @@ public class AuthController {
     public ResponseEntity<?> verifyResetCode(@RequestBody Map<String, String> data) {
         try {
             String email = data.get("email");
+            String username=data.get("username");
             String code = data.get("code");
 
             if (email == null || email.trim().isEmpty()) {
@@ -309,7 +306,7 @@ public class AuthController {
             }
 
             // 2. 验证验证码
-            boolean isValid = emailCodeService.verifyCode(email, code);
+            boolean isValid = emailCodeService.verifyCode(email,username,code);
             if (!isValid) {
                 return ResponseEntity.badRequest().body(Map.of(
                         "success", false,
@@ -317,8 +314,9 @@ public class AuthController {
                 ));
             }
 
-            // 3. 验证成功，将邮箱标记为已验证（有效10分钟）
-            verifiedEmails.put(email, LocalDateTime.now().plusMinutes(VERIFIED_EXPIRE_MINUTES));
+            // 3. 验证成功，将邮箱:用户名组合标记为已验证（有效10分钟）
+            String verificationKey = email + ":" + username;
+            verifiedEmails.put(verificationKey, LocalDateTime.now().plusMinutes(VERIFIED_EXPIRE_MINUTES));
 
             return ResponseEntity.ok().body(Map.of(
                     "success", true,
@@ -338,6 +336,7 @@ public class AuthController {
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> data) {
         try {
             String email = data.get("email");
+            String username=data.get("username");
             String newPassword = data.get("newPassword");
             String confirmPassword = data.get("confirmPassword");  // 添加确认密码
 
@@ -361,24 +360,27 @@ public class AuthController {
                 throw new RuntimeException("两次输入的密码不一致");
             }
 
-            // 1. 检查邮箱是否已验证
-            LocalDateTime expireTime = verifiedEmails.get(email);
+            // 1. 检查用户名和邮箱的组合是否已验证
+            String verificationKey = email + ":" + username;
+            LocalDateTime expireTime = verifiedEmails.get(verificationKey);
             if (expireTime == null) {
                 throw new RuntimeException("请先完成验证码验证");
             }
-
             // 2. 检查验证是否过期
             if (expireTime.isBefore(LocalDateTime.now())) {
-                verifiedEmails.remove(email);
+                verifiedEmails.remove(verificationKey);
                 throw new RuntimeException("验证已过期，请重新获取验证码");
             }
 
-            // 3. 验证邮箱是否注册
-            Optional<Userdata> userOpt = userdataRepository.findByEmail(email);
-            if (!userOpt.isPresent()) {
-                throw new RuntimeException("用户不存在");
+            // 3. 验证用户名和邮箱是否匹配
+            if (username == null || username.trim().isEmpty()) {
+                throw new RuntimeException("用户名不能为空");
             }
 
+            Optional<Userdata> userOpt = userdataRepository.findByUsernameAndEmail(username, email);
+            if (!userOpt.isPresent()) {
+                throw new RuntimeException("用户名和邮箱不匹配");
+            }
             Userdata user = userOpt.get();
 
             // 4. 检查新密码是否与旧密码相同

@@ -49,6 +49,9 @@ public class Message {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "READ_TIME")
     private Date readTime;
+    // 新增字段：提醒次数
+    @Column(name = "REMIND_COUNT", nullable = false)
+    private Integer remindCount = 1;  // 默认值设为1
 
     // 构造器
     public Message() {}
@@ -70,7 +73,7 @@ public class Message {
 
     // 静态工厂方法：创建逾期消息
     public static Message createOverdueMessage(Long userId, Long borrowId, String bookName,
-                                               Date borrowTime, Date dueTime, String bookCode) {
+                                               Date borrowTime, Date dueTime, String bookId) {
         String title = "📚 图书逾期提醒";
         String content = String.format(
                 "您借阅的图书《%s》已逾期！\n\n" +
@@ -81,11 +84,12 @@ public class Message {
                 bookName,
                 borrowTime,
                 dueTime,
-                bookCode
+                bookId
         );
 
         Message message = new Message(userId, borrowId, title, content, TYPE_OVERDUE);
         message.setStatus(STATUS_UNREAD);
+        message.setRemindCount(3);  // 逾期消息初始提醒次数为3
         return message;
     }
 
@@ -103,6 +107,7 @@ public class Message {
 
         Message message = new Message(userId, title, content, TYPE_ACHIEVEMENT);
         message.setStatus(STATUS_UNREAD);
+        message.setRemindCount(1);  // 成就消息提醒次数为1
         return message;
     }
 
@@ -147,6 +152,9 @@ public class Message {
     public Date getReadTime() { return readTime; }
     public void setReadTime(Date readTime) { this.readTime = readTime; }
 
+    // 新增 Getter 和 Setter
+    public Integer getRemindCount() { return remindCount; }
+    public void setRemindCount(Integer remindCount) { this.remindCount = remindCount; }
     // 便捷方法
     public boolean isRead() {
         return STATUS_READ.equals(status);
@@ -166,6 +174,7 @@ public class Message {
                 ", title='" + title + '\'' +
                 ", msgType='" + msgType + '\'' +
                 ", status='" + status + '\'' +
+                ", remindCount=" + remindCount +  // 新增
                 ", createTime=" + createTime +
                 '}';
     }

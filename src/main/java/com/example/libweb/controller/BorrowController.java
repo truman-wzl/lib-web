@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -110,16 +111,18 @@ public class BorrowController {
             BorrowRecord record = new BorrowRecord();
             record.setUserId(userId);
             record.setBookId(bookId);
-            record.setBorrowTime(new Date());
+            record.setBorrowTime(LocalDateTime.now());
 
             // 计算应还时间（30天后）
             Calendar calendar = Calendar.getInstance();
-            calendar.add(Calendar.DAY_OF_MONTH, 30);
-            record.setDueTime(calendar.getTime());
+            //calendar.add(Calendar.DAY_OF_MONTH, 30);
+            calendar.add(Calendar.MINUTE, 1);
+            record.setDueTime(LocalDateTime.now().plusMinutes(1));  // 测试用1分钟
+            // record.setDueTime(LocalDateTime.now().plusDays(30));  // 正式用30天
 
             // 状态为"BORROWED"
             record.setStatus("BORROWED");
-            record.setCreateTime(new Date());
+            record.setCreateTime(LocalDateTime.now());
 
             borrowRecordRepository.save(record);
 
@@ -213,6 +216,29 @@ public class BorrowController {
 
             Long userId = currentUser.getUserId();
             System.out.println("从Session获取当前用户ID: " + userId);
+            // 🔥 新增：在查询前先更新该用户的逾期记录
+            try {
+                // 1. 查询该用户需要标记为逾期的记录
+                List<BorrowRecord> overdueRecords = borrowRecordRepository.findRecordsToMarkOverdueByUserId(userId);
+
+                // 2. 批量更新状态
+                int updatedCount = 0;
+                for (BorrowRecord record : overdueRecords) {
+                    int result = borrowRecordRepository.markAsOverdue(record.getRecordId());
+                    if (result > 0) {
+                        updatedCount++;
+                        System.out.println("✅ 自动更新逾期状态: 记录ID=" + record.getRecordId()
+                                + ", 用户ID=" + userId);
+                    }
+                }
+
+                if (updatedCount > 0) {
+                    System.out.println("🔄 用户ID=" + userId + " 的逾期记录已更新, 共" + updatedCount + "条");
+                }
+            } catch (Exception e) {
+                // 逾期更新失败不影响正常查询
+                System.err.println("⚠️ 逾期状态更新失败: " + e.getMessage());
+            }
             System.out.println("筛选参数 - status: " + status + ", keyword: " + keyword);
 
             // 2. 验证分页参数
@@ -407,7 +433,7 @@ public class BorrowController {
             }
 
             // 4. 更新借阅记录
-            record.setReturnTime(new Date());
+            record.setReturnTime(LocalDateTime.now());
             record.setStatus("RETURNED");
             borrowRecordRepository.save(record);
 
@@ -441,7 +467,7 @@ public class BorrowController {
     }
 
     /**
-     * 续借接口
+     * 续借图书
      * POST /api/borrow/renew
      */
     @PostMapping("/borrow/renew")
@@ -494,14 +520,14 @@ public class BorrowController {
             }
 
             // 5. 验证状态和日期
-            Date now = new Date();
+            LocalDateTime now = LocalDateTime.now();
             if (!"BORROWED".equals(record.getStatus())) {
                 response.put("success", false);
                 response.put("message", "只有借阅中的图书才能续借");
                 return ResponseEntity.badRequest().body(response);
             }
 
-            if (record.getDueTime().before(now)) {
+            if (record.getDueTime().isBefore(now)) {
                 response.put("success", false);
                 response.put("message", "已逾期的图书不能续借");
                 return ResponseEntity.badRequest().body(response);
@@ -509,9 +535,9 @@ public class BorrowController {
 
             // 6. 计算新的应还时间（当前应还时间+30天）
             Calendar calendar = Calendar.getInstance();
-            calendar.setTime(record.getDueTime());
+            LocalDateTime newDueTime = record.getDueTime().plusDays(30);
             calendar.add(Calendar.DAY_OF_MONTH, 30);
-            Date newDueTime = calendar.getTime();
+            //Date newDueTime = calendar.getTime();
 
             // 7. 执行原子更新
             int updatedRows = borrowRecordRepository.renewBorrowRecord(
@@ -542,4 +568,5 @@ public class BorrowController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
 }

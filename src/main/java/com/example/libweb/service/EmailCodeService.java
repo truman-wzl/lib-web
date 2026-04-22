@@ -21,7 +21,10 @@ public class EmailCodeService {
 
     // 存储验证码：key=邮箱, value={code, expireTime, tryCount, lastSendTime}
     private final Map<String, EmailCode> codeStore = new ConcurrentHashMap<>();
-
+    // 生成key的方法
+    private String generateKey(String email, String username) {
+        return email + ":" + username;  // 例如：123@qq.com:zhangsan
+    }
     // 验证码有效时间（分钟）
     private static final int CODE_EXPIRE_MINUTES = 10;
     // 发送间隔（秒）
@@ -38,17 +41,22 @@ public class EmailCodeService {
     /**
      * 发送验证码到指定邮箱
      * @param email 邮箱地址
+     *  username 用户名
      * @return 验证码（仅用于测试，生产环境不要返回）
      */
-    public String sendCode(String email) {
+    public String sendCode(String email,String username) {
         try {
             // 检查邮箱格式
             if (email == null || email.trim().isEmpty() || !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
                 throw new RuntimeException("邮箱格式不正确");
             }
-
+            if (username == null || username.trim().isEmpty()) {
+                throw new RuntimeException("用户名不能为空");
+            }
+            // 使用组合key
+            String key = generateKey(email, username);
             // 检查发送频率
-            EmailCode existingCode = codeStore.get(email);
+            EmailCode existingCode = codeStore.get(key);
             if (existingCode != null) {
                 long secondsSinceLastSend = ChronoUnit.SECONDS.between(
                         existingCode.getLastSendTime(), LocalDateTime.now());
@@ -63,13 +71,13 @@ public class EmailCodeService {
             LocalDateTime expireTime = now.plusMinutes(CODE_EXPIRE_MINUTES);
 
             // 存储验证码，包括发送时间和过期时间
-            codeStore.put(email, new EmailCode(code, expireTime, now));
+            codeStore.put(key, new EmailCode(code, expireTime, now,username,email));
 
             System.out.println("生成的验证码: " + code + " 已存储，邮箱: " + email + ", 过期时间: " + expireTime);
 
             // 发送邮件
             try {
-                sendEmail(email, code);
+                sendEmail(email, code,username);
                 logger.info("邮件发送成功，邮箱: {}", email);
             } catch (Exception e) {
                 // 如果邮件发送失败，从存储中移除验证码
@@ -93,14 +101,16 @@ public class EmailCodeService {
      * @param code 用户输入的验证码
      * @return 是否验证成功
      */
-    public boolean verifyCode(String email, String code) {
+    public boolean verifyCode(String email, String username, String code) {
         if (email == null || code == null || code.trim().length() != 6) {
             return false;
         }
+        // 使用组合 key
+        String key = (username == null || username.trim().isEmpty()) ? email : generateKey(email, username);
 
-        EmailCode emailCode = codeStore.get(email);
+        EmailCode emailCode = codeStore.get(key);
         if (emailCode == null) {
-            logger.warn("邮箱 {} 没有验证码记录", email);
+            logger.warn("验证码不存在，邮箱: {}，用户名: {}", email, username);
             return false;
         }
 
@@ -134,9 +144,15 @@ public class EmailCodeService {
      * 移除验证码（用于重置密码成功后清除）
      * @param email 邮箱
      */
+    // 可以重载或修改
     public void removeCode(String email) {
-        codeStore.remove(email);
-        logger.info("移除邮箱 {} 的验证码", email);
+        removeCode(email, null);
+    }
+
+    public void removeCode(String email, String username) {
+        String key = (username == null || username.trim().isEmpty()) ? email : generateKey(email, username);
+        codeStore.remove(key);
+        logger.info("移除验证码，邮箱: {}，用户名: {}", email, username);
     }
 
     /**
@@ -151,7 +167,7 @@ public class EmailCodeService {
     /**
      * 发送邮件
      */
-    private void sendEmail(String toEmail, String code) {
+    private void sendEmail(String toEmail, String code,String username) {
         if (mailSender == null) {
             logger.warn("邮件服务未配置，无法发送验证码到: {}，验证码为: {}", toEmail, code);
             return;
@@ -182,18 +198,24 @@ public class EmailCodeService {
         private final String code;
         private final LocalDateTime expireTime;
         private final LocalDateTime lastSendTime;
+        private final String username;  // 新增字段
+        private final String email;     // 新增字段
         private int tryCount = 0;
 
-        public EmailCode(String code, LocalDateTime expireTime, LocalDateTime lastSendTime) {
+        public EmailCode(String code, LocalDateTime expireTime, LocalDateTime lastSendTime,String username, String email) {
             this.code = code;
             this.expireTime = expireTime;
             this.lastSendTime = lastSendTime;
+            this.username = username;
+            this.email = email;
         }
 
         public String getCode() { return code; }
         public LocalDateTime getExpireTime() { return expireTime; }
         public LocalDateTime getLastSendTime() { return lastSendTime; }
         public int getTryCount() { return tryCount; }
+        public String getUsername() { return username; }
+        public String getEmail() { return email; }
         public void incrementTryCount() { this.tryCount++; }
     }
 }

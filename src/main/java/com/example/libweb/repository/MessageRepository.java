@@ -38,8 +38,9 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @Query("UPDATE Message m SET m.status = 'READ', m.readTime = :readTime WHERE m.userId = :userId AND m.status = 'UNREAD'")
     int markAllAsRead(@Param("userId") Long userId, @Param("readTime") Date readTime);
 
-    // 根据借阅记录ID查找消息
-    List<Message> findByBorrowId(Long borrowId);
+    // MessageRepository.java 中添加
+    @Query("SELECT m FROM Message m WHERE m.borrowId = :borrowId AND m.msgType = 'OVERDUE' ORDER BY m.createTime DESC")
+    List<Message> findOverdueMessageByBorrowId(@Param("borrowId") Long borrowId);
 
     // 删除用户的消息
     @Modifying
@@ -48,4 +49,11 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     int deleteByUserIdAndMessageId(@Param("messageId") Long messageId, @Param("userId") Long userId);
     // MessageRepository.java
     int countByUserIdAndStatus(long userId, String status);
+    // 根据借阅ID、消息类型和时间范围查询
+    List<Message> findByBorrowIdAndMsgTypeAndCreateTimeBetween(
+            @Param("borrowId") Long borrowId,
+            @Param("msgType") String msgType,
+            @Param("start") Date start,
+            @Param("end") Date end
+    );
 }

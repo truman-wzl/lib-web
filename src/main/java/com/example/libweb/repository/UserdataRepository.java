@@ -77,4 +77,9 @@ public interface UserdataRepository extends JpaRepository<Userdata, Long> {
     @Transactional
     @Query(value = "UPDATE userdata SET last_login_time = :lastLoginTime WHERE user_id = :userId", nativeQuery = true)
     void updateLastLoginTime(@Param("userId") Long userId, @Param("lastLoginTime") Date lastLoginTime);
+    // 新增：根据用户名和邮箱查找用户
+    @Query(value = "SELECT * FROM userdata WHERE username = :username AND email = :email AND ROWNUM = 1",
+            nativeQuery = true)
+    Optional<Userdata> findByUsernameAndEmail(@Param("username") String username,
+                                              @Param("email") String email);
 }

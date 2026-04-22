@@ -1,15 +1,13 @@
 package com.example.libweb.repository;
 
 import com.example.libweb.entity.BorrowRecord;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -85,28 +83,30 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
      * 根据用户ID查询借阅记录（带图书信息和筛选条件，后端分页）
      * 注意：Oracle ROWNUM 的写法
      */
-    @Query(value = "SELECT br.RECORD_ID, br.USER_ID, br.BOOK_ID, br.BORROW_TIME, " +
-            "br.DUE_TIME, br.RETURN_TIME, br.STATUS, br.CREATE_TIME, " +
-            "b.BOOKNAME, b.AUTHOR, b.PUBLISHER, b.CATEGORY_ID, b.TOTAL_NUMBER, b.CAN_BORROW " +
-            "FROM ( " +
-            "  SELECT t.*, ROWNUM as rn FROM ( " +
-            "    SELECT * FROM BORROW_RECORD WHERE USER_ID = :userId " +
-            "    AND (:status IS NULL OR STATUS = :status) " +  // ✅ 状态筛选
-            "    AND (:keyword IS NULL OR (EXISTS ( " +
-            "      SELECT 1 FROM BOOK b2 WHERE b2.BOOK_ID = BORROW_RECORD.BOOK_ID " +
-            "      AND (UPPER(b2.BOOKNAME) LIKE UPPER('%' || :keyword || '%') " +
-            "           OR UPPER(b2.AUTHOR) LIKE UPPER('%' || :keyword || '%')) " +
-            "    ))) " +  // ✅ 关键词搜索（书名或作者）
-            "    ORDER BY BORROW_TIME DESC " +
-            "  ) t WHERE ROWNUM <= :endRow " +
-            ") br LEFT JOIN BOOK b ON br.BOOK_ID = b.BOOK_ID WHERE rn > :startRow",
-            nativeQuery = true)
+    @Query(value = """
+    SELECT br.RECORD_ID, br.USER_ID, br.BOOK_ID, br.BORROW_TIME, 
+    br.DUE_TIME, br.RETURN_TIME, br.STATUS, br.CREATE_TIME, 
+    b.BOOKNAME, b.AUTHOR, b.PUBLISHER, b.CATEGORY_ID, b.TOTAL_NUMBER, b.CAN_BORROW 
+    FROM ( 
+      SELECT t.*, ROWNUM as rn FROM ( 
+        SELECT * FROM BORROW_RECORD WHERE USER_ID = :userId 
+        AND (:status IS NULL OR STATUS = :status) 
+        AND (:keyword IS NULL OR (EXISTS ( 
+          SELECT 1 FROM BOOK b2 WHERE b2.BOOK_ID = BORROW_RECORD.BOOK_ID 
+          AND (UPPER(b2.BOOKNAME) LIKE UPPER('%' || :keyword || '%') 
+               OR UPPER(b2.AUTHOR) LIKE UPPER('%' || :keyword || '%')
+               OR TO_CHAR(b2.BOOK_ID) LIKE '%' || :keyword || '%')) 
+        )) 
+        ORDER BY BORROW_TIME DESC 
+      ) t WHERE ROWNUM <= :endRow 
+    ) br LEFT JOIN BOOK b ON br.BOOK_ID = b.BOOK_ID WHERE rn > :startRow
+    """, nativeQuery = true)
     List<Object[]> findByUserIdWithBookInfoPaginationWithFilter(
             @Param("userId") Long userId,
             @Param("startRow") int startRow,
             @Param("endRow") int endRow,
-            @Param("status") String status,   // 新增：状态参数
-            @Param("keyword") String keyword); // 新增：关键词参数
+            @Param("status") String status,   // 状态参数
+            @Param("keyword") String keyword); // 关键词参数
 
     /**
      * 根据用户ID统计借阅记录总数（带筛选条件）
@@ -116,14 +116,65 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
             "WHERE br.USER_ID = :userId " +
             "AND (:status IS NULL OR br.STATUS = :status) " +  // ✅ 状态筛选
             "AND (:keyword IS NULL OR (UPPER(b.BOOKNAME) LIKE UPPER('%' || :keyword || '%') " +
-            "     OR UPPER(b.AUTHOR) LIKE UPPER('%' || :keyword || '%')))",  // ✅ 关键词搜索
+            "     OR UPPER(b.AUTHOR) LIKE UPPER('%' || :keyword || '%') " +
+            "     OR TO_CHAR(b.BOOK_ID) LIKE '%' || :keyword || '%'))",  // ✅ 新增：图书编号搜索
             nativeQuery = true)
     int countByUserIdWithFilter(@Param("userId") Long userId,
                                 @Param("status") String status,
                                 @Param("keyword") String keyword);
     @Modifying
     @Query("UPDATE BorrowRecord br SET br.dueTime = :newDueTime, br.status = 'RENEWED' WHERE br.recordId = :recordId AND br.userId = :userId AND br.status = 'BORROWED' AND br.dueTime > CURRENT_DATE")
-    int renewBorrowRecord(@Param("recordId") Long recordId, @Param("userId") Long userId, @Param("newDueTime") Date newDueTime);
+    int renewBorrowRecord(@Param("recordId") Long recordId, @Param("userId") Long userId, @Param("newDueTime") LocalDateTime newDueTime);
+
+//    // 在 BorrowRecordRepository 中添加
+//    @Query(value = "SELECT * FROM BORROW_RECORD WHERE STATUS IN ('BORROWED', 'RENEWED') AND DUE_TIME < SYSDATE", nativeQuery = true)
+//    List<BorrowRecord> findRecordsToMarkOverdue();
+
+    @Modifying
+    @Query(value = "UPDATE BORROW_RECORD SET STATUS = 'OVERDUE' WHERE RECORD_ID = :recordId", nativeQuery = true)
+    int markAsOverdue(@Param("recordId") Long recordId);
+
+    /**
+     * 根据用户ID查询需要标记为逾期的记录
+     */
+    @Query(value = "SELECT * FROM BORROW_RECORD WHERE USER_ID = :userId AND STATUS IN ('BORROWED', 'RENEWED') AND DUE_TIME <= SYSDATE",
+            nativeQuery = true)
+    List<BorrowRecord> findRecordsToMarkOverdueByUserId(@Param("userId") Long userId);
+
+
+    /**
+     * 查询逾期记录（包含用户和图书信息）
+     * 返回：借阅记录 + 用户邮箱 + 图书信息
+     */
+    @Query(value = """
+SELECT 
+    br.RECORD_ID,
+    br.USER_ID,
+    br.BOOK_ID,
+    br.BORROW_TIME,
+    br.DUE_TIME,
+    br.STATUS,
+    u.USERNAME,
+    b.BOOKNAME
+FROM BORROW_RECORD br
+JOIN USERDATA u ON br.USER_ID = u.USER_ID
+JOIN BOOK b ON br.BOOK_ID = b.BOOK_ID
+WHERE br.STATUS IN ('BORROWED', 'RENEWED')
+  AND br.RETURN_TIME IS NULL
+  AND br.DUE_TIME < SYSDATE
+  AND NOT EXISTS (
+    SELECT 1 FROM MESSAGE m 
+    WHERE m.BORROW_ID = br.RECORD_ID 
+    AND m.MSG_TYPE = 'OVERDUE'
+    AND TRUNC(m.CREATE_TIME) = TRUNC(SYSDATE)
+  )
+""", nativeQuery = true)
+    List<Object[]> findOverdueRecordsWithUserAndBook();
+
+
+
+
+
 
     /**
      * 管理员：查询所有借阅记录（分页+状态筛选）
@@ -211,4 +262,6 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
     ) WHERE ROWNUM <= 3
     """, nativeQuery = true)
     List<Object[]> findTop3PopularCategories();
+
+
 }

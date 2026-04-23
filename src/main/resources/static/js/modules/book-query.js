@@ -640,6 +640,10 @@
                     `;
 
                     window.showBorrowResult('success', '借阅成功！请在30天内归还', successDetails);
+                    // ✅ 添加这行 - 借阅成功后立即刷新整个页面
+                    setTimeout(() => {
+                        location.reload();  // 相当于按F5
+                    }, 1000);  // 延迟1秒，让用户能看到成功消息
                 } else {
                     // 借阅失败
                     throw new Error(result.message || '借阅失败');

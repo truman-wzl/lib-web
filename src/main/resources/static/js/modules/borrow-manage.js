@@ -341,37 +341,31 @@
                 return;
             }
 
-            // 获取当前筛选条件
-            const searchKeyword = document.getElementById('searchInput') ?
-                document.getElementById('searchInput').value : '';
             const statusFilter = document.getElementById('statusFilter') ?
                 document.getElementById('statusFilter').value : '';
 
-            // 构建参数
             const params = new URLSearchParams();
-
-            if (searchKeyword && searchKeyword.trim() !== '') {
-                params.append('keyword', searchKeyword.trim());
-            }
 
             if (statusFilter && statusFilter !== 'all') {
                 params.append('status', statusFilter);
             }
 
-            // 构建完整的URL
             let url = '/api/export/borrow';
             if (params.toString()) {
                 url += '?' + params.toString();
             }
 
-            // 生成文件名
             const today = new Date();
             const dateStr = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
             const filename = `借阅记录_${dateStr}.xlsx`;
 
-            // 调用通用导出管理器
+            console.log('📤 开始导出借阅记录，URL:', url);
+
             window.ExportManager.exportToExcel(url, '借阅记录', filename);
         },
+
+
+
         // 加载借阅记录
         loadBorrowRecords: async function() {
             try {

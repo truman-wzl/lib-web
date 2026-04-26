@@ -9,6 +9,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -208,90 +209,149 @@ public class FileController {
      * 导出借阅记录
      */
     @GetMapping("/borrow")
-    public void exportBorrow(HttpServletResponse response) throws IOException {
-        List<BorrowRecord> records = borrowRecordRepository.findAll();
+    public void exportBorrow(
+            HttpServletResponse response,
+            @RequestParam(required = false) String status) throws IOException {
 
-        Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("借阅记录");
+        try {
+            List<Object[]> recordsData;
 
-        // 创建表头
-        Row headerRow = sheet.createRow(0);
-        String[] headers = {"记录ID", "用户ID", "图书ID", "借阅时间", "应还时间", "归还时间", "状态"};
-        for (int i = 0; i < headers.length; i++) {
-            Cell cell = headerRow.createCell(i);
-            cell.setCellValue(headers[i]);
-
-            CellStyle headerStyle = workbook.createCellStyle();
-            Font headerFont = workbook.createFont();
-            headerFont.setBold(true);
-            headerStyle.setFont(headerFont);
-            headerStyle.setFillForegroundColor(IndexedColors.LIGHT_ORANGE.getIndex());
-            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            cell.setCellStyle(headerStyle);
-        }
-
-        // 填充数据
-        int rowNum = 1;
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        for (BorrowRecord record : records) {
-            Row row = sheet.createRow(rowNum++);
-            row.createCell(0).setCellValue(record.getRecordId());
-            row.createCell(1).setCellValue(record.getUserId());
-            row.createCell(2).setCellValue(record.getBookId());
-
-            // 借阅时间
-            if (record.getBorrowTime() != null) {
-                row.createCell(3).setCellValue(dateFormat.format(record.getBorrowTime()));
+            if (status != null && !status.isEmpty() && !"all".equalsIgnoreCase(status)) {
+                recordsData = borrowRecordRepository.findAllBorrowRecordsWithInfoPagination(0, Integer.MAX_VALUE, status.toUpperCase());
             } else {
-                row.createCell(3).setCellValue("");
+                recordsData = borrowRecordRepository.findAllBorrowRecordsWithInfoPagination(0, Integer.MAX_VALUE, null);
             }
 
-            // 应还时间
-            if (record.getDueTime() != null) {
-                row.createCell(4).setCellValue(dateFormat.format(record.getDueTime()));
-            } else {
-                row.createCell(4).setCellValue("");
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("借阅记录");
+
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"记录ID", "用户名", "真实姓名", "图书名称", "作者", "出版社", "借阅时间", "应还时间", "归还时间", "状态"};
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+
+                CellStyle headerStyle = workbook.createCellStyle();
+                Font headerFont = workbook.createFont();
+                headerFont.setBold(true);
+                headerStyle.setFont(headerFont);
+                headerStyle.setFillForegroundColor(IndexedColors.LIGHT_ORANGE.getIndex());
+                headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+                cell.setCellStyle(headerStyle);
             }
 
-            // 归还时间
-            if (record.getReturnTime() != null) {
-                row.createCell(5).setCellValue(dateFormat.format(record.getReturnTime()));
-            } else {
-                row.createCell(5).setCellValue("");
+            int rowNum = 1;
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+            for (Object[] row : recordsData) {
+                try {
+                    Row dataRow = sheet.createRow(rowNum++);
+
+                    Long recordId = row[0] != null ? ((Number) row[0]).longValue() : 0L;
+                    Long userId = row[1] != null ? ((Number) row[1]).longValue() : 0L;
+                    Long bookId = row[2] != null ? ((Number) row[2]).longValue() : 0L;
+
+                    Object borrowTimeObj = row[3];
+                    Object dueTimeObj = row[4];
+                    Object returnTimeObj = row[5];
+
+                    String recordStatus = row[6] != null ? row[6].toString() : "";
+
+                    String username = row[8] != null ? row[8].toString() : "";
+                    String realName = row[9] != null ? row[9].toString() : "";
+                    String bookname = row[10] != null ? row[10].toString() : "";
+                    String author = row[11] != null ? row[11].toString() : "";
+                    String publisher = row[12] != null ? row[12].toString() : "";
+
+                    dataRow.createCell(0).setCellValue(recordId);
+                    dataRow.createCell(1).setCellValue(username);
+                    dataRow.createCell(2).setCellValue(realName);
+                    dataRow.createCell(3).setCellValue(bookname);
+                    dataRow.createCell(4).setCellValue(author);
+                    dataRow.createCell(5).setCellValue(publisher);
+
+                    if (borrowTimeObj != null) {
+                        Date borrowDate = convertToDate(borrowTimeObj);
+                        dataRow.createCell(6).setCellValue(borrowDate != null ? dateFormat.format(borrowDate) : "");
+                    } else {
+                        dataRow.createCell(6).setCellValue("");
+                    }
+
+                    if (dueTimeObj != null) {
+                        Date dueDate = convertToDate(dueTimeObj);
+                        dataRow.createCell(7).setCellValue(dueDate != null ? dateFormat.format(dueDate) : "");
+                    } else {
+                        dataRow.createCell(7).setCellValue("");
+                    }
+
+                    if (returnTimeObj != null) {
+                        Date returnDate = convertToDate(returnTimeObj);
+                        dataRow.createCell(8).setCellValue(returnDate != null ? dateFormat.format(returnDate) : "");
+                    } else {
+                        dataRow.createCell(8).setCellValue("");
+                    }
+
+                    String statusChinese;
+                    switch (recordStatus.toUpperCase()) {
+                        case "BORROWED":
+                            statusChinese = "借阅中";
+                            break;
+                        case "RETURNED":
+                            statusChinese = "已归还";
+                            break;
+                        case "RENEWED":
+                            statusChinese = "已续借";
+                            break;
+                        case "OVERDUE":
+                            statusChinese = "已逾期";
+                            break;
+                        default:
+                            statusChinese = recordStatus;
+                    }
+                    dataRow.createCell(9).setCellValue(statusChinese);
+                } catch (Exception e) {
+                    System.err.println("处理第" + rowNum + "行数据时出错: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
 
-            // 状态映射
-            String status = record.getStatus();
-            String statusChinese;
-            switch (status) {
-                case "borrowed":
-                    statusChinese = "借阅中";
-                    break;
-                case "returned":
-                    statusChinese = "已归还";
-                    break;
-                case "renewed":
-                    statusChinese = "已续借";
-                    break;
-                case "overdue":
-                    statusChinese = "已逾期";
-                    break;
-                default:
-                    statusChinese = status;
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
             }
-            row.createCell(6).setCellValue(statusChinese);
+
+            setResponseHeader(response, "BorrowRecord");
+            workbook.write(response.getOutputStream());
+            workbook.close();
+
+        } catch (Exception e) {
+            System.err.println("导出借阅记录失败: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
         }
-
-        // 自动调整列宽
-        for (int i = 0; i < headers.length; i++) {
-            sheet.autoSizeColumn(i);
-        }
-
-        setResponseHeader(response, "BorrowRecord");
-        workbook.write(response.getOutputStream());
-        workbook.close();
     }
 
+    private Date convertToDate(Object dateObj) {
+        if (dateObj == null) {
+            return null;
+        }
+
+        if (dateObj instanceof Date) {
+            return (Date) dateObj;
+        } else if (dateObj instanceof java.sql.Timestamp) {
+            return new Date(((java.sql.Timestamp) dateObj).getTime());
+        } else if (dateObj instanceof java.sql.Date) {
+            return new Date(((java.sql.Date) dateObj).getTime());
+        } else if (dateObj instanceof java.time.LocalDateTime) {
+            java.time.LocalDateTime ldt = (java.time.LocalDateTime) dateObj;
+            return java.sql.Timestamp.valueOf(ldt);
+        } else if (dateObj instanceof java.time.LocalDate) {
+            java.time.LocalDate ld = (java.time.LocalDate) dateObj;
+            return java.sql.Date.valueOf(ld);
+        } else {
+            System.err.println("未知的日期类型: " + dateObj.getClass().getName());
+            return null;
+        }
+    }
     /**
      * 设置响应头
      */

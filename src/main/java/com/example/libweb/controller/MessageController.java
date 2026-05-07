@@ -174,8 +174,6 @@ public class MessageController {
         result.put("message", message);
         return result;
     }
-
-    //临时测试接口
     @GetMapping("/my-messages-test")
     public Map<String, Object> getMyMessagesTest() {
         Map<String, Object> result = new HashMap<>();
@@ -184,8 +182,6 @@ public class MessageController {
             List<Map<String, Object>> messages = new ArrayList<>();
 
             Calendar calendar = Calendar.getInstance();
-
-            // 添加测试消息
             Map<String, Object> msg1 = new HashMap<>();
             msg1.put("id", 1L);
             msg1.put("userId", 1L);

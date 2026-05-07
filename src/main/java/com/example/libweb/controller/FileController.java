@@ -95,13 +95,10 @@ public class FileController {
      */
     @GetMapping("/book")
     public void exportBook(HttpServletResponse response) throws IOException {
-        // 使用Service方法获取图书数据
         List<Book> books = bookService.getAllBooks();
 
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("图书列表");
-
-        // 创建表头
         Row headerRow = sheet.createRow(0);
         String[] headers = {"图书ID", "图书名称", "作者", "出版社", "分类", "总数量", "可借数量"};
         for (int i = 0; i < headers.length; i++) {

@@ -41,16 +41,10 @@ public class AuthController {
             if (user.getPassword().length() < 6) {
                 throw new RuntimeException("密码长度至少6位");
             }
-
-            // 调用Service进行注册
             Userdata registeredUser = userService.register(user);
-
-            // 创建响应
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "注册成功");
-
-            //返回部分用户信息
             Map<String, Object> userData = new HashMap<>();
             userData.put("userId", registeredUser.getUserId());
             userData.put("username", registeredUser.getUsername());
@@ -59,7 +53,6 @@ public class AuthController {
             userData.put("phone", registeredUser.getPhone());
             userData.put("role", registeredUser.getRole());
             userData.put("createTime", registeredUser.getCreateTime());
-
             response.put("data", userData);
 
             return ResponseEntity.ok(response);

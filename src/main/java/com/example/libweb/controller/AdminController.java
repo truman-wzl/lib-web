@@ -219,9 +219,7 @@ public class AdminController {
 
             if ("CANCELLED".equals(newStatus)) {
                 try {
-                    // 调用 Repository 方法获取未归还图书数量
                     int unreturnedCount = borrowRecordRepository.countBorrowedByUser(userId);
-                    // 记录调试信息
                     System.out.println("[注销检查] 用户ID: " + userId + ", 未归还图书数: " + unreturnedCount);
                     if (unreturnedCount > 0) {
                         return ResponseEntity.badRequest().body(Map.of(
@@ -232,7 +230,6 @@ public class AdminController {
                 } catch (Exception e) {
                     System.out.println("[错误] 查询未归还图书失败: " + e.getMessage());
                     e.printStackTrace();
-                    // 如果查询失败，为了安全起见，不允许注销
                     return ResponseEntity.badRequest().body(Map.of(
                             "success", false,
                             "message", "无法检查借阅记录，注销失败: " + e.getMessage()

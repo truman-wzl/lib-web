@@ -71,13 +71,10 @@ public class EmailCodeService {
             codeStore.put(key, new EmailCode(code, expireTime, now,username,email));
 
             System.out.println("生成的验证码: " + code + " 已存储，邮箱: " + email + ", 过期时间: " + expireTime);
-
-            // 发送邮件
             try {
                 sendEmail(email, code,username);
                 logger.info("邮件发送成功，邮箱: {}", email);
             } catch (Exception e) {
-                // 如果邮件发送失败，从存储中移除验证码
                 codeStore.remove(email);
                 throw new RuntimeException("邮件发送失败: " + e.getMessage());
             }

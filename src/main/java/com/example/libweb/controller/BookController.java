@@ -337,11 +337,8 @@ public class BookController {
                 response.put("message", "解析Excel文件失败: " + e.getMessage());
                 return ResponseEntity.badRequest().body(response);
             }
-
-            //批量保存
             if (!booksToSave.isEmpty()) {
                 try {
-                    // 使用Repository的saveAll进行批量保存，效率更高
                     List<Book> savedBooks = bookRepository.saveAll(booksToSave);
                 } catch (Exception e) {
                     response.put("success", false);
@@ -374,10 +371,8 @@ public class BookController {
 
     //获取默认分类（ID=5，“5中转类5”）
     private Category getDefaultCategory() {
-        //优先从数据库获取
         return categoryRepository.findById(5L)
                 .orElseGet(() -> {
-                    //如果数据库中连默认分类都没有，创建一个临时对象
                     Category defaultCategory = new Category();
                     defaultCategory.setCategoryId(5L);
                     defaultCategory.setCategoryName("5中转类5");

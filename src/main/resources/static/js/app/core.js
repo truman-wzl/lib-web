@@ -504,7 +504,7 @@ window.addEventListener('menu-rendered', function(event) {
 
     // 确保用户已登录
     if (!window.AppState.currentUser) {
-        console.log('👤 用户未登录，跳过泡泡初始化');
+        console.log(' 用户未登录，跳过泡泡初始化');
         return;
     }
 

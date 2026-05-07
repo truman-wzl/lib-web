@@ -16,7 +16,7 @@ const statsManageModule = {
     render: function() {
         return `
             <div class="container-fluid py-3">
-                <h4 class="mb-4">📈 数据统计</h4>
+                <h4 class="mb-4"> 数据统计</h4>
 
                 <!-- 借阅趋势卡片 -->
                 <div class="card mb-4">
@@ -499,13 +499,10 @@ const statsManageModule = {
         console.log('加载热门类别数据...');
         const canvas = document.getElementById('categoryChart');
         if (!canvas) {
-            console.error('❌ categoryChart元素不存在！');
+            console.error(' categoryChart元素不存在！');
             return;
         }
-
         const detailBody = document.getElementById('categoryDetailBody');
-
-        // ✅ 使用遮罩层，不删除canvas
         this.showLoadingOverlay(canvas, '加载类别数据...');
 
         // 更新详情表格的加载状态
@@ -803,39 +800,37 @@ const statsManageModule = {
         }
     }
 };
-// === 文件末尾的模块注册 ===
 (function() {
-    console.log('📦 开始注册统计模块...');
+    console.log('开始注册统计模块...');
 
     // 检查模块是否已存在
     if (window.ModuleRegistry && window.ModuleRegistry['stats-manage']) {
-        console.warn('⚠️ 警告：stats-manage模块已存在于ModuleRegistry');
+        console.warn('警告：stats-manage模块已存在于ModuleRegistry');
     }
 
     if (window.modules && window.modules['stats-manage']) {
-        console.warn('⚠️ 警告：stats-manage模块已存在于window.modules');
+        console.warn('警告：stats-manage模块已存在于window.modules');
     }
 
     // 使用你的模块注册系统
     if (typeof safeRegisterModule === 'function') {
-        console.log('✅ 使用safeRegisterModule注册');
+        console.log('使用safeRegisterModule注册');
         safeRegisterModule('stats-manage', statsManageModule);
     } else if (typeof registerModule === 'function') {
-        console.log('✅ 使用registerModule注册');
+        console.log(' 使用registerModule注册');
         registerModule('stats-manage', statsManageModule);
     } else {
-        console.log('⚠️ 使用备用注册到window.modules');
+        console.log('使用备用注册到window.modules');
         window.modules = window.modules || {};
         window.modules['stats-manage'] = statsManageModule;
-
         // 如果模块系统就绪，立即注册
         if (window.isModuleSystemReady === true) {
-            console.log('🔧 检测到模块系统就绪，手动注册到ModuleRegistry');
+            console.log('检测到模块系统就绪，手动注册到ModuleRegistry');
             if (typeof window.registerModule === 'function') {
                 window.registerModule('stats-manage', statsManageModule);
             }
         }
     }
-    console.log('✅ 统计模块注册完成');
+    console.log('统计模块注册完成');
     console.log('模块名称:', statsManageModule.name);
 })();

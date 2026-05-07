@@ -2,8 +2,7 @@
 // 我的借阅模块
 (function() {
     'use strict';
-
-    console.log('=== my-borrow.js 开始执行 ===');
+    console.log('my-borrow.js 开始执行');
 
     // 我的借阅模块主对象
     const myBorrowModule = {
@@ -48,7 +47,7 @@
                     <!-- 页面标题 -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
-                            <h2 class="mb-1">📋 我的借阅记录</h2>
+                            <h2 class="mb-1"> 我的借阅记录</h2>
                             <p class="text-muted mb-0">查看和管理您的图书借阅</p>
                         </div>
                     </div>
@@ -275,7 +274,6 @@
                 const keyword = this.state.searchKeyword;
                 // 构建基础URL
                 let url = `/api/borrow/records?page=${page}&size=${size}`;
-                // 添加状态筛选参数（如果不是"全部"）
                 if (status && status !== 'all') {
                     url += `&status=${encodeURIComponent(status)}`;
                 }
@@ -376,7 +374,7 @@
                                 <div class="flex-grow-1">
                                     <h6 class="mb-1">${record.bookname || '未知图书'}</h6>
                                     <div class="small text-muted">
-                                        <div><strong>📖 图书编号：</strong> ${record.bookId || 'N/A'}</div>
+                                        <div><strong> 图书编号：</strong> ${record.bookId || 'N/A'}</div>
                                         <div>作者: ${record.author || '-'}</div>
                                         <div>出版社: ${record.publisher || '-'}</div>
                                     </div>
@@ -1000,54 +998,45 @@
             console.log('清理my-borrow模块资源');
         }
     };
-
-    // 在 my-borrow.js 的最后，注册代码修改为（约第 530-550 行）：
     // 立即注册模块到全局
     if (typeof window !== 'undefined') {
-        console.log('🚀 开始注册我的借阅模块...');
+        console.log(' 开始注册我的借阅模块...');
 
-        // 方法1: 优先使用 window.registerModule（core.js 的系统）
         if (typeof window.registerModule === 'function') {
             window.registerModule('my-borrow', myBorrowModule);
-            console.log('✅ 通过 window.registerModule 注册成功');
+            console.log('通过 window.registerModule 注册成功');
         }
-        // 方法2: 注册到 window.modules 作为备用
         else {
             if (!window.modules) {
                 window.modules = {};
             }
             window.modules['my-borrow'] = myBorrowModule;
-            console.log('✅ 通过 window.modules 注册成功');
+            console.log(' 通过 window.modules 注册成功');
         }
-
-        // 方法3: 直接注册到 ModuleRegistry
         if (typeof ModuleRegistry !== 'undefined') {
             ModuleRegistry['my-borrow'] = myBorrowModule;
-            console.log('✅ 直接注册到 ModuleRegistry 成功');
+            console.log(' 直接注册到 ModuleRegistry 成功');
         }
 
-        console.log('✅ my-borrow 模块注册完成，模块对象:', Object.keys(myBorrowModule));
+        console.log(' my-borrow 模块注册完成，模块对象:', Object.keys(myBorrowModule));
     }
 
-    console.log('✅ my-borrow.js 执行完成');
-
-    // 立即执行一次模块渲染（如果URL参数包含my-borrow）
+    console.log(' my-borrow.js 执行完成');
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('📄 my-borrow.js: DOM加载完成');
+        console.log(' my-borrow.js: DOM加载完成');
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('module') === 'my-borrow') {
-            console.log('🔍 检测到URL参数包含my-borrow，尝试渲染');
-            // 延迟一点，确保其他脚本加载完成
+            console.log(' 检测到URL参数包含my-borrow，尝试渲染');
             setTimeout(() => {
                 if (typeof window.loadModule === 'function') {
                     window.loadModule('my-borrow');
                 } else if (ModuleRegistry && ModuleRegistry['my-borrow']) {
-                    console.log('🎨 从ModuleRegistry直接渲染my-borrow');
+                    console.log('从ModuleRegistry直接渲染my-borrow');
                     ModuleRegistry['my-borrow'].render();
                 }
             }, 100);
         }
     });
 
-    console.log('=== my-borrow.js 执行结束 ===');
+    console.log('my-borrow.js 执行结束');
 })();

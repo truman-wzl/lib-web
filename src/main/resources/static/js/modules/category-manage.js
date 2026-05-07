@@ -23,7 +23,7 @@
             <div class="category-manage-module">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">📂 分类管理</h4>
+                        <h4 class="mb-0"> 分类管理</h4>
                         <div>
                             <button class="btn btn-success" id="exportCategoryBtn">
                                 <i class="bi bi-file-excel"></i> 导出Excel
@@ -537,7 +537,7 @@
     }
 
     async function exportCategoriesToExcel() {
-        console.log('📤 点击了分类导出按钮');
+        console.log(' 点击了分类导出按钮');
 
         if (!window.ExportManager) {
             alert('导出功能未初始化，请刷新页面重试');
@@ -546,7 +546,7 @@
 
         // 获取当前搜索条件
         const keyword = document.getElementById('searchKeyword')?.value || '';
-        console.log('🔍 搜索参数:', { keyword });
+        console.log(' 搜索参数:', { keyword });
 
         // 构建参数
         const params = new URLSearchParams();
@@ -560,7 +560,7 @@
             url += '?' + params.toString();
         }
 
-        console.log('🌐 分类导出URL:', url);
+        console.log(' 分类导出URL:', url);
 
         // 生成文件名
         const today = new Date();
@@ -646,7 +646,6 @@
      * 高亮表格行
      */
     function highlightTableRow(rowId, action = 'add') {
-        // 暂时不实现，先保证基本功能
         console.log('高亮行:', rowId, action);
     }
 })();

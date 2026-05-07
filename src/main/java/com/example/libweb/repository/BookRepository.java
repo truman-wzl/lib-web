@@ -14,15 +14,11 @@ import java.util.Optional;
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
 
-    /**
-     * 统计某个分类下的图书数量
-     */
+    // 统计某个分类下的图书数量
     @Query(value = "SELECT COUNT(*) FROM book WHERE category_id = :categoryId", nativeQuery = true)
     long countByCategoryId(@Param("categoryId") Long categoryId);
 
-    /**
-     * 将图书从一个分类转移到另一个分类
-     */
+    // 将图书从一个分类转移到另一个分类
     @Modifying
     @Transactional
     @Query(value = "UPDATE book SET category_id = :targetCategoryId WHERE category_id = :sourceCategoryId",
@@ -30,9 +26,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     int updateBooksCategory(@Param("sourceCategoryId") Long sourceCategoryId,
                             @Param("targetCategoryId") Long targetCategoryId);
 
-    /**
-     * 检查图书是否存在
-     */
+    // 检查图书是否存在
     @Query(value = "SELECT COUNT(*) FROM book WHERE book_id = :bookId", nativeQuery = true)
     int countByBookId(@Param("bookId") Long bookId);
 
@@ -40,9 +34,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
         return countByBookId(bookId) > 0;
     }
 
-    /**
-     * 搜索图书（分页，Oracle 11g兼容）
-     */
+    // 搜索图书（分页，Oracle 11g兼容）
     @Query(value = "SELECT * FROM (SELECT b.*, ROWNUM rnum FROM (" +
             "SELECT * FROM book WHERE " +
             "(:bookname IS NULL OR LOWER(bookname) LIKE '%' || LOWER(:bookname) || '%') AND " +
@@ -59,9 +51,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
             @Param("endRow") int endRow
     );
 
-    /**
-     * 统计搜索结果数量
-     */
+    // 统计搜索结果数量
     @Query(value = "SELECT COUNT(*) FROM book WHERE " +
             "(:bookname IS NULL OR LOWER(bookname) LIKE '%' || LOWER(:bookname) || '%') AND " +
             "(:author IS NULL OR LOWER(author) LIKE '%' || LOWER(:author) || '%') AND " +
@@ -72,9 +62,11 @@ public interface BookRepository extends JpaRepository<Book, Long> {
             @Param("author") String author,
             @Param("categoryId") Long categoryId
     );
+
     @Modifying
     @Query("UPDATE Book b SET b.canBorrow = b.canBorrow - 1 WHERE b.bookId = :bookId AND b.canBorrow > 0")
     int decrementCanBorrow(@Param("bookId") Long bookId);
+
     // 根据书名、作者、出版社查找图书判断是否已存在
     Optional<Book> findByBooknameAndAuthorAndPublisher(String bookname, String author, String publisher);
 }

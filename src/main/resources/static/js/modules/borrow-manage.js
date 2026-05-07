@@ -242,7 +242,7 @@
 
         // 初始化模块 - 在render之后调用
         onRender: function() {
-            console.log(' 初始化管理员借阅管理模块');
+            console.log('🚀 初始化管理员借阅管理模块');
 
             // 重置状态
             this.state = {
@@ -318,28 +318,32 @@
                     self.loadBorrowRecords();
                 });
             }
+            // 添加导出按钮事件绑定
             this.bindExportEvent();
         },
-        //绑定导出按钮事件
+        // 新增：绑定导出按钮事件
         bindExportEvent: function() {
             const exportBtn = document.getElementById('exportBorrowBtn');
             if (exportBtn) {
                 exportBtn.addEventListener('click', () => {
                     this.exportBorrowRecords();
                 });
-                console.log('借阅记录导出按钮事件已绑定');
+                console.log('✅ 借阅记录导出按钮事件已绑定');
             } else {
-                console.warn('未找到借阅记录导出按钮');
+                console.warn('⚠️ 未找到借阅记录导出按钮');
             }
         },
 
+        // 新增：导出借阅记录函数
         exportBorrowRecords: function() {
             if (!window.ExportManager) {
                 alert('导出功能未初始化，请刷新页面重试');
                 return;
             }
+
             const statusFilter = document.getElementById('statusFilter') ?
                 document.getElementById('statusFilter').value : '';
+
             const params = new URLSearchParams();
 
             if (statusFilter && statusFilter !== 'all') {
@@ -355,7 +359,7 @@
             const dateStr = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
             const filename = `借阅记录_${dateStr}.xlsx`;
 
-            console.log('开始导出借阅记录，URL:', url);
+            console.log('📤 开始导出借阅记录，URL:', url);
 
             window.ExportManager.exportToExcel(url, '借阅记录', filename);
         },
@@ -367,15 +371,24 @@
             try {
                 if (this.state.loading) return;
                 this.state.loading = true;
+
                 this.showLoading();
-                const page = this.state.currentPage - 1;
+
+                // 获取筛选参数
+                const page = this.state.currentPage - 1;  // 后端从0开始
                 const size = this.state.pageSize;
                 const status = this.state.filterStatus;
+
+                // 构建URL
                 let url = `${this.config.apiBase}/admin/borrows?page=${page}&size=${size}`;
+
+                // 添加状态筛选参数
                 if (status && status !== 'all') {
                     url += `&status=${encodeURIComponent(status)}`;
                 }
+
                 console.log('正在请求借阅记录:', url);
+
                 // 调用后端接口
                 const response = await fetch(url, {
                     method: 'GET',
@@ -415,7 +428,7 @@
                     this.state.records = data.list || [];
                     this.state.totalItems = data.total || 0;
                     this.state.totalPages = data.totalPages || 1;
-                    this.state.currentPage = data.page || 1; // 后端返回0-based，转为1-based
+                    this.state.currentPage = data.page;
 
                     // 渲染界面
                     this.renderTable();
@@ -799,34 +812,15 @@
 
             html += '</ul>';
             pagination.innerHTML = html;
-
-            // 绑定分页按钮事件
-            this.bindPaginationEvents();
-        },
-
-        // 绑定分页事件
-        bindPaginationEvents: function() {
-            const self = this;
-            const pagination = document.getElementById('pagination');
-
-            if (!pagination) return;
-
-            pagination.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const target = e.target.closest('.page-link');
-                if (!target) return;
-
-                const page = target.getAttribute('data-page');
-                if (page && !isNaN(page)) {
-                    const pageNum = parseInt(page);
-                    if (pageNum !== self.state.currentPage) {
-                        console.log('点击页码:', pageNum);
-                        self.state.currentPage = pageNum;
+            pagination.querySelectorAll('.page-link[data-page]').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = parseInt(this.getAttribute('data-page'));
+                    if (!isNaN(page) && page !== self.state.currentPage) {
+                        self.state.currentPage = page;
                         self.loadBorrowRecords();
                     }
-                }
+                });
             });
         },
 
@@ -931,31 +925,31 @@
             }
         }
     };
-    console.log(' borrow-manage.js 模块定义完成');
+    console.log('🔧 borrow-manage.js 模块定义完成');
 
-    // 模块注册代码
-    //safeRegisterModule
+    // ✅ 模块注册代码（必须在模块对象外部）
+    // 方法1：使用 safeRegisterModule（如果可用）
     if (typeof window.safeRegisterModule === 'function') {
         window.safeRegisterModule('borrow-manage', borrowManageModule);
-        console.log(' 通过 safeRegisterModule 注册成功');
+        console.log('✅ 通过 safeRegisterModule 注册成功');
     }
-
+    // 方法2：使用 registerModule（如果可用）
     else if (typeof window.registerModule === 'function') {
         window.registerModule('borrow-manage', borrowManageModule);
-        console.log('通过 registerModule 注册成功');
+        console.log('✅ 通过 registerModule 注册成功');
     }
-    //直接注册到 ModuleRegistry
+    // 方法3：直接注册到 ModuleRegistry
     else if (typeof ModuleRegistry !== 'undefined') {
         ModuleRegistry['borrow-manage'] = borrowManageModule;
-        console.log('直接注册到 ModuleRegistry 成功');
+        console.log('✅ 直接注册到 ModuleRegistry 成功');
     }
-    //注册到全局 modules
+    // 方法4：注册到全局 modules
     else {
         window.modules = window.modules || {};
         window.modules['borrow-manage'] = borrowManageModule;
-        console.log(' 注册到 window.modules 作为备用');
+        console.log('✅ 注册到 window.modules 作为备用');
     }
-    console.log(' 模块注册状态:', {
+    console.log('📦 模块注册状态:', {
         '已注册到safeRegisterModule': typeof window.safeRegisterModule === 'function',
         '已注册到registerModule': typeof window.registerModule === 'function',
         '已注册到ModuleRegistry': !!ModuleRegistry && !!ModuleRegistry['borrow-manage'],

@@ -1,4 +1,4 @@
-//js/modules/book-query.js
+// js/modules/book-query.js
 (function() {
     'use strict';
 
@@ -37,7 +37,7 @@
                     <!-- 搜索区域 -->
                     <div class="card mb-4">
                         <div class="card-body">
-                            <h5 class="card-title mb-3">搜索图书</h5>
+                            <h5 class="card-title mb-3">🔍 搜索图书</h5>
                             <form id="searchForm">
                                 <div class="row g-3">
                                     <div class="col-md-4">
@@ -93,6 +93,7 @@
                         </div>
                     </div>
 
+                    <!-- 新增：借阅确认模态框 -->
                     <div class="modal fade" id="borrowConfirmModal" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content">
@@ -111,6 +112,7 @@
                                     </div>
 
                                     <div id="bookConfirmInfo" class="border rounded p-3 mb-3">
+                                        <!-- 图书信息会在这里动态显示 -->
                                     </div>
 
                                     <div class="alert alert-info mb-0 small">
@@ -127,6 +129,7 @@
                         </div>
                     </div>
 
+                    <!-- 新增：借阅结果模态框 -->
                     <div class="modal fade" id="borrowResultModal" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content">
@@ -177,10 +180,12 @@
 
                 if (result.success && result.data) {
                     console.log('分类数据加载成功，数量:', result.data.length);
-                    // 清空选项 保留"全部分类"
+
+                    // 清空选项（保留"全部分类"）
                     while (categorySelect.options.length > 1) {
                         categorySelect.remove(1);
                     }
+
                     // 添加分类选项，排除ID=5的中转分类
                     result.data.forEach(category => {
                         if (category.categoryId !== 5) {
@@ -209,6 +214,7 @@
         // 绑定事件
         bindEvents: function() {
             const self = this;
+
             // 搜索表单提交
             const searchForm = document.getElementById('searchForm');
             if (searchForm) {
@@ -224,6 +230,7 @@
                 });
             }
         },
+
         // 加载图书
         async loadBooks() {
             const tbody = document.getElementById('bookTableBody');
@@ -241,9 +248,10 @@
             try {
                 // 构建查询参数
                 const params = new URLSearchParams({
-                    page: this.state.currentPage - 1,
+                    page: this.state.currentPage - 1,  // 后端从0开始
                     size: this.state.pageSize
                 });
+
                 // 添加搜索参数
                 if (this.state.searchParams.bookname) {
                     params.append('bookname', this.state.searchParams.bookname);
@@ -254,6 +262,7 @@
                 if (this.state.searchParams.categoryId) {
                     params.append('categoryId', this.state.searchParams.categoryId);
                 }
+
                 console.log('请求图书列表，参数:', Object.fromEntries(params));
                 const response = await fetch(`/api/books/search?${params}`);
                 const result = await response.json();
@@ -277,6 +286,7 @@
                 `;
             }
         },
+
         // 渲染图书列表
         renderBooks: function(books) {
             const tbody = document.getElementById('bookTableBody');
@@ -292,6 +302,7 @@
                 `;
                 return;
             }
+
             let html = '';
             books.forEach(book => {
                 const publisherDisplay = book.publisher ? book.publisher : '暂无出版社信息';
@@ -343,6 +354,7 @@
             tbody.innerHTML = html;
         },
 
+        // 渲染分页
         renderPagination: function(totalPages, currentPage) {
             const container = document.getElementById('pagination');
 
@@ -353,12 +365,15 @@
 
             console.log('渲染分页，总页数:', totalPages, '当前页(后端索引):', currentPage, '当前页(前端索引):', this.state.currentPage);
 
+            // 后端返回的currentPage是从0开始的，我们需要转换为从1开始
             const currentPageOneBased = currentPage + 1;
 
             let html = `
                 <nav aria-label="图书分页">
                     <ul class="pagination justify-content-center mb-0">
             `;
+
+            // 上一页
             if (currentPageOneBased > 1) {
                 html += `
                     <li class="page-item">
@@ -377,17 +392,21 @@
                 `;
             }
 
-            //页码按钮
-            const maxVisiblePages = 5; //最多显示5个页码
+            // 生成页码按钮
+            const maxVisiblePages = 5; // 最多显示5个页码
             let startPage, endPage;
 
             if (totalPages <= maxVisiblePages) {
+                // 总页数较少，显示所有页码
                 startPage = 1;
                 endPage = totalPages;
             } else {
+                // 总页数较多，显示当前页附近的页码
                 const halfVisible = Math.floor(maxVisiblePages / 2);
                 startPage = Math.max(currentPageOneBased - halfVisible, 1);
                 endPage = Math.min(startPage + maxVisiblePages - 1, totalPages);
+
+                // 调整起始页码
                 if (endPage - startPage + 1 < maxVisiblePages) {
                     startPage = Math.max(endPage - maxVisiblePages + 1, 1);
                 }
@@ -409,6 +428,8 @@
                     `;
                 }
             }
+
+            // 下一页
             if (currentPageOneBased < totalPages) {
                 html += `
                     <li class="page-item">
@@ -431,7 +452,9 @@
                     </ul>
                 </nav>
             `;
+
             container.innerHTML = html;
+
             // 绑定分页按钮事件
             this.bindPaginationEvents();
         },
@@ -440,8 +463,10 @@
         bindPaginationEvents: function() {
             const container = document.getElementById('pagination');
             const self = this;
+
             if (!container) return;
 
+            // 使用事件委托处理分页按钮点击
             container.addEventListener('click', function(e) {
                 const target = e.target;
                 const pageButton = target.closest('.page-link');
@@ -458,6 +483,7 @@
                 }
             });
         },
+
         // 切换页码
         changePage: function(page) {
             console.log('切换页码，旧页码:', this.state.currentPage, '新页码:', page);
@@ -525,7 +551,7 @@
                 console.log('借阅API响应:', result);
 
                 if (result.success) {
-                    alert('借阅成功！请在30天内归还');
+                    alert('✅ 借阅成功！请在30天内归还');
 
                     // 重新加载图书列表，更新可借数量
                     this.loadBooks();
@@ -545,26 +571,32 @@
                 }
             } catch (error) {
                 console.error('借阅失败:', error);
-                alert(`借阅失败: ${error.message}`);
+                alert(`❌ 借阅失败: ${error.message}`);
             }
         }
     };
+
+
+    // 立即注册模块函数到全局
     // 注册模块
     if (typeof window !== 'undefined') {
         console.log('注册图书查询模块...');
+
+        // 方法1: 优先使用 window.registerModule（core.js 的系统）
         if (typeof window.registerModule === 'function') {
             window.registerModule('book-query', bookQueryModule);
-            console.log('通过 window.registerModule 注册成功');
+            console.log('✓ 通过 window.registerModule 注册成功');
         }
+        // 方法2: 兼容 window.modules
         else {
             if (!window.modules) {
                 window.modules = {};
             }
             window.modules['book-query'] = bookQueryModule;
-            console.log('通过 window.modules 注册成功');
+            console.log('✓ 通过 window.modules 注册成功');
         }
 
-        // 全局借阅函数
+        // 全局借阅函数 - 必须单独暴露
         window.borrowBook = async function(bookId, bookName, author, publisher, category) {
             console.log('[全局函数] 借阅图书，ID:', bookId, '书名:', bookName);
 
@@ -589,7 +621,7 @@
                 console.log('借阅结果:', result);
 
                 if (result.success) {
-                    //借阅成功
+                    // 借阅成功，显示成功模态框
                     const dueDate = new Date(result.data.dueTime);
                     const dueStr = dueDate.toLocaleDateString('zh-CN', {
                         year: 'numeric',
@@ -608,9 +640,10 @@
                     `;
 
                     window.showBorrowResult('success', '借阅成功！请在30天内归还', successDetails);
+                    // ✅ 添加这行 - 借阅成功后立即刷新整个页面
                     setTimeout(() => {
-                        location.reload();
-                    }, 1000);  //延迟1秒，让用户能看到成功消息
+                        location.reload();  // 相当于按F5
+                    }, 1000);  // 延迟1秒，让用户能看到成功消息
                 } else {
                     // 借阅失败
                     throw new Error(result.message || '借阅失败');
@@ -621,8 +654,9 @@
             }
         };
 
-        //全局借阅确认函数
+        // 全局借阅确认函数（使用模态框）
         window.showBorrowConfirmWithModal = function(event, bookId, bookName, author, publisher, category) {
+            // 阻止默认事件
             if (event) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -630,14 +664,14 @@
 
             console.log('[全局函数] 显示借阅确认框，图书:', bookName, 'ID:', bookId);
 
-            //验证用户登录状态
+            // 1. 验证用户登录状态
             const currentUser = window.AppState?.currentUser;
             if (!currentUser || !currentUser.userId) {
                 window.showBorrowResult('error', '请先登录后再借阅图书');
                 return;
             }
 
-            //显示图书详情
+            // 2. 显示图书详情
             const bookInfoHtml = `
                 <div class="book-info">
                     <p class="mb-1"><strong>书名：</strong><span class="text-primary">《${bookName}》</span></p>
@@ -649,12 +683,13 @@
 
             document.getElementById('bookConfirmInfo').innerHTML = bookInfoHtml;
 
-            //设置确认按钮事件
+            // 3. 设置确认按钮事件
             const confirmBtn = document.getElementById('confirmBorrowBtn');
             confirmBtn.onclick = function() {
                 console.log('用户确认借阅，图书ID:', bookId);
                 // 调用原来的借阅函数
                 window.borrowBook(bookId, bookName, author, publisher, category);
+
                 // 隐藏确认模态框
                 const modal = bootstrap.Modal.getInstance(document.getElementById('borrowConfirmModal'));
                 if (modal) {
@@ -662,7 +697,7 @@
                 }
             };
 
-            //显示确认模态框
+            // 4. 显示确认模态框
             const confirmModal = new bootstrap.Modal(document.getElementById('borrowConfirmModal'));
             confirmModal.show();
         };
@@ -676,7 +711,7 @@
             const msg = document.getElementById('resultMessage');
             const detailsEl = document.getElementById('resultDetails');
 
-            //根据类型设置样式
+            // 根据类型设置样式
             if (type === 'success') {
                 header.className = 'modal-header bg-success text-white';
                 title.textContent = '借阅成功';
@@ -711,6 +746,7 @@
             const modalEl = document.getElementById('borrowResultModal');
             modalEl.addEventListener('hidden.bs.modal', function() {
                 if (type === 'success') {
+                    // 借阅成功，刷新图书列表
                     if (window.modules && window.modules['book-query'] &&
                         typeof window.modules['book-query'].loadBooks === 'function') {
                         window.modules['book-query'].loadBooks();
@@ -719,6 +755,6 @@
             });
         };
 
-        console.log('book-query 模块和全局函数已注册完成');
+        console.log('✓ book-query 模块和全局函数已注册完成');
     }
 })();

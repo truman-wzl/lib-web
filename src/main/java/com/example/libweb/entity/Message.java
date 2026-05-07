@@ -12,10 +12,12 @@ public class Message {
     @SequenceGenerator(name = "message_seq", sequenceName = "SEQ_MESSAGE_ID", allocationSize = 1, schema = "ADM_55230931")
     @Column(name = "ID")
     private Long id;
-    //关联用户ID
+
+    // 关联用户ID（与Userdata实体关联）
     @Column(name = "USER_ID", nullable = false)
     private Long userId;
-    // 关联借阅记录ID（可为空）
+
+    // 关联借阅记录ID（可为空，与BorrowRecord实体关联）
     @Column(name = "BORROW_ID")
     private Long borrowId;
 
@@ -26,13 +28,17 @@ public class Message {
     private String content;
 
     @Column(name = "MSG_TYPE", nullable = false, length = 20)
-    private String msgType;
+    private String msgType;  // 移除默认值，必须显式设置
 
+    // 消息类型常量
     public static final String TYPE_OVERDUE = "OVERDUE";         // 逾期提醒
     public static final String TYPE_ACHIEVEMENT = "ACHIEVEMENT"; // 成就消息
 
+    // 消息状态：UNREAD(未读), READ(已读)
     @Column(name = "STATUS", nullable = false, length = 20)
     private String status = STATUS_UNREAD;
+
+    // 消息状态常量
     public static final String STATUS_UNREAD = "UNREAD";         // 未读
     public static final String STATUS_READ = "READ";             // 已读
 
@@ -43,8 +49,11 @@ public class Message {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "READ_TIME")
     private Date readTime;
+    // 新增字段：提醒次数
     @Column(name = "REMIND_COUNT", nullable = false)
-    private Integer remindCount = 1;
+    private Integer remindCount = 1;  // 默认值设为1
+
+    // 构造器
     public Message() {}
 
     public Message(Long userId, String title, String content, String msgType) {
@@ -62,14 +71,15 @@ public class Message {
         this.msgType = msgType;
     }
 
+    // 静态工厂方法：创建逾期消息
     public static Message createOverdueMessage(Long userId, Long borrowId, String bookName,
                                                Date borrowTime, Date dueTime, String bookId) {
-        String title = " 图书逾期提醒";
+        String title = "📚 图书逾期提醒";
         String content = String.format(
                 "您借阅的图书《%s》已逾期！\n\n" +
-                        "借阅日期：%tF\n" +
-                        "应还日期：%tF\n" +
-                        " 图书编号：%s\n\n" +
+                        "📅 借阅日期：%tF\n" +
+                        "⏰ 应还日期：%tF\n" +
+                        "🔖 图书编号：%s\n\n" +
                         "请尽快到图书馆办理还书手续，以免产生更多逾期费用。",
                 bookName,
                 borrowTime,
@@ -79,15 +89,17 @@ public class Message {
 
         Message message = new Message(userId, borrowId, title, content, TYPE_OVERDUE);
         message.setStatus(STATUS_UNREAD);
-        message.setRemindCount(3);
+        message.setRemindCount(3);  // 逾期消息初始提醒次数为3
         return message;
     }
+
+    // 静态工厂方法：创建成就消息
     public static Message createAchievementMessage(Long userId, String achievementName,
                                                    String achievementDescription) {
-        String title = "【成就达成】";
+        String title = "🏆 成就达成";
         String content = String.format(
                 "恭喜您！达成成就：%s\n\n" +
-                        "成就描述：%s\n\n" +
+                        "🎯 成就描述：%s\n\n" +
                         "继续保持，解锁更多成就！",
                 achievementName,
                 achievementDescription
@@ -95,10 +107,11 @@ public class Message {
 
         Message message = new Message(userId, title, content, TYPE_ACHIEVEMENT);
         message.setStatus(STATUS_UNREAD);
-        message.setRemindCount(1);
+        message.setRemindCount(1);  // 成就消息提醒次数为1
         return message;
     }
 
+    // 重载：创建关联借阅记录的成就消息
     public static Message createAchievementMessage(Long userId, Long borrowId, String achievementName,
                                                    String achievementDescription) {
         Message message = createAchievementMessage(userId, achievementName, achievementDescription);
@@ -106,7 +119,7 @@ public class Message {
         return message;
     }
 
-    //Getter和Setter
+    // Getter 和 Setter
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -139,9 +152,10 @@ public class Message {
     public Date getReadTime() { return readTime; }
     public void setReadTime(Date readTime) { this.readTime = readTime; }
 
+    // 新增 Getter 和 Setter
     public Integer getRemindCount() { return remindCount; }
     public void setRemindCount(Integer remindCount) { this.remindCount = remindCount; }
-
+    // 便捷方法
     public boolean isRead() {
         return STATUS_READ.equals(status);
     }
@@ -160,7 +174,7 @@ public class Message {
                 ", title='" + title + '\'' +
                 ", msgType='" + msgType + '\'' +
                 ", status='" + status + '\'' +
-                ", remindCount=" + remindCount +
+                ", remindCount=" + remindCount +  // 新增
                 ", createTime=" + createTime +
                 '}';
     }

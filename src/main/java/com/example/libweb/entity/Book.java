@@ -48,8 +48,8 @@ public class Book {
     public void setAuthor(String author) { this.author = author; }
     public String getPublisher() { return publisher; }
     public void setPublisher(String publisher) { this.publisher = publisher; }
-    public Category getCategory() { return category; } // 重要
-    public void setCategory(Category category) { this.category = category; } // 重要
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
     public Integer getTotalNumber() { return totalNumber; }
     public void setTotalNumber(Integer totalNumber) { this.totalNumber = totalNumber; }
     public Integer getCanBorrow() { return canBorrow; }
@@ -109,7 +109,6 @@ public class Book {
 //                    throw new IllegalArgumentException("总数量必须是整数");
 //                }
 //            } else {
-//                // 如果没有提供数量，默认设置为0
 //                book.setTotalNumber(0);
 //            }
 //
@@ -128,7 +127,6 @@ public class Book {
 //            } else {
 //                book.setCanBorrow(0);
 //            }
-//            // 设置创建时间为当前时间
 //            book.setCreateTime(new Date());
 //        } catch (Exception e) {
 //            throw new RuntimeException("创建图书对象失败: " + e.getMessage(), e);

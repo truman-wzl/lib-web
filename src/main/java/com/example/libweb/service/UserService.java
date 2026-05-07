@@ -14,7 +14,7 @@ public interface UserService {
 
     // 更新用户信息
     Userdata updateUserInfo(Userdata user);
-    // 修改用户名的方法
+    // 修改用户名
     Userdata updateUsername(String newUsername);
     // 修改密码
     boolean updatePassword(String oldPassword, String newPassword);

@@ -198,7 +198,7 @@ public class AuthController {
             Map<String, Object> userData = new HashMap<>();
             userData.put("userId", updatedUser.getUserId());
             userData.put("username", updatedUser.getUsername());
-            userData.put("realName", updatedUser.getRealName());  // 添加真实姓名
+            userData.put("realName", updatedUser.getRealName());
             userData.put("email", updatedUser.getEmail());
             userData.put("phone", updatedUser.getPhone());
             userData.put("role", updatedUser.getRole());
@@ -334,7 +334,7 @@ public class AuthController {
             String email = data.get("email");
             String username=data.get("username");
             String newPassword = data.get("newPassword");
-            String confirmPassword = data.get("confirmPassword");  //添加确认密码
+            String confirmPassword = data.get("confirmPassword");
 
             if (email == null || email.trim().isEmpty()) {
                 throw new RuntimeException("邮箱不能为空");

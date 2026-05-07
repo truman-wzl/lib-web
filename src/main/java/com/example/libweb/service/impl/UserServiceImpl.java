@@ -102,7 +102,7 @@ public class UserServiceImpl implements UserService {
             dbUser.setRealName(updateInfo.getRealName());
         }
         if (updateInfo.getEmail() != null) {
-            // 可以添加邮箱格式验证
+
             if (!updateInfo.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
                 throw new RuntimeException("邮箱格式不正确");
             }

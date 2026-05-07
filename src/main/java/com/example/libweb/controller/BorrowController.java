@@ -99,7 +99,7 @@ public class BorrowController {
                 response.put("message", "您已达到借阅上限（最多5本）");
                 return ResponseEntity.badRequest().body(response);
             }
-            //关键：原子操作扣减库存
+
             int updatedRows = bookRepository.decrementCanBorrow(bookId);
 
             if (updatedRows == 0) {

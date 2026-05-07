@@ -141,7 +141,7 @@ public class EmailCodeService {
      * 移除验证码
      * @param email 邮箱
      */
-    // 可以重载或修改
+
     public void removeCode(String email) {
         removeCode(email, null);
     }

@@ -213,7 +213,7 @@ public class AdminController {
 
             // 状态变更的验证逻辑
             if ("CANCELLED".equals(oldStatus)) {
-                // 已注销的用户不能直接恢复（与您的要求一致）
+
                 return ResponseEntity.badRequest().body(Map.of(
                         "success", false,
                         "message", "已注销的用户需要重新注册，不能直接恢复状态"

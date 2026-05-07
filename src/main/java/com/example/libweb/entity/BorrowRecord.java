@@ -49,8 +49,6 @@ public class BorrowRecord {
         this.bookId = bookId;
         this.dueTime = dueTime;
     }
-
-    // Getter 和 Setter
     public Long getRecordId() { return recordId; }
     public void setRecordId(Long recordId) { this.recordId = recordId; }
 

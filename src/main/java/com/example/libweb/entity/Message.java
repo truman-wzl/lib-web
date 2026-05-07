@@ -12,11 +12,9 @@ public class Message {
     @SequenceGenerator(name = "message_seq", sequenceName = "SEQ_MESSAGE_ID", allocationSize = 1, schema = "ADM_55230931")
     @Column(name = "ID")
     private Long id;
-
     //关联用户ID
     @Column(name = "USER_ID", nullable = false)
     private Long userId;
-
     // 关联借阅记录ID（可为空）
     @Column(name = "BORROW_ID")
     private Long borrowId;
@@ -35,8 +33,6 @@ public class Message {
 
     @Column(name = "STATUS", nullable = false, length = 20)
     private String status = STATUS_UNREAD;
-
-    // 消息状态常量
     public static final String STATUS_UNREAD = "UNREAD";         // 未读
     public static final String STATUS_READ = "READ";             // 已读
 
@@ -49,8 +45,6 @@ public class Message {
     private Date readTime;
     @Column(name = "REMIND_COUNT", nullable = false)
     private Integer remindCount = 1;
-
-    // 构造器
     public Message() {}
 
     public Message(Long userId, String title, String content, String msgType) {

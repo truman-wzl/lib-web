@@ -28,7 +28,6 @@ public class Category {
         this.categoryName = categoryName;
     }
 
-    //Getter和Setter
     public Long getCategoryId() { return categoryId; }
     public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
     public String getCategoryName() { return categoryName; }

@@ -242,7 +242,7 @@
 
         // 初始化模块 - 在render之后调用
         onRender: function() {
-            console.log('🚀 初始化管理员借阅管理模块');
+            console.log(' 初始化管理员借阅管理模块');
 
             // 重置状态
             this.state = {

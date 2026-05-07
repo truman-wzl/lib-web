@@ -201,7 +201,7 @@
         const categorySelect = document.getElementById('categoryId');
         const searchCategorySelect = document.getElementById('searchCategory');
 
-        console.log('🔍 开始加载分类数据...');
+        console.log(' 开始加载分类数据...');
 
         if (!categorySelect) {
             console.error('找不到分类下拉框元素: #categoryId');

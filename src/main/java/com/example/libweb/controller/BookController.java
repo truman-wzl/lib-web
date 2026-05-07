@@ -161,11 +161,6 @@ public class BookController {
     }
     /**
      * 批量导入图书
-     * 核心逻辑：
-     * 1. 根据书名(bookname)、作者(author)、出版社(publisher)判断图书唯一性。
-     * 2. 若三者完全相同，则合并：总数量(totalNumber)和可借数量(canBorrow)分别累加。
-     * 3. 若不同，则创建新图书。
-     * 4. 分类处理：根据分类名查找，若不存在则使用默认分类（ID=5，“5中转类5”）。
      */
     @PostMapping("/import")
     @Transactional
@@ -173,14 +168,11 @@ public class BookController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // 1. 验证文件
             if (file == null || file.isEmpty()) {
                 response.put("success", false);
                 response.put("message", "请选择一个文件");
                 return ResponseEntity.badRequest().body(response);
             }
-
-            // 2. 验证文件类型
             String fileName = file.getOriginalFilename();
             if (fileName == null || !(fileName.endsWith(".xlsx") || fileName.endsWith(".xls"))) {
                 response.put("success", false);
@@ -213,9 +205,7 @@ public class BookController {
                     if (row == null || isRowEmpty(row)) {
                         continue;
                     }
-
                     try {
-                        // 读取单元格值
                         String bookName = getCellStringValue(row.getCell(0));
                         String author = getCellStringValue(row.getCell(1));
                         String publisher = getCellStringValue(row.getCell(2));

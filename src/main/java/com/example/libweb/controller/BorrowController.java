@@ -275,8 +275,6 @@ public class BorrowController {
 
             System.out.println("查询到记录数: " + (results != null ? results.size() : 0));
             System.out.println("总记录数: " + totalItems);
-
-            // 6. 转换结果
             List<Map<String, Object>> records = new ArrayList<>();
             if (results != null) {
                 for (Object[] row : results) {

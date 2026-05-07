@@ -38,7 +38,7 @@ public interface UserdataRepository extends JpaRepository<Userdata, Long> {
     @Query(value = "SELECT COUNT(*) FROM userdata WHERE role = :role", nativeQuery = true)
     long countByRole(@Param("role") String role);
 
-    // 关键词搜索（用户名、真实姓名、邮箱）
+    // keyword搜索（用户名、真实姓名、邮箱）
     /**
      * Oracle 11g 兼容的分页查询
      */

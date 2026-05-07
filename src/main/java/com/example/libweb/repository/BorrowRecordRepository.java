@@ -103,8 +103,8 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
             @Param("userId") Long userId,
             @Param("startRow") int startRow,
             @Param("endRow") int endRow,
-            @Param("status") String status,   // 状态参数
-            @Param("keyword") String keyword); // 关键词参数
+            @Param("status") String status,
+            @Param("keyword") String keyword);
 
     /**
      * 根据用户ID统计借阅记录总数（带筛选）

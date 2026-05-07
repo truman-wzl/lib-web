@@ -314,8 +314,6 @@ console.log(' 模块系统已就绪');
                 this.checkUnreadCount();
             }, 30000);
         },
-
-        // 修改checkUnreadCount方法
         checkUnreadCount: async function() {
             console.log('开始检查未读消息...');
 
@@ -334,29 +332,22 @@ console.log(' 模块系统已就绪');
                 if (response.ok) {
                     const data = await response.json();
                     console.log('API返回数据:', data);
-
-                    //使用正确的字段名
                     let unreadCount = 0;
                     if (data.unreadCount !== undefined && data.unreadCount !== null) {
                         unreadCount = parseInt(data.unreadCount) || 0;
                         console.log(` 使用unreadCount字段: ${unreadCount}`);
                     }
-                    // 如果API返回的是 {success: true, count: 1}
                     else if (data.count !== undefined && data.count !== null) {
                         unreadCount = parseInt(data.count) || 0;
                         console.log(` 使用count字段: ${unreadCount}`);
                     }
-                    // 如果API返回的是 {success: true, data: 1}
                     else if (data.data !== undefined && data.data !== null) {
                         unreadCount = parseInt(data.data) || 0;
                         console.log(`使用data字段: ${unreadCount}`);
                     }
-                    // 如果API返回的是其他格式
                     else {
                         console.warn('API返回格式不明确，尝试查找数值字段...');
                         console.log('数据所有字段:', Object.keys(data));
-
-                        // 遍历所有字段，寻找数字类型的值
                         for (let key in data) {
                             if (typeof data[key] === 'number') {
                                 unreadCount = data[key];

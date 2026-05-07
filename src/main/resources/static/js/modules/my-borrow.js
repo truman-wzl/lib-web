@@ -303,7 +303,6 @@
 
                 const result = await response.json();
 
-                // 修改后的正确代码
                 if (result.success) {
                     const data = result.data;
 
@@ -684,10 +683,8 @@
                 return new Date(dateTimeStr + '+08:00');  // 添加北京时间时区
             }
 
-            // 其他格式，尝试直接解析
             return new Date(dateTimeStr);
         },
-        // 修改 isRecordOverdue
         isRecordOverdue: function(record) {
             // 已归还的记录不算逾期
             if (record.status === 'RETURNED') {
@@ -712,8 +709,6 @@
 
             return false;
         },
-
-        // 修改 getDaysRemaining
         getDaysRemaining: function(record) {
             // 已归还的图书，剩余天数为0
             if (record.status === 'RETURNED') {
@@ -724,8 +719,6 @@
             const dueDate = this.parseDateTime(record.dueTime);
             const now = new Date();
             const diffTime = dueDate - now;
-
-            // 返回天数（向上取整）
             return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         },
 

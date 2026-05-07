@@ -164,7 +164,7 @@ public class AuthController {
         }
     }
 
-    //3. 修改用户基本信息（真实姓名、邮箱、电话）
+    //修改用户基本信息
     @PostMapping("/update-info")
     public ResponseEntity<?> updateBasicInfo(@RequestBody Map<String, String> data, HttpSession session) {
         try {

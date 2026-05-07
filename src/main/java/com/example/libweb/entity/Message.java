@@ -48,7 +48,7 @@ public class Message {
     @Column(name = "READ_TIME")
     private Date readTime;
     @Column(name = "REMIND_COUNT", nullable = false)
-    private Integer remindCount = 1;  // 默认值设为1
+    private Integer remindCount = 1;
 
     // 构造器
     public Message() {}

@@ -261,9 +261,6 @@ public class AdminController {
             ));
         }
     }
-
-    // 在AdminController类中添加以下方法：
-
     /**
      * 分页获取借阅记录（管理员）
      * 接口：GET /api/admin/borrows
@@ -283,23 +280,15 @@ public class AdminController {
             // 计算起始行和结束行（Oracle ROWNUM分页）
             int startRow = (page - 1) * size;
             int endRow = page * size;
-
-            // 查询数据
             List<Object[]> recordsData = borrowRecordRepository.findAllBorrowRecordsWithInfoPagination(
                     startRow, endRow, status);
-
-            // 统计总数
             int total = borrowRecordRepository.countAllBorrowRecordsWithFilter(status);
-
-            // 计算总页数
             int totalPages = (int) Math.ceil((double) total / size);
             List<Map<String, Object>> recordList = recordsData.stream().map(row -> {
                 Map<String, Object> record = new HashMap<>();
                 record.put("recordId", row[0]);
                 record.put("userId", row[1]);
                 record.put("bookId", row[2]);
-
-                // 日期格式化
                 if (row[3] != null) {
                     record.put("borrowTime", dateFormat.format((Date) row[3]));
                 } else {
@@ -372,23 +361,15 @@ public class AdminController {
     @GetMapping("/borrows/stats")
     public ResponseEntity<?> getBorrowStats() {
         try {
-            // 统计各状态的数量
             List<Object[]> statusCounts = borrowRecordRepository.countByStatusGroup();
-
-            // 统计总数
             int totalBorrowRecords = borrowRecordRepository.countAllBorrowRecordsWithFilter(null);
-
-            // 初始化统计结果
             Map<String, Object> stats = new HashMap<>();
             stats.put("total", totalBorrowRecords);
 
-            // 默认值
             stats.put("borrowed", 0);
             stats.put("overdue", 0);
             stats.put("returned", 0);
             stats.put("renewed", 0);
-
-            // 处理统计结果
             for (Object[] row : statusCounts) {
                 String status = (String) row[0];
                 Number count = (Number) row[1];

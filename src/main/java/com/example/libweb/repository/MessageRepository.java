@@ -14,16 +14,12 @@ import java.util.List;
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
-    // 根据用户ID查找消息
     List<Message> findByUserIdOrderByCreateTimeDesc(Long userId);
 
-    // 根据用户ID和消息类型查找
     List<Message> findByUserIdAndMsgTypeOrderByCreateTimeDesc(Long userId, String msgType);
 
-    // 根据用户ID和状态查找
     List<Message> findByUserIdAndStatusOrderByCreateTimeDesc(Long userId, String status);
 
-    // 根据用户ID统计未读消息数量
     long countByUserIdAndStatus(Long userId, String status);
 
     // 标记消息为已读

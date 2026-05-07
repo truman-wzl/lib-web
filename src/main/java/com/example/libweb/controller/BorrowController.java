@@ -105,8 +105,8 @@ public class BorrowController {
             Calendar calendar = Calendar.getInstance();
             //calendar.add(Calendar.DAY_OF_MONTH, 30);
             calendar.add(Calendar.MINUTE, 1);
-            record.setDueTime(LocalDateTime.now().plusMinutes(1));  // 测试用1分钟
-            // record.setDueTime(LocalDateTime.now().plusDays(30));  // 正式用30天
+            record.setDueTime(LocalDateTime.now().plusMinutes(1));
+            // record.setDueTime(LocalDateTime.now().plusDays(30));
 
             // 状态为"BORROWED"
             record.setStatus("BORROWED");

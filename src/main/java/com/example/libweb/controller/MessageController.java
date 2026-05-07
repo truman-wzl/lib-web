@@ -107,7 +107,6 @@ public class MessageController {
         return result;
     }
 
-//    // 测试接口，发送示例消息
 //    @PostMapping("/send-test")
 //    public Map<String, Object> sendTestMessage(HttpSession session) {
 //        Long userId = getCurrentUserId(session);
@@ -115,8 +114,6 @@ public class MessageController {
 //        if (userId == null) {
 //            return createErrorResponse("用户未登录");
 //        }
-//
-//        // 创建测试消息
 //        Message message = new Message();
 //        message.setUserId(userId);
 //        message.setTitle("测试消息");

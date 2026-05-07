@@ -23,7 +23,7 @@ public class EmailCodeService {
     private final Map<String, EmailCode> codeStore = new ConcurrentHashMap<>();
 
     private String generateKey(String email, String username) {
-        return email + ":" + username;  // 例如：123@qq.com:zhangsan
+        return email + ":" + username;
     }
     // 验证码有效时间（分钟）
     private static final int CODE_EXPIRE_MINUTES = 10;
@@ -107,28 +107,22 @@ public class EmailCodeService {
             logger.warn("验证码不存在，邮箱: {}，用户名: {}", email, username);
             return false;
         }
-
-        // 检查尝试次数
         if (emailCode.getTryCount() >= MAX_TRY_COUNT) {
             codeStore.remove(email);
             logger.warn("邮箱 {} 尝试次数过多", email);
             return false;
         }
-
-        // 检查是否过期
         if (emailCode.getExpireTime().isBefore(LocalDateTime.now())) {
             codeStore.remove(email);
             logger.warn("邮箱 {} 的验证码已过期", email);
             return false;
         }
-
-        // 验证验证码
         boolean isValid = emailCode.getCode().equals(code);
         if (isValid) {
-            codeStore.remove(email); // 验证成功后移除验证码
+            codeStore.remove(email);
             logger.info("邮箱 {} 验证码验证成功", email);
         } else {
-            emailCode.incrementTryCount(); // 增加尝试次数
+            emailCode.incrementTryCount();
             logger.warn("邮箱 {} 验证码验证失败，尝试次数: {}", email, emailCode.getTryCount());
         }
         return isValid;

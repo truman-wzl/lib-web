@@ -209,11 +209,8 @@ WHERE br.STATUS IN ('BORROWED', 'RENEWED')
     @Query(value = "SELECT STATUS, COUNT(*) as count FROM BORROW_RECORD " +
             "GROUP BY STATUS", nativeQuery = true)
     List<Object[]> countByStatusGroup();
-    // 在 BorrowRecordRepository.java 中添加这些方法
-
     /**
      * 借阅趋势 - 统计最近7天的借阅次数（不包含今天）
-     * 返回格式：[["2024-10-01", 5], ["2024-10-02", 8], ...]
      */
     @Query(value = """
     SELECT 

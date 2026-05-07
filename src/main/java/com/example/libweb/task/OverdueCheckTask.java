@@ -60,8 +60,6 @@ public class OverdueCheckTask {
         checkOverdueRecords();
     }
 
-    // OverdueCheckTask.java 修改后的checkOverdueRecords方法
-    // 修改后的 checkOverdueRecords 方法
     public void checkOverdueRecords() {
         logger.info("🔍 开始检查逾期记录...");
 
@@ -78,7 +76,7 @@ public class OverdueCheckTask {
 
             int successCount = 0;
             int failCount = 0;
-            int skippedCount = 0;  // 新增：跳过计数
+            int skippedCount = 0; 
 
             // 2. 为每条逾期记录生成消息
             for (Object[] record : overdueRecords) {
@@ -97,7 +95,7 @@ public class OverdueCheckTask {
                     logger.info("📋 处理逾期记录: 用户={}({}), 图书={}, 借阅ID={}",
                             username, userId, bookName, recordId);
 
-                    // 修改：调用新的 sendOverdueMessage 方法
+                  
                     // 这个方法内部会检查是否已存在，并处理提醒次数
                     Message sentMessage = messageService.sendOverdueMessage(
                             userId,

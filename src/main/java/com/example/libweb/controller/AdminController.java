@@ -30,15 +30,7 @@ public class AdminController {
 
     /**
      * 分页获取用户列表
-     * 接口：GET /api/admin/users
-     * 参数：
-     *   page: 页码，从1开始（默认1）
-     *   size: 每页数量（默认10）
-     *   keyword: 搜索关键词（可选，搜索用户名、邮箱、真实姓名）
-     *   sortField: 排序字段（可选，默认userId）
-     *   sortOrder: 排序方向（asc/desc，默认desc）
      */
-    // 在 AdminController.java 中修改 getUsers 方法
     @GetMapping("/users")
     public ResponseEntity<?> getUsers(
             @RequestParam(defaultValue = "1") int page,

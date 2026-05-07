@@ -79,12 +79,12 @@ public class Message {
 
         Message message = new Message(userId, borrowId, title, content, TYPE_OVERDUE);
         message.setStatus(STATUS_UNREAD);
-        message.setRemindCount(3);  // 逾期消息初始提醒次数为3
+        message.setRemindCount(3);
         return message;
     }
     public static Message createAchievementMessage(Long userId, String achievementName,
                                                    String achievementDescription) {
-        String title = "🏆成就达成";
+        String title = "【成就达成】";
         String content = String.format(
                 "恭喜您！达成成就：%s\n\n" +
                         "成就描述：%s\n\n" +

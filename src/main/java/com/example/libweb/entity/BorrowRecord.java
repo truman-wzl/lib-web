@@ -29,8 +29,6 @@ public class BorrowRecord {
     @Column(name = "RETURN_TIME")
     private LocalDateTime returnTime;
 
-
-
     @Column(name = "STATUS", nullable = false, length = 20)
     private String status;
 

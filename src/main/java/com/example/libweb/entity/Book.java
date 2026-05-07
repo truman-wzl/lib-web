@@ -21,7 +21,7 @@ public class Book {
 
     @Column(name = "PUBLISHER", nullable = false,length = 100)
     private String publisher;
-    //一本书属于一个分类 (对应外键 FK_BOOK_CATEGORY)
+    //关联分类表(外键：FK_BOOK_CATEGORY)
     @ManyToOne
     @JoinColumn(name = "CATEGORY_ID", foreignKey = @ForeignKey(name = "FK_BOOK_CATEGORY"))
     private Category category;

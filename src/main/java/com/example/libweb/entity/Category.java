@@ -19,7 +19,7 @@ public class Category {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "CREATE_TIME")
     private Date createTime = new Date();
-    //映射数据库中的IS_PROTECTED字段
+    // 是否受保护（true=不可删除）
     @Column(name = "IS_PROTECTED")
     private Boolean isProtected = false;  // 默认false
     public Category() {}

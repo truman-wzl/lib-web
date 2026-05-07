@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import java.io.InputStream;
 import java.util.*;
+
 @RestController
 @RequestMapping("/api/books")
 @CrossOrigin(origins = "http://localhost:8081")
@@ -30,12 +31,9 @@ public class BookController {
     private BookService bookService;
     @Autowired
     private CategoryRepository categoryRepository;
-
     @Autowired
     private BookRepository bookRepository;
-    /**
-     * 获取图书列表（分页）
-     */
+
     @GetMapping
     public ResponseEntity<?> getBooks(
             @RequestParam(defaultValue = "0") int page,
@@ -44,25 +42,12 @@ public class BookController {
             Pageable pageable = PageRequest.of(page, size);
             Page<Book> books = bookService.findAllBooks(pageable);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("data", books.getContent());
-            response.put("totalPages", books.getTotalPages());
-            response.put("currentPage", books.getNumber());
-            response.put("totalElements", books.getTotalElements());
-
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(buildPageResponse(books));
         } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "获取图书列表失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
+            return ResponseEntity.badRequest().body(buildErrorResponse("获取图书列表失败: " + e.getMessage()));
         }
     }
 
-    /**
-     * 搜索图书
-     */
     @GetMapping("/search")
     public ResponseEntity<?> searchBooks(
             @RequestParam(required = false) String bookname,
@@ -74,94 +59,47 @@ public class BookController {
             Pageable pageable = PageRequest.of(page, size);
             Page<Book> books = bookService.searchBooks(bookname, author, categoryId, pageable);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("data", books.getContent());
-            response.put("totalPages", books.getTotalPages());
-            response.put("currentPage", books.getNumber());
-            response.put("totalElements", books.getTotalElements());
-
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(buildPageResponse(books));
         } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "搜索图书失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
+            return ResponseEntity.badRequest().body(buildErrorResponse("搜索图书失败: " + e.getMessage()));
         }
     }
 
-    /**
-     * 获取单个图书
-     */
     @GetMapping("/{id}")
     public ResponseEntity<?> getBookById(@PathVariable Long id) {
         try {
             Optional<Book> book = bookService.findById(id);
 
             if (book.isPresent()) {
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", true);
-                response.put("data", book.get());
-                return ResponseEntity.ok(response);
+                return ResponseEntity.ok(buildSuccessResponse(book.get()));
             } else {
-                Map<String, Object> errorResponse = new HashMap<>();
-                errorResponse.put("success", false);
-                errorResponse.put("message", "图书不存在");
-                return ResponseEntity.status(404).body(errorResponse);
+                return ResponseEntity.status(404).body(buildErrorResponse("图书不存在"));
             }
         } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "获取图书失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
+            return ResponseEntity.badRequest().body(buildErrorResponse("获取图书失败: " + e.getMessage()));
         }
     }
 
-    /**
-     * 创建或更新图书
-     */
     @PostMapping
     public ResponseEntity<?> saveBook(@RequestBody Book book) {
         try {
             Book savedBook = bookService.saveBook(book);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "保存成功");
-            response.put("data", savedBook);
-
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(buildSuccessResponse("保存成功", savedBook));
         } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
+            return ResponseEntity.badRequest().body(buildErrorResponse(e.getMessage()));
         }
     }
 
-    /**
-     * 删除图书
-     */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteBook(@PathVariable Long id) {
         try {
             bookService.deleteBook(id);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "删除成功");
-
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(buildSuccessResponse("删除成功", null));
         } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
+            return ResponseEntity.badRequest().body(buildErrorResponse(e.getMessage()));
         }
     }
-    /**
-     * 批量导入图书
-     */
+
     @PostMapping("/import")
     @Transactional
     public ResponseEntity<Map<String, Object>> importBooks(@RequestParam("file") MultipartFile file) {
@@ -212,6 +150,7 @@ public class BookController {
                         String categoryName = getCellStringValue(row.getCell(3));
                         String totalNumberStr = getCellStringValue(row.getCell(4));
                         String canBorrowStr = getCellStringValue(row.getCell(5));
+
                         if (bookName == null || bookName.trim().isEmpty()) {
                             errors.add(createError(rowNum, "书名不能为空"));
                             failCount++;
@@ -243,7 +182,8 @@ public class BookController {
                                 continue;
                             }
                         }
-                        int canBorrow = 0; //默认0
+
+                        int canBorrow = 0;
                         if (canBorrowStr != null && !canBorrowStr.trim().isEmpty()) {
                             try {
                                 canBorrow = Integer.parseInt(canBorrowStr.trim());
@@ -258,26 +198,26 @@ public class BookController {
                                 continue;
                             }
                         }
+
                         if (canBorrow > totalNumber) {
                             errors.add(createError(rowNum, "可借数量(" + canBorrow + ")不能大于总数量(" + totalNumber + ")"));
                             failCount++;
                             continue;
                         }
+                        // 查找或创建默认分类
                         Category category = null;
                         if (categoryName != null && !categoryName.trim().isEmpty()) {
-                            // 尝试查找分类
                             Optional<Category> categoryOpt = categoryRepository.findByCategoryName(categoryName.trim());
                             if (categoryOpt.isPresent()) {
                                 category = categoryOpt.get();
                             } else {
-                                // 分类不存在，使用默认分类 (ID=5)
                                 category = getDefaultCategory();
                                 errors.add(createError(rowNum, "分类 '" + categoryName + "' 不存在，已分配到默认分类'5中转类5'"));
                             }
                         } else {
-                            // 分类名为空，使用默认分类
                             category = getDefaultCategory();
                         }
+                        // 检查图书是否已存在（书名+作者+出版社相同视为同一本）
                         Optional<Book> existingBookOpt = findByBooknameAndAuthorAndPublisher(
                                 bookName.trim(), author.trim(), publisher.trim());
 
@@ -285,7 +225,7 @@ public class BookController {
                             Book existingBook = existingBookOpt.get();
                             int newTotal = existingBook.getTotalNumber() + totalNumber;
                             int newCanBorrow = existingBook.getCanBorrow() + canBorrow;
-                            // 合并后再次验证可借数 <= 总数
+
                             if (newCanBorrow > newTotal) {
                                 errors.add(createError(rowNum,
                                         String.format("合并后，图书《%s》的可借数量(%d)将大于总数量(%d)，跳过本行更新。",
@@ -327,15 +267,17 @@ public class BookController {
                 response.put("message", "解析Excel文件失败: " + e.getMessage());
                 return ResponseEntity.badRequest().body(response);
             }
+
             if (!booksToSave.isEmpty()) {
                 try {
-                    List<Book> savedBooks = bookRepository.saveAll(booksToSave);
+                    bookRepository.saveAll(booksToSave);
                 } catch (Exception e) {
                     response.put("success", false);
                     response.put("message", "保存图书数据失败: " + e.getMessage());
                     return ResponseEntity.badRequest().body(response);
                 }
             }
+
             response.put("success", true);
             response.put("message", String.format("导入完成。共处理%d行，成功%d行（新增%d本，更新%d本），失败%d行。",
                     (successCount + failCount), successCount, addCount, updateCount, failCount));
@@ -354,12 +296,42 @@ public class BookController {
             e.printStackTrace();
             response.put("success", false);
             response.put("message", "系统错误，导入失败: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(response);
+            return ResponseEntity.status(500).body(response);
         }
     }
 
+    private Map<String, Object> buildPageResponse(Page<?> page) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", page.getContent());
+        response.put("totalPages", page.getTotalPages());
+        response.put("currentPage", page.getNumber());
+        response.put("totalElements", page.getTotalElements());
+        return response;
+    }
 
-    //获取默认分类（ID=5，“5中转类5”）
+    private Map<String, Object> buildSuccessResponse(Object data) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", data);
+        return response;
+    }
+
+    private Map<String, Object> buildSuccessResponse(String message, Object data) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", message);
+        response.put("data", data);
+        return response;
+    }
+
+    private Map<String, Object> buildErrorResponse(String message) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", false);
+        response.put("message", message);
+        return response;
+    }
+
     private Category getDefaultCategory() {
         return categoryRepository.findById(5L)
                 .orElseGet(() -> {
@@ -370,10 +342,10 @@ public class BookController {
                 });
     }
 
-    //图书已存在
     private Optional<Book> findByBooknameAndAuthorAndPublisher(String bookname, String author, String publisher) {
         return bookRepository.findByBooknameAndAuthorAndPublisher(bookname, author, publisher);
     }
+
     private boolean isRowEmpty(Row row) {
         if (row == null) {
             return true;
@@ -389,6 +361,7 @@ public class BookController {
         }
         return true;
     }
+
     private String getCellStringValue(Cell cell) {
         if (cell == null) {
             return "";
@@ -419,6 +392,7 @@ public class BookController {
                 return "";
         }
     }
+
     private Map<String, Object> createError(int row, String reason) {
         Map<String, Object> error = new HashMap<>();
         error.put("row", row);

@@ -16,114 +16,56 @@ public class MessageController {
     @Autowired
     private MessageService messageService;
 
-    /**
-     * 获取当前用户的消息列表
-     * GET /api/messages/my-messages
-     */
     @GetMapping("/my-messages")
     public Map<String, Object> getMyMessages(HttpSession session) {
         Long userId = getCurrentUserId(session);
         if (userId == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", "用户未登录，请先登录");
-            return error;
+            return createErrorResponse("用户未登录，请先登录");
         }
         return messageService.getUserMessages(userId);
     }
 
-    /**
-     * 标记消息为已读
-     * POST /api/messages/{id}/read
-     */
     @PostMapping("/{id}/read")
     public Map<String, Object> markAsRead(@PathVariable Long id, HttpSession session) {
         Long userId = getCurrentUserId(session);
-
         if (userId == null) {
             return createErrorResponse("用户未登录");
         }
-
         return messageService.markAsRead(id, userId);
     }
 
-    /**
-     * 全部标记为已读
-     * POST /api/messages/mark-all-read
-     */
     @PostMapping("/mark-all-read")
     public Map<String, Object> markAllAsRead(HttpSession session) {
         Long userId = getCurrentUserId(session);
-
         if (userId == null) {
             return createErrorResponse("用户未登录");
         }
-
         return messageService.markAllAsRead(userId);
     }
 
-    /**
-     * 删除消息
-     * DELETE /api/messages/{id}
-     */
     @DeleteMapping("/{id}")
     public Map<String, Object> deleteMessage(@PathVariable Long id, HttpSession session) {
         Long userId = getCurrentUserId(session);
-
         if (userId == null) {
             return createErrorResponse("用户未登录");
         }
-
         return messageService.deleteMessage(id, userId);
     }
 
-    /**
-     * 获取未读消息数量
-     * GET /api/messages/unread-count
-     */
     @GetMapping("/unread-count")
     public Map<String, Object> getUnreadCount(HttpSession session) {
         Long userId = getCurrentUserId(session);
-
         if (userId == null) {
             return createErrorResponse("用户未登录");
         }
 
         Map<String, Object> result = new HashMap<>();
         long unreadCount = messageService.getUnreadCount(userId);
-
         result.put("success", true);
         result.put("unreadCount", unreadCount);
-
         return result;
     }
 
-//    @PostMapping("/send-test")
-//    public Map<String, Object> sendTestMessage(HttpSession session) {
-//        Long userId = getCurrentUserId(session);
-//
-//        if (userId == null) {
-//            return createErrorResponse("用户未登录");
-//        }
-//        Message message = new Message();
-//        message.setUserId(userId);
-//        message.setTitle("测试消息");
-//        message.setContent("这是一条测试消息，用于测试消息系统功能。\n\n发送时间：" + new Date());
-//        message.setMsgType(Message.TYPE_ACHIEVEMENT);
-//        message.setStatus(Message.STATUS_UNREAD);
-//        message.setCreateTime(new Date());
-//
-//        Message savedMessage = messageService.sendMessage(message);
-//
-//        Map<String, Object> result = new HashMap<>();
-//        result.put("success", true);
-//        result.put("message", "测试消息发送成功");
-//        result.put("data", savedMessage);
-//
-//        return result;
-//    }
-
-    // MessageController.java
     private Long getCurrentUserId(HttpSession session) {
         Userdata currentUser = (Userdata) session.getAttribute("loginUser");
         if (currentUser != null) {
@@ -155,13 +97,13 @@ public class MessageController {
         return null;
     }
 
-    // 创建错误响应
     private Map<String, Object> createErrorResponse(String message) {
         Map<String, Object> result = new HashMap<>();
         result.put("success", false);
         result.put("message", message);
         return result;
     }
+
     @GetMapping("/my-messages-test")
     public Map<String, Object> getMyMessagesTest() {
         Map<String, Object> result = new HashMap<>();

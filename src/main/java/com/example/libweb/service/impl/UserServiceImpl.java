@@ -35,9 +35,9 @@ public class UserServiceImpl implements UserService {
 
         long userCount = userRepository.count();
         if (userCount == 0) {
-            user.setRole("ADMIN"); //第一个注册的用户自动成为管理员
+            user.setRole("ADMIN");
         } else {
-            user.setRole("USER");  //其他用户为普通用户
+            user.setRole("USER");
         }
         user.setStatus("ACTIVE");
 
@@ -45,7 +45,6 @@ public class UserServiceImpl implements UserService {
             user.setCreateTime(new Date());
         }
 
-        //保存用户
         return userRepository.save(user);
     }
 
@@ -87,17 +86,15 @@ public class UserServiceImpl implements UserService {
         }
         return user;
     }
-    //更新用户信息
+
     @Override
     @Transactional
     public Userdata updateUserInfo(Userdata updateInfo) {
         Userdata currentUser = getCurrentUserInfo();
 
-        // 从数据库获取完整用户信息
         Userdata dbUser = userRepository.findById(currentUser.getUserId())
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
 
-        // 只更新允许修改的字段
         if (updateInfo.getRealName() != null) {
             dbUser.setRealName(updateInfo.getRealName());
         }
@@ -127,7 +124,6 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(dbUser);
     }
 
-    //修改密码
     @Override
     @Transactional
     public boolean updatePassword(String oldPassword, String newPassword) {
@@ -145,7 +141,7 @@ public class UserServiceImpl implements UserService {
 
         return true;
     }
-    //修改用户名
+
     @Override
     @Transactional
     public Userdata updateUsername(String newUsername) {

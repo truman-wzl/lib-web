@@ -19,17 +19,15 @@ public class EmailCodeService {
 
     private static final Logger logger = LoggerFactory.getLogger(EmailCodeService.class);
 
-    //存储验证码
+    // 存储验证码（邮箱:用户名 -> 验证码信息）
     private final Map<String, EmailCode> codeStore = new ConcurrentHashMap<>();
 
     private String generateKey(String email, String username) {
         return email + ":" + username;
     }
-    // 验证码有效时间（分钟）
+
     private static final int CODE_EXPIRE_MINUTES = 10;
-    // 发送间隔
     private static final int SEND_INTERVAL_SECONDS = 60;
-    // 最大尝试次数
     private static final int MAX_TRY_COUNT = 5;
 
     @Autowired(required = false)
@@ -38,21 +36,17 @@ public class EmailCodeService {
     @Value("${spring.mail.username:noreply@example.com}")
     private String fromEmail;
 
-    /**
-     * 发送验证码到指定邮箱
-     */
     public String sendCode(String email,String username) {
         try {
-            // 检查邮箱格式
             if (email == null || email.trim().isEmpty() || !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
                 throw new RuntimeException("邮箱格式不正确");
             }
             if (username == null || username.trim().isEmpty()) {
                 throw new RuntimeException("用户名不能为空");
             }
-            // 使用组合key
+
             String key = generateKey(email, username);
-            // 检查发送频率
+
             EmailCode existingCode = codeStore.get(key);
             if (existingCode != null) {
                 long secondsSinceLastSend = ChronoUnit.SECONDS.between(
@@ -62,11 +56,10 @@ public class EmailCodeService {
                 }
             }
 
-            // 生成6位数字验证码
             String code = String.format("%06d", new Random().nextInt(999999));
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime expireTime = now.plusMinutes(CODE_EXPIRE_MINUTES);
-            // 存储验证码
+
             codeStore.put(key, new EmailCode(code, expireTime, now,username,email));
             try {
                 sendEmail(email, code,username);
@@ -86,17 +79,11 @@ public class EmailCodeService {
         }
     }
 
-    /**
-     * 验证验证码
-     * @param email 邮箱
-     * @param code 用户输入的验证码
-     * @return 是否验证成功
-     */
     public boolean verifyCode(String email, String username, String code) {
         if (email == null || code == null || code.trim().length() != 6) {
             return false;
         }
-        // 使用组合 key
+
         String key = (username == null || username.trim().isEmpty()) ? email : generateKey(email, username);
 
         EmailCode emailCode = codeStore.get(key);
@@ -125,10 +112,6 @@ public class EmailCodeService {
         return isValid;
     }
 
-    /**
-     * 移除验证码
-     * @param email 邮箱
-     */
     public void removeCode(String email) {
         removeCode(email, null);
     }
@@ -139,18 +122,6 @@ public class EmailCodeService {
         logger.info("移除验证码，邮箱: {}，用户名: {}", email, username);
     }
 
-    /**
-     * 生成6位数字验证码
-     */
-    private String generateCode() {
-        Random random = new Random();
-        int code = 100000 + random.nextInt(900000); // 生成100000-999999之间的数字
-        return String.valueOf(code);
-    }
-
-    /**
-     * 发送邮件
-     */
     private void sendEmail(String toEmail, String code,String username) {
         if (mailSender == null) {
             logger.warn("邮件服务未配置，无法发送验证码到: {}，验证码为: {}", toEmail, code);
@@ -175,9 +146,6 @@ public class EmailCodeService {
         }
     }
 
-    /**
-     * 内部类：存储验证码信息
-     */
     private static class EmailCode {
         private final String code;
         private final LocalDateTime expireTime;

@@ -22,22 +22,13 @@ public class MessageController {
      */
     @GetMapping("/my-messages")
     public Map<String, Object> getMyMessages(HttpSession session) {
-        System.out.println(" GET /api/messages/my-messages 被调用");
-        System.out.println("Session ID: " + session.getId());
-        System.out.println("loginUser: " + session.getAttribute("loginUser"));
-
         Long userId = getCurrentUserId(session);
-        System.out.println("获取到的用户ID: " + userId);
-
         if (userId == null) {
-            System.out.println("用户未登录，返回401");
             Map<String, Object> error = new HashMap<>();
             error.put("success", false);
             error.put("message", "用户未登录，请先登录");
             return error;
         }
-
-        System.out.println("用户已登录，ID: " + userId);
         return messageService.getUserMessages(userId);
     }
 

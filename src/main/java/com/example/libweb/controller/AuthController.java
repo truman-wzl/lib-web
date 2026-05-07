@@ -235,8 +235,6 @@ public class AuthController {
             //发送验证码，同时传入用户名和邮箱
             try {
                 String code = emailCodeService.sendCode(email, username);
-                System.out.println("验证码发送成功，验证码: " + code + ", 邮箱: " + email + ", 用户: " + username);
-
                 return ResponseEntity.ok().body(Map.of(
                         "success", true,
                         "message", "验证码已发送到邮箱，请查收"

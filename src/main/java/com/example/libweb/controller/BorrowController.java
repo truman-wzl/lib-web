@@ -201,47 +201,32 @@ public class BorrowController {
             }
 
             Long userId = currentUser.getUserId();
-            System.out.println("从Session获取当前用户ID: " + userId);
-            //查询前先更新该用户的逾期记录
+
             try {
-
                 List<BorrowRecord> overdueRecords = borrowRecordRepository.findRecordsToMarkOverdueByUserId(userId);
-
 
                 int updatedCount = 0;
                 for (BorrowRecord record : overdueRecords) {
                     int result = borrowRecordRepository.markAsOverdue(record.getRecordId());
                     if (result > 0) {
                         updatedCount++;
-                        System.out.println(" 自动更新逾期状态: 记录ID=" + record.getRecordId()
-                                + ", 用户ID=" + userId);
                     }
-                }
-
-                if (updatedCount > 0) {
-                    System.out.println(" 用户ID=" + userId + " 的逾期记录已更新, 共" + updatedCount + "条");
                 }
             } catch (Exception e) {
                 System.err.println("逾期状态更新失败: " + e.getMessage());
             }
-            System.out.println("筛选参数 - status: " + status + ", keyword: " + keyword);
-
-            //验证分页参数
             if (page < 0) {
                 page = 0;
             }
             if (size <= 0) {
                 size = 10;
             } else if (size > 100) {
-                size = 100; // 限制最大每页100条
+                size=100;
             }
 
-            //计算分页参数（Oracle ROWNUM从1开始）
             int startRow = page * size;
             int endRow = (page + 1) * size;
 
-            //处理筛选参数
-            //将空字符串转为null，以便SQL中的IS NULL判断
             if (status != null && status.trim().isEmpty()) {
                 status = null;
             } else if (status != null) {
@@ -251,19 +236,13 @@ public class BorrowController {
             if (keyword != null && keyword.trim().isEmpty()) {
                 keyword = null;
             }
-
-            System.out.println("处理后的筛选参数 - status: " + status + ", keyword: " + keyword);
-
-
             List<Object[]> results = null;
             int totalItems = 0;
 
             if ((status == null || "ALL".equalsIgnoreCase(status)) && keyword == null) {
-                //如果没有筛选条件，使用原来的查询
                 results = borrowRecordRepository.findByUserIdWithBookInfoPagination(userId, startRow, endRow);
                 totalItems = borrowRecordRepository.countByUserId(userId);
             } else {
-                // 如果状态是"ALL"，则视为null
                 if (status != null && "ALL".equalsIgnoreCase(status)) {
                     status = null;
                 }
@@ -273,8 +252,6 @@ public class BorrowController {
                 totalItems = borrowRecordRepository.countByUserIdWithFilter(userId, status, keyword);
             }
 
-            System.out.println("查询到记录数: " + (results != null ? results.size() : 0));
-            System.out.println("总记录数: " + totalItems);
             List<Map<String, Object>> records = new ArrayList<>();
             if (results != null) {
                 for (Object[] row : results) {

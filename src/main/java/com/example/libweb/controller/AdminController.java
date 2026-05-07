@@ -220,7 +220,6 @@ public class AdminController {
             if ("CANCELLED".equals(newStatus)) {
                 try {
                     int unreturnedCount = borrowRecordRepository.countBorrowedByUser(userId);
-                    System.out.println("[注销检查] 用户ID: " + userId + ", 未归还图书数: " + unreturnedCount);
                     if (unreturnedCount > 0) {
                         return ResponseEntity.badRequest().body(Map.of(
                                 "success", false,
@@ -228,7 +227,6 @@ public class AdminController {
                         ));
                     }
                 } catch (Exception e) {
-                    System.out.println("[错误] 查询未归还图书失败: " + e.getMessage());
                     e.printStackTrace();
                     return ResponseEntity.badRequest().body(Map.of(
                             "success", false,
@@ -236,20 +234,12 @@ public class AdminController {
                     ));
                 }
             }
-
-            // 记录操作日志（简化版本）
-            System.out.println("用户状态变更: userId=" + userId +
-                    ", 从 " + oldStatus + " 变为 " + newStatus);
-
-            // 更新状态
             user.setStatus(newStatus);
             userdataRepository.save(user);
-
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "操作成功"
             ));
-
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of(

@@ -66,11 +66,8 @@ public class EmailCodeService {
             String code = String.format("%06d", new Random().nextInt(999999));
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime expireTime = now.plusMinutes(CODE_EXPIRE_MINUTES);
-
-            // 存储验证码，包括发送时间和过期时间
+            // 存储验证码
             codeStore.put(key, new EmailCode(code, expireTime, now,username,email));
-
-            System.out.println("生成的验证码: " + code + " 已存储，邮箱: " + email + ", 过期时间: " + expireTime);
             try {
                 sendEmail(email, code,username);
                 logger.info("邮件发送成功，邮箱: {}", email);

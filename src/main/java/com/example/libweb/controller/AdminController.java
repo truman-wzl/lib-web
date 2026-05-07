@@ -221,8 +221,6 @@ public class AdminController {
             }
 
             if ("CANCELLED".equals(newStatus)) {
-                // 注销前检查是否有未归还的图书
-                // ✅ 使用 BorrowRecordRepository 检查用户是否有未归还的图书
                 try {
                     // 调用 Repository 方法获取未归还图书数量
                     int unreturnedCount = borrowRecordRepository.countBorrowedByUser(userId);

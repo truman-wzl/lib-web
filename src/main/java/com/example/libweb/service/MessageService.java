@@ -205,10 +205,10 @@ public class MessageService {
                                          int remainingCount, int currentReminder) {
         return String.format(
                 "您借阅的图书《%s》已逾期！(第%d次提醒)\n\n" +
-                        "📅 借阅日期：%tF\n" +
-                        "⏰ 应还日期：%tF\n" +
-                        "🔖 图书编号：%s\n" +
-                        "⏳ 剩余提醒次数：%d次\n\n" +
+                        " 借阅日期：%tF\n" +
+                        " 应还日期：%tF\n" +
+                        " 图书编号：%s\n" +
+                        " 剩余提醒次数：%d次\n\n" +
                         "请尽快到图书馆办理还书手续，以免产生更多逾期费用。",
                 bookName, currentReminder, borrowTime, dueTime, bookId, remainingCount
         );
@@ -224,30 +224,27 @@ public class MessageService {
                 logger.warn("邮件服务未配置，跳过邮件发送");
                 return;
             }
-
-            // 1. 获取用户信息
+            //获取用户信息
             Userdata user = userdataRepository.findById(userId).orElse(null);
             if (user == null) {
                 logger.warn("用户不存在，用户ID: {}", userId);
                 return;
             }
 
-            // 2. 检查用户是否有邮箱
+            //检查用户是否有邮箱
             String userEmail = user.getEmail();
             if (userEmail == null || userEmail.trim().isEmpty()) {
                 logger.warn("用户 {} 没有邮箱，无法发送逾期提醒邮件", user.getUsername());
                 return;
             }
 
-            // 3. 计算逾期天数
+            //计算逾期天数
             long overdueDays = 0;
             if (dueTime != null) {
                 Date now = new Date();
                 overdueDays = (now.getTime() - dueTime.getTime()) / (1000 * 60 * 60 * 24);
                 if (overdueDays < 0) overdueDays = 0;
             }
-
-            // 4. 构建邮件内容
             SimpleMailMessage mailMessage = new SimpleMailMessage();
             mailMessage.setFrom(fromEmail);
             mailMessage.setTo(userEmail);
@@ -256,11 +253,11 @@ public class MessageService {
             String emailContent = String.format(
                     "亲爱的 %s 用户：\n\n" +
                             "您借阅的图书《%s》已逾期%s%s！\n\n" +
-                            "📅 应还日期：%tF\n" +
-                            "📅 今天日期：%tF\n" +
-                            "⏰ 逾期天数：%d 天\n" +
-                            "🔔 当前提醒：第%d次提醒\n" +
-                            "⏳ 剩余提醒次数：%d 次\n\n" +
+                            " 应还日期：%tF\n" +
+                            " 今天日期：%tF\n" +
+                            " 逾期天数：%d 天\n" +
+                            " 当前提醒：第%d次提醒\n" +
+                            " 剩余提醒次数：%d 次\n\n" +
                             "请尽快登录系统处理，或前往图书馆办理还书手续。\n\n" +
                             "逾期费用计算：\n" +
                             "• 普通图书：每天 0.5 元\n" +
@@ -284,14 +281,14 @@ public class MessageService {
 
             mailMessage.setText(emailContent);
 
-            // 5. 发送邮件
+            // 发送邮件
             mailSender.send(mailMessage);
 
-            logger.info("✅ 已发送第{}次逾期提醒邮件到: {}, 图书: {}",
+            logger.info(" 已发送第{}次逾期提醒邮件到: {}, 图书: {}",
                     currentReminder, userEmail, bookName);
 
         } catch (Exception e) {
-            logger.error("❌ 发送逾期提醒邮件失败: {}", e.getMessage());
+            logger.error(" 发送逾期提醒邮件失败: {}", e.getMessage());
             // 邮件发送失败不影响系统运行
         }
     }

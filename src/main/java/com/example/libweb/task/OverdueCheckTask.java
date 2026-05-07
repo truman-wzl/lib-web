@@ -109,7 +109,7 @@ public class OverdueCheckTask {
                                 username, bookName, remainingCount);
                     } else {
                         skippedCount++;
-                        logger.info("⏹跳过发送: 用户={}, 图书={}, 原因=已有消息或次数用完",
+                        logger.info("跳过发送: 用户={}, 图书={}, 原因=已有消息或次数用完",
                                 username, bookName);
                     }
                 } catch (Exception e) {

@@ -90,10 +90,10 @@ public class Message {
     }
     public static Message createAchievementMessage(Long userId, String achievementName,
                                                    String achievementDescription) {
-        String title = "🏆 成就达成";
+        String title = "🏆成就达成";
         String content = String.format(
                 "恭喜您！达成成就：%s\n\n" +
-                        "🎯 成就描述：%s\n\n" +
+                        "成就描述：%s\n\n" +
                         "继续保持，解锁更多成就！",
                 achievementName,
                 achievementDescription

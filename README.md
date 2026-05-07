@@ -24,7 +24,7 @@
 - Maven（可选，项目自带 Maven Wrapper，推荐直接用 `mvnw`）
 - Oracle 数据库可访问（本地或远程）
 
-### 2) 配置文件（非常重要）
+### 2) 配置文件
 本项目运行依赖 `src/main/resources/application.properties`。
 
 仓库中提供了示例模板：

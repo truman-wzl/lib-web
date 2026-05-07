@@ -102,7 +102,6 @@ public class CategoryController {
     @PostMapping
     public ResponseEntity<?> createCategory(@RequestBody Category category) {
         try {
-            //基本验证
             if (category.getCategoryName() == null || category.getCategoryName().trim().isEmpty()) {
                 throw new RuntimeException("分类名称不能为空");
             }
@@ -141,7 +140,6 @@ public class CategoryController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCategory(@PathVariable Long id, @RequestBody Category category) {
         try {
-            //基本验证
             if (category.getCategoryName() == null || category.getCategoryName().trim().isEmpty()) {
                 throw new RuntimeException("分类名称不能为空");
             }
@@ -303,12 +301,8 @@ public class CategoryController {
                         if (row == null) {
                             continue;
                         }
-
-                        // 获取单元格值
                         String categoryName = getCellStringValue(row.getCell(0));
                         String isProtectedStr = getCellStringValue(row.getCell(1));
-
-                        // 验证数据
                         List<String> validationErrors = validateCategoryRow(categoryName, isProtectedStr, rowNum);
 
                         if (!validationErrors.isEmpty()) {

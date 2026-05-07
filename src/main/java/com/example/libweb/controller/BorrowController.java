@@ -45,18 +45,13 @@ public class BorrowController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // 1. 使用 BorrowRequest 的验证方法
             if (!borrowRequest.isValid()) {
                 response.put("success", false);
                 response.put("message", "用户ID和图书ID必须为正整数");
                 return ResponseEntity.badRequest().body(response);
             }
-
-            // 2. 从 BorrowRequest 获取参数
             Long userId = borrowRequest.getUserId();
             Long bookId = borrowRequest.getBookId();
-
-            // 3. 验证用户是否存在
             Optional<Userdata> userOpt = userdataRepository.findById(userId);
             if (!userOpt.isPresent()) {
                 response.put("success", false);
@@ -66,7 +61,7 @@ public class BorrowController {
 
             Userdata user = userOpt.get();
 
-            // 4. 验证图书是否存在
+            //验证图书是否存在
             Optional<Book> bookOpt = bookRepository.findById(bookId);
             if (!bookOpt.isPresent()) {
                 response.put("success", false);
@@ -75,8 +70,6 @@ public class BorrowController {
             }
 
             Book book = bookOpt.get();
-
-            // 5. 验证图书库存
             Integer canBorrow = book.getCanBorrow();
             if (canBorrow == null || canBorrow == 0) {
                 response.put("success", false);
@@ -84,15 +77,13 @@ public class BorrowController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // 6. 检查用户是否已借阅此书且未归还
+            //检查用户是否已借阅此书且未归还
             int borrowCount = borrowRecordRepository.countBorrowedByUserAndBook(userId, bookId);
             if (borrowCount > 0) {
                 response.put("success", false);
                 response.put("message", "您已借阅此书且未归还");
                 return ResponseEntity.badRequest().body(response);
             }
-
-            // 7. 检查用户借阅上限（最多5本）
             int userBorrowCount = borrowRecordRepository.countBorrowedByUser(userId);
             if (userBorrowCount >= 5) {
                 response.put("success", false);
@@ -107,13 +98,10 @@ public class BorrowController {
                 response.put("message", "库存不足，已被其他同学借走");
                 return ResponseEntity.badRequest().body(response);
             }
-            // 8. 创建借阅记录
             BorrowRecord record = new BorrowRecord();
             record.setUserId(userId);
             record.setBookId(bookId);
             record.setBorrowTime(LocalDateTime.now());
-
-            // 计算应还时间（30天后）
             Calendar calendar = Calendar.getInstance();
             //calendar.add(Calendar.DAY_OF_MONTH, 30);
             calendar.add(Calendar.MINUTE, 1);
@@ -126,15 +114,13 @@ public class BorrowController {
 
             borrowRecordRepository.save(record);
 
-            // 9. 更新图书库存
+            //更新图书库存
 //            int newCanBorrow = canBorrow - 1;
 //            if (newCanBorrow < 0) {
 //                newCanBorrow = 0;
 //            }
 //            book.setCanBorrow(newCanBorrow);
 //            bookRepository.save(book);
-
-            // 10. 返回成功响应
             response.put("success", true);
             response.put("message", "借阅成功");
             response.put("data", Map.of(

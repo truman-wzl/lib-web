@@ -121,7 +121,6 @@ public class MessageService {
     public Message sendOverdueMessage(Long userId, Long borrowId, String bookName,
                                       Date borrowTime, Date dueTime, String bookId) {
         try {
-            // 1. 检查是否已存在该借阅的逾期消息
             List<Message> existingMessages = messageRepository.findOverdueMessageByBorrowId(borrowId);
             Message message = null;
 

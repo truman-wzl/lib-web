@@ -89,8 +89,6 @@ public class AdminController {
 
                 return userMap;
             }).collect(Collectors.toList());
-
-            // 构建响应
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "获取用户列表成功");
@@ -143,7 +141,6 @@ public class AdminController {
 
             long todayRegistered = 0; // 暂时设为0
 
-            // 构建响应
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "获取统计信息成功");
@@ -338,8 +335,6 @@ public class AdminController {
 
                 return record;
             }).collect(Collectors.toList());
-
-            // 构建响应
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "获取借阅记录成功");
@@ -417,8 +412,6 @@ public class AdminController {
                     }
                 }
             }
-
-            // 构建响应
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "获取借阅统计成功");

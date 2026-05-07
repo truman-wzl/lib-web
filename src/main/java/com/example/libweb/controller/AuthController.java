@@ -76,8 +76,6 @@ public class AuthController {
         try {
             String username = loginData.get("username");
             String password = loginData.get("password");
-
-            // 基本验证
             if (username == null || username.trim().isEmpty()) {
                 throw new RuntimeException("请输入用户名");
             }
@@ -139,8 +137,6 @@ public class AuthController {
             }
 
             Userdata updatedUser = userService.updateUsername(newUsername);
-
-            // 构建响应
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "用户名修改成功");
@@ -189,8 +185,6 @@ public class AuthController {
                 updateInfo.setPhone(phone.trim());
             }
             Userdata updatedUser = userService.updateUserInfo(updateInfo);
-
-            // 构建响应
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "信息更新成功");
@@ -214,9 +208,8 @@ public class AuthController {
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
-    //验证状态缓存
     private final Map<String, LocalDateTime> verifiedEmails = new ConcurrentHashMap<>();
-    private static final int VERIFIED_EXPIRE_MINUTES = 10; //验证通过有效期
+    private static final int VERIFIED_EXPIRE_MINUTES = 10;
     @PostMapping("/forgot-password/send-code")
     public ResponseEntity<?> sendResetCode(@RequestBody Map<String, String> data) {
         try {
@@ -292,7 +285,7 @@ public class AuthController {
                 ));
             }
 
-            // 1. 验证邮箱是否注册
+            //验证邮箱是否注册
             Optional<Userdata> userOpt = userdataRepository.findByEmail(email);
             if (!userOpt.isPresent()) {
                 return ResponseEntity.badRequest().body(Map.of(

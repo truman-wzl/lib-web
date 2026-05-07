@@ -149,29 +149,18 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public Userdata updateUsername(String newUsername) {
-        //获取session用户用于验证
         Userdata sessionUser = getCurrentUserInfo();
-
-        //检查用户名是否与当前相同
         if (newUsername.equals(sessionUser.getUsername())) {
             throw new RuntimeException("新用户名不能与当前用户名相同");
         }
-
-        //检查用户名是否已存在
         Optional<Userdata> existingUser = userRepository.findByUsername(newUsername);
         if (existingUser.isPresent() && !existingUser.get().getUserId().equals(sessionUser.getUserId())) {
             throw new RuntimeException("用户名已存在");
         }
-
-        //从数据库获取实体进行更新
         Userdata dbUser = userRepository.findById(sessionUser.getUserId())
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
-
-        // 更新数据库实体
         dbUser.setUsername(newUsername);
         Userdata updatedUser = userRepository.save(dbUser);
-
-        // 更新session
         sessionUser.setUsername(newUsername);
         session.setAttribute("loginUser", sessionUser);
 

@@ -31,11 +31,7 @@ public class StatsController {
         try {
             //生成过去7天的日期
             List<String> dateList = generateLast7DaysExcludingToday();
-
-            //查询数据库
             List<Object[]> queryResults = borrowRecordRepository.findBorrowTrendLast7Days();
-
-            //将查询结果转换为Map
             Map<String, Integer> dateCountMap = new HashMap<>();
             for (Object[] row : queryResults) {
                 String dateStr = (String) row[0];

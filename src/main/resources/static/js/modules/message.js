@@ -63,7 +63,7 @@ const MessageModule = {
             console.log("尝试从后端获取消息...");
             const response = await fetch('/api/messages/my-messages', {
                 method: 'GET',
-                credentials: 'include',  // 重要：确保发送 session cookie
+                credentials: 'include',  //确保发送 session cookie
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'

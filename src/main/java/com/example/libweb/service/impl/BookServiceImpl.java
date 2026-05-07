@@ -29,7 +29,6 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public Book saveBook(Book book) {
-        //基本验证
         if (book.getBookname() == null || book.getBookname().trim().isEmpty()) {
             throw new RuntimeException("图书名称不能为空");
         }
@@ -42,7 +41,7 @@ public class BookServiceImpl implements BookService {
             throw new RuntimeException("可借数量必须大于等于0");
         }
 
-        //验证可借数量不超过总数
+        //可借数量不超过总数
         if (book.getCanBorrow() > book.getTotalNumber()) {
             throw new RuntimeException("可借数量不能大于图书总数");
         }

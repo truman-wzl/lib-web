@@ -21,8 +21,6 @@ import java.util.List;
 @Component
 @Transactional
 public class OverdueCheckTask {
-
-    // 添加 logger
     private static final Logger logger = LoggerFactory.getLogger(OverdueCheckTask.class);
 
     @Autowired
@@ -36,8 +34,8 @@ public class OverdueCheckTask {
      */
     @PostConstruct
     public void init() {
-        logger.info("🚀 OverdueCheckTask 初始化完成");
-        logger.info("🎯 定时任务已配置: 每天凌晨1点执行");
+        logger.info(" OverdueCheckTask 初始化完成");
+        logger.info(" 定时任务已配置: 每天凌晨1点执行");
     }
 
     /**
@@ -45,7 +43,7 @@ public class OverdueCheckTask {
      */
     @Scheduled(fixedRate = 60000) // 1分钟
     public void testCheckOverdue() {
-        logger.info("🧪 测试任务执行: 当前时间 = {}", LocalDateTime.now());
+        logger.info(" 测试任务执行: 当前时间 = {}", LocalDateTime.now());
 
         // 手动调用逾期检查
         checkOverdueRecords();
@@ -56,21 +54,21 @@ public class OverdueCheckTask {
      */
     @Scheduled(cron = "0 0 1 * * ?")
     public void scheduledCheck() {
-        logger.info("⏰ 正式定时任务执行: 当前时间 = {}", LocalDateTime.now());
+        logger.info(" 正式定时任务执行: 当前时间 = {}", LocalDateTime.now());
         checkOverdueRecords();
     }
 
     public void checkOverdueRecords() {
-        logger.info("🔍 开始检查逾期记录...");
+        logger.info("开始检查逾期记录...");
 
         try {
-            // 1. 查询所有逾期记录
+            //查询所有逾期记录
             List<Object[]> overdueRecords = borrowRecordRepository.findOverdueRecordsWithUserAndBook();
 
-            logger.info("📊 查询到 {} 条逾期记录", overdueRecords.size());
+            logger.info("查询到 {} 条逾期记录", overdueRecords.size());
 
             if (overdueRecords.isEmpty()) {
-                logger.info("📭 没有逾期记录需要处理");
+                logger.info(" 没有逾期记录需要处理");
                 return;
             }
 
@@ -78,10 +76,10 @@ public class OverdueCheckTask {
             int failCount = 0;
             int skippedCount = 0; 
 
-            // 2. 为每条逾期记录生成消息
+            //为每条逾期记录生成消息
             for (Object[] record : overdueRecords) {
                 try {
-                    // 解析记录
+                    //解析记录
                     Long recordId = ((Number) record[0]).longValue();  // RECORD_ID
                     Long userId = ((Number) record[1]).longValue();     // USER_ID
                     Long bookId = ((Number) record[2]).longValue();      // BOOK_ID
@@ -92,43 +90,40 @@ public class OverdueCheckTask {
                     Date borrowTime = (Date) record[3];  // BORROW_TIME
                     Date dueTime = (Date) record[4];     // DUE_TIME
 
-                    logger.info("📋 处理逾期记录: 用户={}({}), 图书={}, 借阅ID={}",
+                    logger.info("处理逾期记录: 用户={}({}), 图书={}, 借阅ID={}",
                             username, userId, bookName, recordId);
 
-                  
-                    // 这个方法内部会检查是否已存在，并处理提醒次数
                     Message sentMessage = messageService.sendOverdueMessage(
                             userId,
-                            recordId,        // borrowId
+                            recordId,
                             bookName,
                             borrowTime,
                             dueTime,
-                            String.valueOf(bookId)  // 图书编号
+                            String.valueOf(bookId)
                     );
 
                     if (sentMessage != null) {
                         successCount++;
                         Integer remainingCount = sentMessage.getRemindCount();
-                        logger.info("✅ 已发送逾期提醒: 用户={}, 图书={}, 剩余次数={}",
+                        logger.info("已发送逾期提醒: 用户={}, 图书={}, 剩余次数={}",
                                 username, bookName, remainingCount);
                     } else {
-                        // 返回 null 表示跳过（已存在或次数用完）
                         skippedCount++;
-                        logger.info("⏹️ 跳过发送: 用户={}, 图书={}, 原因=已有消息或次数用完",
+                        logger.info("⏹跳过发送: 用户={}, 图书={}, 原因=已有消息或次数用完",
                                 username, bookName);
                     }
                 } catch (Exception e) {
                     failCount++;
-                    logger.error("❌ 处理记录失败: 借阅ID={}, 错误: {}",
+                    logger.error(" 处理记录失败: 借阅ID={}, 错误: {}",
                             ((Number) record[0]).longValue(), e.getMessage());
                 }
             }
 
-            logger.info("🎉 逾期检查完成: 成功 {} 条, 跳过 {} 条, 失败 {} 条",
+            logger.info("逾期检查完成: 成功 {} 条, 跳过 {} 条, 失败 {} 条",
                     successCount, skippedCount, failCount);
 
         } catch (Exception e) {
-            logger.error("💥 逾期检查任务执行失败: {}", e.getMessage());
+            logger.error("逾期检查任务执行失败: {}", e.getMessage());
         }
     }
 
@@ -137,7 +132,7 @@ public class OverdueCheckTask {
      * 手动触发接口
      */
     public void triggerManually() {
-        logger.info("🔄 手动触发逾期检查");
+        logger.info("手动触发逾期检查");
         checkOverdueRecords();
     }
 }

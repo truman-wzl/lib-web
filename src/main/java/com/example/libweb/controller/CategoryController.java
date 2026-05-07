@@ -14,14 +14,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.util.*;
 
-// 原有的import保持不变，添加以下import：
-
-// POI相关导入
+// POI
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 
-// Spring文件上传
+// Spring 文件上传
 import org.springframework.web.multipart.MultipartFile;
 
 // Java IO
@@ -41,20 +39,18 @@ import java.util.HashMap;
  */
 @RestController
 @RequestMapping("/api/categories")
-@CrossOrigin(origins = "http://localhost:8081") // 允许你的前端（port:8081）调用
+@CrossOrigin(origins = "http://localhost:8081")
 public class CategoryController {
     @Autowired
-    private BookRepository bookRepository; // 需要你创建这个接口
+    private BookRepository bookRepository;
 
     @Autowired
     private CategoryRepository categoryRepository;
 
-    // ==================== 1. 查询：获取所有分类 ====================
-    // ==================== 1. 查询：获取所有分类 ====================
+    //获取所有分类
     @GetMapping
     public ResponseEntity<?> getAllCategories(
-            @RequestParam(value = "keyword", required = false) String keyword) {  // 添加keyword参数
-
+            @RequestParam(value = "keyword", required = false) String keyword) {
         try {
             List<Category> categories;
 
@@ -78,7 +74,7 @@ public class CategoryController {
         }
     }
 
-    // ==================== 2. 查询：根据ID获取单个分类 ====================
+    //根据ID获取单个分类
     @GetMapping("/{id}")
     public ResponseEntity<?> getCategoryById(@PathVariable Long id) {
         try {
@@ -102,32 +98,32 @@ public class CategoryController {
         }
     }
 
-    // ==================== 3. 新增：创建分类 ====================
+    //创建分类
     @PostMapping
     public ResponseEntity<?> createCategory(@RequestBody Category category) {
         try {
-            // 1. 基本验证
+            //基本验证
             if (category.getCategoryName() == null || category.getCategoryName().trim().isEmpty()) {
                 throw new RuntimeException("分类名称不能为空");
             }
             String categoryName = category.getCategoryName().trim();
 
-            // 2. 唯一性验证
+            // 唯一
             if (categoryRepository.existsByCategoryName(categoryName)) {
                 throw new RuntimeException("分类名称 \"" + categoryName + "\" 已存在");
             }
 
-            // 3. 保存到数据库
+            // 保存到数据库
             Category savedCategory = categoryRepository.save(category);
 
-            // 4. 返回成功响应
+            //成功响应
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "分类创建成功");
             response.put("data", savedCategory);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            // 业务逻辑错误（如验证失败）
+            // 业务逻辑错误
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", e.getMessage());
@@ -141,34 +137,34 @@ public class CategoryController {
         }
     }
 
-    // ==================== 4. 更新：修改分类 ====================
+    //修改分类
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCategory(@PathVariable Long id, @RequestBody Category category) {
         try {
-            // 1. 基本验证
+            //基本验证
             if (category.getCategoryName() == null || category.getCategoryName().trim().isEmpty()) {
                 throw new RuntimeException("分类名称不能为空");
             }
             String newName = category.getCategoryName().trim();
 
-            // 2. 确认要修改的分类存在
+            //确认要修改的分类存在
             Category existingCategory = categoryRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("要修改的分类 (ID: " + id + ") 不存在"));
-            // 【新增】3. 保护检查：如果是受保护分类，禁止修改
+            //保护检查：如果是受保护分类禁止修改
             if (Boolean.TRUE.equals(existingCategory.getIsProtected())) {
                 throw new RuntimeException("受保护的系统分类，禁止修改");
             }
-            // 4. 唯一性验证：只有在新名字和旧名字不同，且新名字已被其他分类使用时，才报错
+            //只有在新名字和旧名字不同，且新名字已被其他分类使用时，才报错
             if (!existingCategory.getCategoryName().equals(newName)
                     && categoryRepository.existsByCategoryName(newName)) {
                 throw new RuntimeException("分类名称 \"" + newName + "\" 已被其他分类使用");
             }
 
-            // 5 更新并保存
+            //更新并保存
             existingCategory.setCategoryName(newName);
             Category updatedCategory = categoryRepository.save(existingCategory);
 
-            // 6. 返回成功响应
+            //返回成功响应
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "分类更新成功");
@@ -187,43 +183,42 @@ public class CategoryController {
         }
     }
 
-    // ==================== 5. 删除：删除分类 ====================
+    //删除分类
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCategory(@PathVariable Long id) {
         try {
-            // 1. 确认要删除的分类存在
-            Category categoryToDelete = categoryRepository.findById(id) // 使用 findById 以便获取对象
+            //确认要删除的分类存在
+            Category categoryToDelete = categoryRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("要删除的分类 (ID: " + id + ") 不存在"));
 
-            // 🛡️ 【新增】2. 保护检查：如果是受保护分类，禁止删除
+            //保护检查
             if (Boolean.TRUE.equals(categoryToDelete.getIsProtected())) {
                 throw new RuntimeException("受保护的系统分类，禁止删除");
             }
 
-            // 3. 查找“5中转类5”分类
+            //查找“5中转类5”分类
             Category transferCategory = categoryRepository.findByCategoryName("5中转类5")
                     .orElseThrow(() -> new RuntimeException("系统错误：未找到中转分类‘5中转类5’，请联系管理员"));
 
-            // 4. 检查是否试图删除中转分类本身（双重保险）
+            //是否试图删除中转分类本身
             if (categoryToDelete.getCategoryId().equals(transferCategory.getCategoryId())) {
                 throw new RuntimeException("无法删除系统必需的中转分类");
             }
 
-            // 5. 检查该分类下是否有图书
-            long bookCount = bookRepository.countByCategoryId(id); // 需要 BookRepository 有这个方法
+            //检查该分类下是否有图书
+            long bookCount = bookRepository.countByCategoryId(id);
 
             Map<String, Object> response = new HashMap<>();
             if (bookCount > 0) {
-                // 6. 有图书：执行转移
-                int movedCount = bookRepository.updateBooksCategory(id, transferCategory.getCategoryId()); // 需要此方法
-                // 7. 删除原分类
+
+                int movedCount = bookRepository.updateBooksCategory(id, transferCategory.getCategoryId());
+
                 categoryRepository.delete(categoryToDelete);
 
                 response.put("success", true);
                 response.put("message", String.format("删除成功。已将 %d 本图书从「%s」转移至「%s」。", movedCount, categoryToDelete.getCategoryName(), transferCategory.getCategoryName()));
                 response.put("movedCount", movedCount);
             } else {
-                // 8. 无图书：直接删除
                 categoryRepository.delete(categoryToDelete);
                 response.put("success", true);
                 response.put("message", "删除成功。");
@@ -247,16 +242,12 @@ public class CategoryController {
     @PostMapping("/import")
     public ResponseEntity<?> importCategories(@RequestParam("file") MultipartFile file) {
         Map<String, Object> response = new HashMap<>();
-
         try {
-            // 1. 验证文件
             if (file.isEmpty()) {
                 response.put("success", false);
                 response.put("message", "文件不能为空");
                 return ResponseEntity.badRequest().body(response);
             }
-
-            // 2. 验证文件类型
             String fileName = file.getOriginalFilename();
             if (fileName == null || !(fileName.endsWith(".xlsx") || fileName.endsWith(".xls"))) {
                 response.put("success", false);
@@ -264,7 +255,7 @@ public class CategoryController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // 3. 解析Excel
+            // 解析Excel
             List<Map<String, Object>> dataRows = new ArrayList<>();
             List<Map<String, Object>> errors = new ArrayList<>();
             int totalRows = 0;
@@ -273,7 +264,7 @@ public class CategoryController {
             try (InputStream inputStream = file.getInputStream()) {
                 Workbook workbook = null;
 
-                // 根据文件扩展名创建不同的Workbook对象
+
                 if (fileName.endsWith(".xlsx")) {
                     workbook = new XSSFWorkbook(inputStream);
                 } else if (fileName.endsWith(".xls")) {
@@ -287,7 +278,7 @@ public class CategoryController {
                 }
 
                 try {
-                    // 获取第一个工作表
+
                     Sheet sheet = workbook.getSheetAt(0);
                     totalRows = sheet.getPhysicalNumberOfRows();
 
@@ -296,8 +287,6 @@ public class CategoryController {
                         response.put("message", "Excel文件没有数据行");
                         return ResponseEntity.badRequest().body(response);
                     }
-
-                    // 验证表头
                     Row headerRow = sheet.getRow(0);
                     if (headerRow == null ||
                             !"category_name".equalsIgnoreCase(getCellStringValue(headerRow.getCell(0))) ||
@@ -306,11 +295,9 @@ public class CategoryController {
                         response.put("message", "Excel表头格式不正确，请使用正确的模板格式（第一行：category_name, is_protected）");
                         return ResponseEntity.badRequest().body(response);
                     }
-
-                    // 4. 处理每一行数据
-                    for (int i = 1; i < totalRows; i++) {  // 从第2行开始，第1行是表头
+                    for (int i = 1; i < totalRows; i++) {  // 从第2行开始
                         Row row = sheet.getRow(i);
-                        int rowNum = i + 1;  // Excel行号（从1开始）
+                        int rowNum = i + 1;  // Excel行从1开始
 
                         // 跳过空行
                         if (row == null) {
@@ -325,40 +312,35 @@ public class CategoryController {
                         List<String> validationErrors = validateCategoryRow(categoryName, isProtectedStr, rowNum);
 
                         if (!validationErrors.isEmpty()) {
-                            // 如果有验证错误，添加到错误列表
+
                             for (String error : validationErrors) {
                                 errors.add(createError(rowNum, error));
                             }
                             continue;
                         }
 
-                        // 转换为boolean
+                        //转换为boolean
                         boolean isProtected = false;
                         if (isProtectedStr != null && !isProtectedStr.trim().isEmpty()) {
                             isProtectedStr = isProtectedStr.trim().toLowerCase();
                             isProtected = isProtectedStr.equals("true") || isProtectedStr.equals("1") || isProtectedStr.equals("是");
                         }
 
-                        // 检查分类是否已存在 - 使用Optional处理
+                        // 检查分类是否已存在
                         java.util.Optional<Category> existingCategoryOpt = categoryRepository.findByCategoryName(categoryName);
                         if (existingCategoryOpt.isPresent()) {
-                            // 分类已存在，跳过
                             errors.add(createError(rowNum, "分类已存在，跳过：" + categoryName));
                             continue;
                         }
 
-                        // 创建新的分类
                         Category category = new Category();
                         category.setCategoryName(categoryName);
                         category.setIsProtected(isProtected);
                         category.setCreateTime(new Date());
 
-                        // 保存到数据库
                         try {
                             categoryRepository.save(category);
                             successCount++;
-
-                            // 记录成功的数据
                             Map<String, Object> rowData = new HashMap<>();
                             rowData.put("row", rowNum);
                             rowData.put("categoryName", categoryName);
@@ -370,7 +352,6 @@ public class CategoryController {
                         }
                     }
                 } finally {
-                    // 确保关闭workbook
                     if (workbook != null) {
                         workbook.close();
                     }
@@ -382,8 +363,7 @@ public class CategoryController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // 5. 返回结果
-            int dataCount = totalRows - 1;  // 减去表头行
+            int dataCount = totalRows - 1;
             int failedCount = errors.size();
 
             response.put("success", true);
@@ -400,12 +380,10 @@ public class CategoryController {
             return ResponseEntity.ok(response);
 
         } catch (RuntimeException e) {
-            // 业务逻辑错误
             response.put("success", false);
             response.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
-            // 系统错误
             response.put("success", false);
             response.put("message", "导入失败：" + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
@@ -419,23 +397,20 @@ public class CategoryController {
             return "";
         }
 
-        // 使用getCellType()方法，注意：POI 4.0+使用CellType枚举
         if (cell.getCellType() == CellType.STRING) {
             return cell.getStringCellValue().trim();
         } else if (cell.getCellType() == CellType.NUMERIC) {
-            // 如果是布尔型的数字（1或0），转换为true/false
             double numValue = cell.getNumericCellValue();
             if (numValue == 1.0) {
                 return "true";
             } else if (numValue == 0.0) {
                 return "false";
             }
-            // 否则返回整数形式
             return String.valueOf((int) numValue);
         } else if (cell.getCellType() == CellType.BOOLEAN) {
             return String.valueOf(cell.getBooleanCellValue());
         } else if (cell.getCellType() == CellType.FORMULA) {
-            // 对于公式单元格，尝试获取计算结果
+            //对于公式单元格，尝试获取计算结果
             try {
                 CellType resultType = cell.getCachedFormulaResultType();
                 if (resultType == CellType.STRING) {

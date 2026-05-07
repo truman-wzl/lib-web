@@ -1,4 +1,4 @@
-// message.js - 用户消息中心（纯JavaScript版本）
+// message.js
 console.log("!!! message.js 开始执行 !!!");
 
 // 定义消息模块
@@ -8,27 +8,26 @@ const MessageModule = {
 
     // 渲染方法 - 必须要有这个方法
     render: function() {
-        console.log("📨 渲染消息模块");
+        console.log("渲染消息模块");
         return `
         <div class="container-fluid message-container">
-            <!-- 消息模块将在这里渲染 -->
         </div>`;
     },
 
     // 模块渲染完成后执行
     onRender: function(container) {
-        console.log("🔧 消息模块 onRender 被调用");
+        console.log("消息模块 onRender 被调用");
         this.initialize(container);
     },
 
     // 初始化
     initialize: function(container) {
-        console.log("🔄 初始化消息模块");
+        console.log("初始化消息模块");
 
         // 获取实际容器
         this.container = container || document.querySelector('.message-container');
         if (!this.container) {
-            console.error("❌ 找不到消息容器");
+            console.error("找不到消息容器");
             return;
         }
 
@@ -56,14 +55,12 @@ const MessageModule = {
 
     // 加载消息列表
     async loadMessages() {
-        console.log("📥 开始加载消息");
+        console.log("开始加载消息");
         this.state.loading = true;
         this.renderMessages();
 
         try {
-            console.log("🔍 尝试从后端获取消息...");
-
-            // 关键修复：添加 credentials: 'include' 来发送 cookie/session
+            console.log("尝试从后端获取消息...");
             const response = await fetch('/api/messages/my-messages', {
                 method: 'GET',
                 credentials: 'include',  // 重要：确保发送 session cookie
@@ -73,32 +70,30 @@ const MessageModule = {
                 }
             });
 
-            console.log("📨 消息API响应状态:", response.status, response.statusText);
+            console.log("消息API响应状态:", response.status, response.statusText);
 
             if (response.ok) {
                 const data = await response.json();
-                console.log("✅ 消息数据获取成功:", data);
+                console.log("消息数据获取成功:", data);
 
-                // 这里需要根据后端返回的数据结构调整
-                if (data.success !== false) {  // 注意：您的接口返回 success: true/false
-                    this.state.messages = data.messages || data.data || [];  // 尝试不同的属性名
+                if (data.success !== false) {
+                    this.state.messages = data.messages || data.data || [];
                     this.state.unreadCount = data.unreadCount || 0;
 
-                    // 初始化展开状态
+                    //初始化展开状态
                     this.state.expandedMessages = {};
                     this.state.messages.forEach(msg => {
                         this.state.expandedMessages[msg.id] = false;
                     });
 
                 } else {
-                    console.warn("⚠️ 后端返回错误:", data.message);
+                    console.warn("后端返回错误:", data.message);
                     this.showError('加载失败', data.message || '未知错误');
-                    // 如果没有后端API，使用模拟数据
                     this.loadMockData();
                 }
             } else if (response.status === 401) {
                 // 未登录
-                console.error("❌ 用户未登录，状态码 401");
+                console.error("用户未登录，状态码 401");
                 this.showError('登录过期', '请重新登录');
 
                 // 跳转到登录页
@@ -106,13 +101,13 @@ const MessageModule = {
                     window.location.href = 'index.html?module=login';
                 }, 2000);
             } else {
-                console.warn("⚠️ 消息API返回错误:", response.status, await response.text());
+                console.warn("消息API返回错误:", response.status, await response.text());
                 this.showError('加载失败', `HTTP ${response.status}: ${response.statusText}`);
                 // 使用模拟数据
                 this.loadMockData();
             }
         } catch (error) {
-            console.error("❌ 加载消息失败:", error);
+            console.error("加载消息失败:", error);
             this.showError('网络错误', '无法连接到服务器，使用模拟数据');
             // 使用模拟数据
             this.loadMockData();
@@ -122,17 +117,17 @@ const MessageModule = {
         }
     },
 
-    // 加载模拟数据（用于开发测试）
+    // 加载模拟数据
     loadMockData() {
-        console.log("📊 加载模拟数据");
+        console.log("加载模拟数据");
 
         const mockMessages = [
             {
                 id: 1,
                 userId: 1,
                 borrowId: 1001,
-                title: "📚 图书逾期提醒",
-                content: "您借阅的《Java编程思想》已逾期3天！\n\n📅 借阅日期：2024-01-10\n⏰ 应还日期：2024-02-10\n🔖 图书编号：BK001\n\n请尽快到图书馆办理还书手续，以免产生更多逾期费用。",
+                title: "图书逾期提醒",
+                content: "您借阅的《Java编程思想》已逾期3天！\n\n借阅日期：2024-01-10\n应还日期：2024-02-10\n图书编号：BK001\n\n请尽快到图书馆办理还书手续，以免产生更多逾期费用。",
                 msgType: "OVERDUE",
                 status: "UNREAD",
                 createTime: new Date(Date.now() - 3600000).toISOString() // 1小时前
@@ -140,7 +135,7 @@ const MessageModule = {
             {
                 id: 2,
                 userId: 1,
-                title: "🏆 成就达成",
+                title: "成就达成",
                 content: "恭喜您！达成成就：首次借阅\n感谢您使用图书管理系统，借阅了第一本图书。",
                 msgType: "ACHIEVEMENT",
                 status: "READ",
@@ -160,10 +155,10 @@ const MessageModule = {
 
     // 渲染消息列表
     renderMessages() {
-        console.log("🎨 渲染消息列表");
+        console.log("渲染消息列表");
 
         if (!this.container) {
-            console.error("❌ 容器不存在，无法渲染");
+            console.error("容器不存在，无法渲染");
             return;
         }
 
@@ -379,28 +374,24 @@ const MessageModule = {
 
     // 刷新消息
     refreshMessages() {
-        console.log("🔄 刷新消息");
+        console.log("刷新消息");
         this.loadMessages();
     },
 
     // 切换筛选条件
     changeFilter(filter) {
-        console.log("🎯 切换筛选条件:", filter);
+        console.log("切换筛选条件:", filter);
         this.state.filter = filter;
         this.renderMessages();
     },
 
     // 切换消息展开状态
     toggleMessage(messageId) {
-        console.log("📂 切换消息展开状态:", messageId);
+        console.log("切换消息展开状态:", messageId);
         this.state.expandedMessages[messageId] = !this.state.expandedMessages[messageId];
         this.renderMessages();
     },
-    // ========================================
-    // 消息模块 - 与泡泡同步的关键代码
-    // ========================================
 
-    // 在 MessageModule 对象内部添加以下方法：
     // 获取未读消息数
     getUnreadCount() {
         if (!this.state || !this.state.messages) {
@@ -410,7 +401,7 @@ const MessageModule = {
     },
     // 标记消息为已读
     async markAsRead(messageId) {
-        console.log("✅ 标记消息为已读:", messageId);
+        console.log("标记消息为已读:", messageId);
         try {
             const response = await fetch(`/api/messages/${messageId}/read`, {
                 method: 'POST',
@@ -423,7 +414,6 @@ const MessageModule = {
             if (response.ok) {
                 const data = await response.json();
                 if (data.success) {
-                    // 更新本地状态
                     const message = this.state.messages.find(m => m.id === messageId);
                     if (message) {
                         message.status = 'READ';
@@ -431,8 +421,6 @@ const MessageModule = {
                     }
                     this.showSuccess('操作成功', '消息已标记为已读');
                     this.renderMessages();
-
-                    // 🔥 触发泡泡更新
                     this.notifyBadgeUpdate();
                 }
             } else {
@@ -446,7 +434,7 @@ const MessageModule = {
                 this.renderMessages();
             }
         } catch (error) {
-            console.error("❌ 标记已读失败:", error);
+            console.error("标记已读失败:", error);
             // 模拟成功（用于测试）
             const message = this.state.messages.find(m => m.id === messageId);
             if (message) {
@@ -459,7 +447,7 @@ const MessageModule = {
     },
     // 全部标记为已读
     markAllAsRead: async function() {
-        console.log("✅ 全部标记为已读");
+        console.log("全部标记为已读");
 
         if (this.state.unreadCount === 0) {
             this.showInfo('提示', '没有未读消息');
@@ -493,7 +481,6 @@ const MessageModule = {
                     this.showSuccess('操作成功', data.message || '已标记所有消息为已读');
                     this.renderMessages();
 
-                    // 🔥 触发泡泡更新
                     this.notifyBadgeUpdate();
                 }
             } else {
@@ -509,7 +496,7 @@ const MessageModule = {
                 this.renderMessages();
             }
         } catch (error) {
-            console.error("❌ 全部标记已读失败:", error);
+            console.error("全部标记已读失败:", error);
             this.state.messages.forEach(msg => {
                 if (msg.status === 'UNREAD') {
                     msg.status = 'READ';
@@ -521,10 +508,8 @@ const MessageModule = {
         }
     },
     // 通知泡泡管理器更新
-    // message.js 中修改
-    // 在markAsRead和markAllAsRead方法中添加：
     notifyBadgeUpdate: function() {
-        console.log('🔔 消息状态变化，通知泡泡更新');
+        console.log('消息状态变化，通知泡泡更新');
 
         // 触发全局事件
         const event = new CustomEvent('message-updated', {
@@ -539,7 +524,7 @@ const MessageModule = {
     },
     // 删除消息
     async deleteMessage(messageId) {
-        console.log("🗑️ 删除消息:", messageId);
+        console.log("删除消息:", messageId);
 
         const message = this.state.messages.find(m => m.id === messageId);
         if (!message) return;
@@ -586,8 +571,8 @@ const MessageModule = {
                 this.renderMessages();
             }
         } catch (error) {
-            console.error("❌ 删除消息失败:", error);
-            // 模拟成功（用于测试）
+            console.error("删除消息失败:", error);
+            // 模拟成功
             const index = this.state.messages.findIndex(m => m.id === messageId);
             if (index !== -1) {
                 if (this.state.messages[index].status === 'UNREAD') {
@@ -613,7 +598,7 @@ const MessageModule = {
     getMessageIcon(msgType) {
         switch(msgType) {
             case 'OVERDUE': return 'bi-exclamation-triangle';
-            case 'ACHIEVEMENT': return 'bi-trophy';  // 奖杯图标表示成就
+            case 'ACHIEVEMENT': return 'bi-trophy';
             default: return 'bi-info-circle';
         }
     },
@@ -693,21 +678,20 @@ const MessageModule = {
 
 };
 
-console.log("📦 定义消息模块完成");
+console.log("定义消息模块完成");
 
 // 注册模块
 console.log("开始注册消息模块...");
 if (typeof window !== 'undefined') {
     if (typeof window.safeRegisterModule === 'function') {
         window.safeRegisterModule('message', MessageModule);
-        console.log("✅ 通过 window.safeRegisterModule 注册消息模块");
+        console.log("通过 window.safeRegisterModule 注册消息模块");
     } else if (typeof window.registerModule === 'function') {
         window.registerModule('message', MessageModule);
-        console.log("✅ 通过 window.registerModule 注册消息模块");
+        console.log("通过 window.registerModule 注册消息模块");
     } else {
-        // 备用方案
         window.MessageModule = MessageModule;
-        console.log("⚠️ MessageModule 已设置为全局变量，但未自动注册");
+        console.log("MessageModule 已设置为全局变量，但未自动注册");
     }
 }
 

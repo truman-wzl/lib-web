@@ -1,8 +1,8 @@
 package com.example.libweb.controller;
 
-import com.example.libweb.entity.Category;  // 需要添加这个
+import com.example.libweb.entity.Category;
 import com.example.libweb.repository.BookRepository;
-import com.example.libweb.repository.CategoryRepository;  // 需要添加这个
+import com.example.libweb.repository.CategoryRepository;
 import com.example.libweb.entity.Book;
 import com.example.libweb.service.BookService;
 import org.apache.poi.ss.usermodel.*;
@@ -13,14 +13,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.transaction.annotation.Transactional;  // 需要添加这个
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import java.io.InputStream;  // 需要添加这个
-import java.util.*;  // 需要添加这个
+import java.io.InputStream;
+import java.util.*;
 @RestController
 @RequestMapping("/api/books")
 @CrossOrigin(origins = "http://localhost:8081")
@@ -28,7 +28,6 @@ public class BookController {
 
     @Autowired
     private BookService bookService;
-    // ✅ 添加这两个依赖
     @Autowired
     private CategoryRepository categoryRepository;
 
@@ -189,31 +188,28 @@ public class BookController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // 3. 解析和处理Excel
             List<Map<String, Object>> errors = new ArrayList<>();
             List<Book> booksToSave = new ArrayList<>();
             int successCount = 0;
             int failCount = 0;
             int addCount = 0;
-            int updateCount = 0; // 新增：记录更新了多少本已存在的书
+            int updateCount = 0;
 
             try (InputStream inputStream = file.getInputStream()) {
                 Workbook workbook = WorkbookFactory.create(inputStream);
                 Sheet sheet = workbook.getSheetAt(0);
                 int totalRows = sheet.getPhysicalNumberOfRows();
 
-                if (totalRows <= 1) { // 只有表头
+                if (totalRows <= 1) {
                     response.put("success", false);
                     response.put("message", "Excel文件没有数据行");
                     return ResponseEntity.badRequest().body(response);
                 }
 
-                // 4. 从第2行开始读取（跳过表头）
                 for (int i = 1; i < totalRows; i++) {
                     Row row = sheet.getRow(i);
-                    int rowNum = i + 1; // Excel行号（从1开始）
+                    int rowNum = i + 1;
 
-                    // 跳过空行
                     if (row == null || isRowEmpty(row)) {
                         continue;
                     }
@@ -226,8 +222,6 @@ public class BookController {
                         String categoryName = getCellStringValue(row.getCell(3));
                         String totalNumberStr = getCellStringValue(row.getCell(4));
                         String canBorrowStr = getCellStringValue(row.getCell(5));
-
-                        // 5. 验证必填字段
                         if (bookName == null || bookName.trim().isEmpty()) {
                             errors.add(createError(rowNum, "书名不能为空"));
                             failCount++;
@@ -244,7 +238,6 @@ public class BookController {
                             continue;
                         }
 
-                        // 6. 验证并转换总数量
                         int totalNumber = 0;
                         if (totalNumberStr != null && !totalNumberStr.trim().isEmpty()) {
                             try {
@@ -260,9 +253,7 @@ public class BookController {
                                 continue;
                             }
                         }
-
-                        // 7. 验证并转换可借数量（作为数字处理）
-                        int canBorrow = 0; // 默认0
+                        int canBorrow = 0; //默认0
                         if (canBorrowStr != null && !canBorrowStr.trim().isEmpty()) {
                             try {
                                 canBorrow = Integer.parseInt(canBorrowStr.trim());
@@ -277,15 +268,11 @@ public class BookController {
                                 continue;
                             }
                         }
-
-                        // 8. 验证可借数量不超过总数量
                         if (canBorrow > totalNumber) {
                             errors.add(createError(rowNum, "可借数量(" + canBorrow + ")不能大于总数量(" + totalNumber + ")"));
                             failCount++;
                             continue;
                         }
-
-                        // 9. 处理分类
                         Category category = null;
                         if (categoryName != null && !categoryName.trim().isEmpty()) {
                             // 尝试查找分类
@@ -301,18 +288,13 @@ public class BookController {
                             // 分类名为空，使用默认分类
                             category = getDefaultCategory();
                         }
-
-                        // 10. 检查图书是否已存在（核心：书名、作者、出版社）
-                        // 注意：这里调用的是您在Controller中定义的私有方法，其内部会调用bookService或bookRepository
                         Optional<Book> existingBookOpt = findByBooknameAndAuthorAndPublisher(
                                 bookName.trim(), author.trim(), publisher.trim());
 
                         if (existingBookOpt.isPresent()) {
-                            // 10.1 已存在：合并库存
                             Book existingBook = existingBookOpt.get();
                             int newTotal = existingBook.getTotalNumber() + totalNumber;
                             int newCanBorrow = existingBook.getCanBorrow() + canBorrow;
-
                             // 合并后再次验证可借数 <= 总数
                             if (newCanBorrow > newTotal) {
                                 errors.add(createError(rowNum,
@@ -330,7 +312,6 @@ public class BookController {
                             successCount++;
 
                         } else {
-                            // 10.2 不存在：创建新书
                             Book newBook = new Book();
                             newBook.setBookname(bookName.trim());
                             newBook.setAuthor(author.trim());
@@ -357,7 +338,7 @@ public class BookController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // 11. 批量保存
+            //批量保存
             if (!booksToSave.isEmpty()) {
                 try {
                     // 使用Repository的saveAll进行批量保存，效率更高
@@ -368,8 +349,6 @@ public class BookController {
                     return ResponseEntity.badRequest().body(response);
                 }
             }
-
-            // 12. 构造返回结果
             response.put("success", true);
             response.put("message", String.format("导入完成。共处理%d行，成功%d行（新增%d本，更新%d本），失败%d行。",
                     (successCount + failCount), successCount, addCount, updateCount, failCount));
@@ -392,14 +371,13 @@ public class BookController {
         }
     }
 
-    /**
-     * 获取默认分类（ID=5，“5中转类5”）
-     */
+
+    //获取默认分类（ID=5，“5中转类5”）
     private Category getDefaultCategory() {
-        // 优先从数据库获取
+        //优先从数据库获取
         return categoryRepository.findById(5L)
                 .orElseGet(() -> {
-                    // 如果数据库中连默认分类都没有，创建一个临时对象（通常不会发生）
+                    //如果数据库中连默认分类都没有，创建一个临时对象
                     Category defaultCategory = new Category();
                     defaultCategory.setCategoryId(5L);
                     defaultCategory.setCategoryName("5中转类5");
@@ -407,13 +385,11 @@ public class BookController {
                 });
     }
 
-    // 修改图书已存在检查逻辑：
+    //图书已存在
     private Optional<Book> findByBooknameAndAuthorAndPublisher(String bookname, String author, String publisher) {
-        // 如果BookService有这个方法，用bookService的
-        // 否则用bookRepository的
         return bookRepository.findByBooknameAndAuthorAndPublisher(bookname, author, publisher);
     }
-    // 辅助方法：判断行是否为空
+    //判断行是否为空
     private boolean isRowEmpty(Row row) {
         if (row == null) {
             return true;
@@ -430,12 +406,11 @@ public class BookController {
         return true;
     }
 
-    // 辅助方法：获取单元格字符串值
+    //获取单元格字符串值
     private String getCellStringValue(Cell cell) {
         if (cell == null) {
             return "";
         }
-
         switch (cell.getCellType()) {
             case STRING:
                 return cell.getStringCellValue().trim();
@@ -443,7 +418,6 @@ public class BookController {
                 if (DateUtil.isCellDateFormatted(cell)) {
                     return cell.getDateCellValue().toString();
                 } else {
-                    // 避免科学计数法
                     double num = cell.getNumericCellValue();
                     if (num == (long) num) {
                         return String.valueOf((long) num);
@@ -464,7 +438,7 @@ public class BookController {
         }
     }
 
-    // 辅助方法：创建错误信息
+    //创建错误信息
     private Map<String, Object> createError(int row, String reason) {
         Map<String, Object> error = new HashMap<>();
         error.put("row", row);

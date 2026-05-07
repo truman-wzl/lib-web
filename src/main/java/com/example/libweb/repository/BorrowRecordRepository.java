@@ -29,15 +29,14 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
     int countBorrowedByUser(@Param("userId") Long userId);
 
     /**
-     * 根据用户ID查询借阅记录（无分页，保持现有逻辑不变）
+     * 根据用户ID查询借阅记录（无分页）
      */
     @Query(value = "SELECT * FROM BORROW_RECORD WHERE USER_ID = :userId ORDER BY BORROW_TIME DESC",
             nativeQuery = true)
     List<BorrowRecord> findByUserId(@Param("userId") Long userId);
 
     /**
-     * 根据用户ID查询借阅记录（带图书信息，后端分页）
-     * 修正：移除不存在的ISBN和COVER_URL字段
+     * 根据用户ID查询借阅记录（带图书信息和分页）
      */
     @Query(value = "SELECT br.RECORD_ID, br.USER_ID, br.BOOK_ID, br.BORROW_TIME, " +
             "br.DUE_TIME, br.RETURN_TIME, br.STATUS, br.CREATE_TIME, " +
@@ -54,7 +53,7 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
             @Param("endRow") int endRow);
 
     /**
-     * 根据用户ID统计借阅记录总数（新增，用于分页）
+     * 根据用户ID统计借阅记录总数（分页）
      */
     @Query(value = "SELECT COUNT(*) FROM BORROW_RECORD WHERE USER_ID = :userId",
             nativeQuery = true)
@@ -80,8 +79,7 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
     @Query(value = "SELECT * FROM BORROW_RECORD WHERE RECORD_ID = :recordId", nativeQuery = true)
     Optional<BorrowRecord> findByRecordId(@Param("recordId") Long recordId);
     /**
-     * 根据用户ID查询借阅记录（带图书信息和筛选条件，后端分页）
-     * 注意：Oracle ROWNUM 的写法
+     * 根据用户ID查询借阅记录（带图书信息和筛选、分页）
      */
     @Query(value = """
     SELECT br.RECORD_ID, br.USER_ID, br.BOOK_ID, br.BORROW_TIME, 
@@ -109,15 +107,15 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
             @Param("keyword") String keyword); // 关键词参数
 
     /**
-     * 根据用户ID统计借阅记录总数（带筛选条件）
+     * 根据用户ID统计借阅记录总数（带筛选）
      */
     @Query(value = "SELECT COUNT(*) FROM BORROW_RECORD br " +
             "LEFT JOIN BOOK b ON br.BOOK_ID = b.BOOK_ID " +
             "WHERE br.USER_ID = :userId " +
-            "AND (:status IS NULL OR br.STATUS = :status) " +  // ✅ 状态筛选
+            "AND (:status IS NULL OR br.STATUS = :status) " +
             "AND (:keyword IS NULL OR (UPPER(b.BOOKNAME) LIKE UPPER('%' || :keyword || '%') " +
             "     OR UPPER(b.AUTHOR) LIKE UPPER('%' || :keyword || '%') " +
-            "     OR TO_CHAR(b.BOOK_ID) LIKE '%' || :keyword || '%'))",  // ✅ 新增：图书编号搜索
+            "     OR TO_CHAR(b.BOOK_ID) LIKE '%' || :keyword || '%'))",
             nativeQuery = true)
     int countByUserIdWithFilter(@Param("userId") Long userId,
                                 @Param("status") String status,
@@ -126,7 +124,6 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
     @Query("UPDATE BorrowRecord br SET br.dueTime = :newDueTime, br.status = 'RENEWED' WHERE br.recordId = :recordId AND br.userId = :userId AND br.status = 'BORROWED' AND br.dueTime > CURRENT_DATE")
     int renewBorrowRecord(@Param("recordId") Long recordId, @Param("userId") Long userId, @Param("newDueTime") LocalDateTime newDueTime);
 
-//    // 在 BorrowRecordRepository 中添加
 //    @Query(value = "SELECT * FROM BORROW_RECORD WHERE STATUS IN ('BORROWED', 'RENEWED') AND DUE_TIME < SYSDATE", nativeQuery = true)
 //    List<BorrowRecord> findRecordsToMarkOverdue();
 
@@ -144,7 +141,7 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
 
     /**
      * 查询逾期记录（包含用户和图书信息）
-     * 返回：借阅记录 + 用户邮箱 + 图书信息
+     * 返回：借阅记录/用户邮箱/图书信息
      */
     @Query(value = """
 SELECT 

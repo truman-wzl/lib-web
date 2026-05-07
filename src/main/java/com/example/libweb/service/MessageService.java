@@ -17,15 +17,14 @@ import java.util.*;
 
 @Service
 public class MessageService {
-    // 添加这行：声明 logger
     private static final Logger logger = LoggerFactory.getLogger(MessageService.class);
     @Autowired
     private MessageRepository messageRepository;
     @Autowired
-    private UserdataRepository userdataRepository;  // 需要获取用户邮箱
+    private UserdataRepository userdataRepository;  //需获取用户邮箱
 
     @Autowired(required = false)
-    private JavaMailSender mailSender;  // 注入邮件发送器
+    private JavaMailSender mailSender;  //注入邮件发送器
 
     @Value("${spring.mail.username:noreply@libsystem.com}")
     private String fromEmail;
@@ -119,7 +118,6 @@ public class MessageService {
 //    public Message sendMessage(Message message) {
 //        return messageRepository.save(message);
 //    }
-    // MessageService.java 中添加
     public Message sendOverdueMessage(Long userId, Long borrowId, String bookName,
                                       Date borrowTime, Date dueTime, String bookId) {
         try {
@@ -131,10 +129,10 @@ public class MessageService {
             Integer remainingCount = 0;  // 剩余提醒次数
 
             if (existingMessages != null && !existingMessages.isEmpty()) {
-                // 2. 已存在逾期消息，获取最新的一个
+                //已存在逾期消息，获取最新的
                 message = existingMessages.get(0);
 
-                // 3. 检查提醒次数
+                //检查提醒次数
                 remainingCount = message.getRemindCount();
                 if (remainingCount == null || remainingCount <= 0) {
                     // 提醒次数已用完，不发送
@@ -142,15 +140,15 @@ public class MessageService {
                     return null;
                 }
 
-                // 4. 计算这是第几次提醒
+                //计算这是第几次提醒
                 currentReminder = 3 - (remainingCount - 1);
 
-                // 5. 减少提醒次数
+                //减少提醒次数
                 int newRemainingCount = remainingCount - 1;
                 message.setRemindCount(newRemainingCount);
                 remainingCount = newRemainingCount;
 
-                // 6. 更新消息内容和时间
+                //更新消息内容和时间
                 String newContent = updateReminderContent(bookName, borrowTime, dueTime,
                         bookId, newRemainingCount, currentReminder);
                 message.setContent(newContent);
@@ -158,16 +156,16 @@ public class MessageService {
                 message.setStatus(Message.STATUS_UNREAD);
 
             } else {
-                // 7. 创建新的逾期消息
+
                 currentReminder = 1;
                 remainingCount = 2;  // 第一次提醒后剩余2次
 
                 String content = String.format(
                         "您借阅的图书《%s》已逾期！(第1次提醒)\n\n" +
-                                "📅 借阅日期：%tF\n" +
-                                "⏰ 应还日期：%tF\n" +
-                                "🔖 图书编号：%s\n" +
-                                "⏳ 剩余提醒次数：%d次\n\n" +
+                                " 借阅日期：%tF\n" +
+                                " 应还日期：%tF\n" +
+                                " 图书编号：%s\n" +
+                                " 剩余提醒次数：%d次\n\n" +
                                 "请尽快到图书馆办理还书手续，以免产生更多逾期费用。",
                         bookName, borrowTime, dueTime, bookId, remainingCount
                 );
@@ -175,22 +173,16 @@ public class MessageService {
                 message = new Message();
                 message.setUserId(userId);
                 message.setBorrowId(borrowId);
-                message.setTitle("📚 图书逾期提醒");
+                message.setTitle(" 图书逾期提醒");
                 message.setContent(content);
                 message.setMsgType(Message.TYPE_OVERDUE);
                 message.setStatus(Message.STATUS_UNREAD);
                 message.setRemindCount(remainingCount);
                 message.setCreateTime(new Date());
             }
-
-            // 8. 保存消息
             Message savedMessage = messageRepository.save(message);
-
-            // 9. 发送邮件
             sendOverdueReminderEmail(userId, bookName, dueTime, remainingCount, currentReminder);
-
             return savedMessage;
-
         } catch (Exception e) {
             logger.error("发送逾期消息失败: 借阅ID={}, 错误: {}", borrowId, e.getMessage(), e);
             return null;

@@ -79,7 +79,6 @@ class ToastHelper {
         // 获取或创建提示容器
         let container = document.getElementById('toastContainer');
         if (!container) {
-            // 如果容器不存在，创建一个
             container = document.createElement('div');
             container.id = 'toastContainer';
             container.className = 'toast-container position-fixed top-0 end-0 p-3';

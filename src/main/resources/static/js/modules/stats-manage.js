@@ -102,15 +102,13 @@ const statsManageModule = {
         `;
     },
 
-    // 修改 onRender 方法
     onRender: function() {
         console.log('统计模块加载');
         this.bindEvents();
 
-        // 先检查DOM元素
         this.waitForDOMReady();
     },
-    // 新增：等待DOM就绪的方法
+    //等待DOM就绪
     waitForDOMReady: function() {
         console.log('检查DOM就绪状态...');
 
@@ -123,11 +121,11 @@ const statsManageModule = {
             console.log('- categoryChart:', categoryChart ? '找到 ✓' : '未找到 ✗');
 
             if (trendChart && categoryChart) {
-                console.log('✅ 所有图表元素就绪，开始初始化');
+                console.log(' 所有图表元素就绪，开始初始化');
                 this.initCharts();
                 this.loadData();
             } else {
-                console.log('⏳ DOM未就绪，50ms后重试...');
+                console.log('DOM未就绪，50ms后重试...');
                 setTimeout(checkDOM, 50);
             }
         };
@@ -163,16 +161,15 @@ const statsManageModule = {
         // 直接获取canvas元素，不延迟
         const canvas = document.getElementById('trendChart');
         if (!canvas) {
-            console.error('❌ 严重错误：trendChart元素不存在！');
+            console.error('严重错误：trendChart元素不存在！');
             return;
         }
 
         const chartContainer = canvas.parentElement;
         if (!chartContainer) {
-            console.error('❌ 找不到trendChart的父元素');
+            console.error('找不到trendChart的父元素');
             return;
         }
-        // ✅ 改为添加加载遮罩，而不是替换整个容器
         this.showLoadingOverlay(canvas, '加载借阅趋势数据...');
 
         fetch('/api/stats/borrow-trend')

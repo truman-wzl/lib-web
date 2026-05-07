@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@EnableJpaRepositories(basePackages = "com.example.libweb.repository") // 推荐添加，明确扫描路径
+@EnableJpaRepositories(basePackages = "com.example.libweb.repository")
 @EnableScheduling 
 public class LibWebApplication {
     public static void main(String[] args) {

@@ -10,9 +10,6 @@ import java.util.Optional;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
-
-    // 使用原生查询避免Oracle 11g兼容性问题
-
     /**
      * 检查分类名称是否已存在
      */
@@ -51,7 +48,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     default boolean existsById(Long id) {
         return countById(id) > 0;
     }
-    // 🆕 新增：根据分类名称精确查找
+    //根据分类名称精确查找
     @Query(value = "SELECT * FROM category WHERE category_name = :categoryName AND ROWNUM = 1",
             nativeQuery = true)
     Optional<Category> findByCategoryName(@Param("categoryName") String categoryName);

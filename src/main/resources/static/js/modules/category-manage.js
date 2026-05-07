@@ -280,7 +280,6 @@
             document.getElementById('searchKeyword').value = '';
             loadCategories();
         });
-        // 🔴 在这里添加导出按钮绑定
         const exportBtn = document.getElementById('exportCategoryBtn');
         if (exportBtn) {
             exportBtn.addEventListener('click', exportCategoriesToExcel);
@@ -537,7 +536,6 @@
         }
     }
 
-    // 🔴 在这里添加导出函数（在cleanup函数之前）
     async function exportCategoriesToExcel() {
         console.log('📤 点击了分类导出按钮');
 

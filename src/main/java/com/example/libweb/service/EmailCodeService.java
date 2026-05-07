@@ -19,15 +19,15 @@ public class EmailCodeService {
 
     private static final Logger logger = LoggerFactory.getLogger(EmailCodeService.class);
 
-    // 存储验证码：key=邮箱, value={code, expireTime, tryCount, lastSendTime}
+    //存储验证码
     private final Map<String, EmailCode> codeStore = new ConcurrentHashMap<>();
-    // 生成key的方法
+
     private String generateKey(String email, String username) {
         return email + ":" + username;  // 例如：123@qq.com:zhangsan
     }
     // 验证码有效时间（分钟）
     private static final int CODE_EXPIRE_MINUTES = 10;
-    // 发送间隔（秒）
+    // 发送间隔
     private static final int SEND_INTERVAL_SECONDS = 60;
     // 最大尝试次数
     private static final int MAX_TRY_COUNT = 5;
@@ -40,9 +40,6 @@ public class EmailCodeService {
 
     /**
      * 发送验证码到指定邮箱
-     * @param email 邮箱地址
-     *  username 用户名
-     * @return 验证码（仅用于测试，生产环境不要返回）
      */
     public String sendCode(String email,String username) {
         try {
@@ -88,7 +85,7 @@ public class EmailCodeService {
             return code;
         } catch (RuntimeException e) {
             logger.error("发送验证码时发生运行时异常: {}", e.getMessage());
-            throw e; // 重新抛出RuntimeException
+            throw e;
         } catch (Exception e) {
             logger.error("发送验证码时发生错误", e);
             throw new RuntimeException("发送验证码时发生错误: " + e.getMessage());
@@ -141,7 +138,7 @@ public class EmailCodeService {
     }
 
     /**
-     * 移除验证码（用于重置密码成功后清除）
+     * 移除验证码
      * @param email 邮箱
      */
     // 可以重载或修改
@@ -198,8 +195,8 @@ public class EmailCodeService {
         private final String code;
         private final LocalDateTime expireTime;
         private final LocalDateTime lastSendTime;
-        private final String username;  // 新增字段
-        private final String email;     // 新增字段
+        private final String username;
+        private final String email;
         private int tryCount = 0;
 
         public EmailCode(String code, LocalDateTime expireTime, LocalDateTime lastSendTime,String username, String email) {

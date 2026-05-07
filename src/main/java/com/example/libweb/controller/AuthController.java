@@ -16,12 +16,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-//处理与用户认证相关的所有HTTP请求，并提供标准的RESTful API接口，图书管理系统“用户认证模块”的入口和总调度中心。
+//处理与用户认证相关的所有HTTP请求，并提供标准的RESTful API接口
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
     @Autowired
-    private EmailCodeService emailCodeService;  // 新增
+    private EmailCodeService emailCodeService;
     @Autowired
     private UserService userService;
     @Autowired
@@ -29,7 +29,6 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Userdata user) {
         try {
-            // 基本验证
             if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
                 throw new RuntimeException("用户名不能为空");
             }
@@ -46,12 +45,12 @@ public class AuthController {
             // 调用Service进行注册
             Userdata registeredUser = userService.register(user);
 
-            // 创建响应，不返回密码等敏感信息
+            // 创建响应
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "注册成功");
 
-            // 只返回必要的用户信息
+            //返回部分用户信息
             Map<String, Object> userData = new HashMap<>();
             userData.put("userId", registeredUser.getUserId());
             userData.put("username", registeredUser.getUsername());
@@ -72,7 +71,6 @@ public class AuthController {
         }
     }
 
-    // 可以在这里继续添加 login、logout 等其他方法
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginData) {
         try {
@@ -91,11 +89,11 @@ public class AuthController {
             Userdata user = userService.login(username, password);
 
 
-            // ==== 修改：使用专用方法更新最后登录时间 ====
+
             Date lastLoginTime = new Date();
             userdataRepository.updateLastLoginTime(user.getUserId(), lastLoginTime);
 
-            // 可选：设置到返回对象中
+            //设置到返回对象中
             user.setLastLoginTime(lastLoginTime);
 
             Map<String, Object> response = new HashMap<>();
@@ -108,7 +106,6 @@ public class AuthController {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", e.getMessage());
-            // 登录失败通常返回 401 状态码
             return ResponseEntity.status(401).body(errorResponse);
         }
     }
@@ -174,13 +171,13 @@ public class AuthController {
             String realName = data.get("realName");
             String email = data.get("email");
             String phone = data.get("phone");
-            // 可选：添加空值检查
+
             if ((realName == null || realName.trim().isEmpty()) &&
                     (email == null || email.trim().isEmpty()) &&
                     (phone == null || phone.trim().isEmpty())) {
                 throw new RuntimeException("至少提供一个字段进行更新");
             }
-            //这里应该传入 Userdata 对象，而不是两个字符串
+
             Userdata updateInfo = new Userdata();
             if (realName != null && !realName.trim().isEmpty()) {
                 updateInfo.setRealName(realName.trim());
@@ -217,14 +214,14 @@ public class AuthController {
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
-    // 在AuthController类中添加验证状态缓存
+    //验证状态缓存
     private final Map<String, LocalDateTime> verifiedEmails = new ConcurrentHashMap<>();
-    private static final int VERIFIED_EXPIRE_MINUTES = 10; // 验证通过后的有效期
+    private static final int VERIFIED_EXPIRE_MINUTES = 10; //验证通过有效期
     @PostMapping("/forgot-password/send-code")
     public ResponseEntity<?> sendResetCode(@RequestBody Map<String, String> data) {
         try {
             String email = data.get("email");
-            String username = data.get("username");  // 新增用户名
+            String username = data.get("username");
 
             if (username == null || username.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of(
@@ -240,17 +237,16 @@ public class AuthController {
                 ));
             }
 
-            // 1. 验证用户名和邮箱是否匹配
+            //验证用户名邮箱是否匹配
             Optional<Userdata> userOpt = userdataRepository.findByUsernameAndEmail(username, email);
             if (!userOpt.isPresent()) {
-                // 返回统一提示，不暴露具体信息
                 return ResponseEntity.ok().body(Map.of(
                         "success", true,
                         "message", "如果用户名和邮箱匹配，验证码将发送到您的邮箱"
                 ));
             }
 
-            // 2. 发送验证码（同时传入用户名和邮箱）
+            //发送验证码，同时传入用户名和邮箱
             try {
                 String code = emailCodeService.sendCode(email, username);
                 System.out.println("验证码发送成功，验证码: " + code + ", 邮箱: " + email + ", 用户: " + username);
@@ -305,7 +301,7 @@ public class AuthController {
                 ));
             }
 
-            // 2. 验证验证码
+            //验证验证码
             boolean isValid = emailCodeService.verifyCode(email,username,code);
             if (!isValid) {
                 return ResponseEntity.badRequest().body(Map.of(
@@ -314,7 +310,7 @@ public class AuthController {
                 ));
             }
 
-            // 3. 验证成功，将邮箱:用户名组合标记为已验证（有效10分钟）
+            //验证成功
             String verificationKey = email + ":" + username;
             verifiedEmails.put(verificationKey, LocalDateTime.now().plusMinutes(VERIFIED_EXPIRE_MINUTES));
 
@@ -338,7 +334,7 @@ public class AuthController {
             String email = data.get("email");
             String username=data.get("username");
             String newPassword = data.get("newPassword");
-            String confirmPassword = data.get("confirmPassword");  // 添加确认密码
+            String confirmPassword = data.get("confirmPassword");  //添加确认密码
 
             if (email == null || email.trim().isEmpty()) {
                 throw new RuntimeException("邮箱不能为空");
@@ -350,29 +346,28 @@ public class AuthController {
                 throw new RuntimeException("确认密码不能为空");
             }
 
-            // 密码长度至少7位（避免与6位验证码混淆）
+            // 密码长度至少7位，避免与6位验证码混淆
             if (newPassword.length() < 7) {
                 throw new RuntimeException("密码长度至少7位");
             }
 
-            // 检查两次密码是否一致
             if (!newPassword.equals(confirmPassword)) {
                 throw new RuntimeException("两次输入的密码不一致");
             }
 
-            // 1. 检查用户名和邮箱的组合是否已验证
+            // 检查用户名和邮箱的组合是否已验证
             String verificationKey = email + ":" + username;
             LocalDateTime expireTime = verifiedEmails.get(verificationKey);
             if (expireTime == null) {
                 throw new RuntimeException("请先完成验证码验证");
             }
-            // 2. 检查验证是否过期
+            //检查验证是否过期
             if (expireTime.isBefore(LocalDateTime.now())) {
                 verifiedEmails.remove(verificationKey);
                 throw new RuntimeException("验证已过期，请重新获取验证码");
             }
 
-            // 3. 验证用户名和邮箱是否匹配
+            //验证用户名和邮箱是否匹配
             if (username == null || username.trim().isEmpty()) {
                 throw new RuntimeException("用户名不能为空");
             }
@@ -383,16 +378,13 @@ public class AuthController {
             }
             Userdata user = userOpt.get();
 
-            // 4. 检查新密码是否与旧密码相同
             if (newPassword.equals(user.getPassword())) {
                 throw new RuntimeException("新密码不能与旧密码相同");
             }
 
-            // 5. 更新密码
             user.setPassword(newPassword);
             userdataRepository.save(user);
 
-            // 6. 清除验证状态
             verifiedEmails.remove(email);
 
             return ResponseEntity.ok().body(Map.of(

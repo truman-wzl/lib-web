@@ -1,4 +1,4 @@
-// 图书管理模块（简化版，移除了分类管理功能）
+//图书管理模块
 (function() {
     const MODULE_ID = 'book-manage';
 
@@ -23,7 +23,7 @@
             <div class="book-manage-module">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">📚 图书管理</h4>
+                        <h4 class="mb-0">图书管理</h4>
                         <div>
                             <button class="btn btn-success" id="exportBookBtn">
                                 <i class="bi bi-file-excel"></i> 导出Excel
@@ -64,7 +64,7 @@
                                         <th>ID</th>
                                         <th>书名</th>
                                         <th>作者</th>
-                                        <th>出版社</th>        <!-- 新增列 -->
+                                        <th>出版社</th>
                                         <th>分类</th>
                                         <th>总数/可借</th>
                                         <th>操作</th>
@@ -272,7 +272,6 @@
                 size: state.pageSize
             });
 
-            // 只添加有值的搜索参数
             if (state.searchParams.bookname) {
                 params.append('bookname', state.searchParams.bookname);
             }
@@ -282,9 +281,6 @@
             if (state.searchParams.categoryId) {
                 params.append('categoryId', state.searchParams.categoryId);
             }
-
-            // 如果是全部分类，categoryId为空，我们不传递这个参数
-            // 这样后端就会查询所有分类的图书
 
             console.log('请求URL:', `/api/books/search?${params}`);
             const response = await fetch(`/api/books/search?${params}`);
@@ -340,7 +336,7 @@
                     <td>${book.bookId}</td>
                     <td>${book.bookname}</td>
                     <td>${book.author || '-'}</td>
-                    <td>${publisherDisplay}</td>  <!-- 新增出版社列 -->
+                    <td>${publisherDisplay}</td>
                     <td>${book.category ? book.category.categoryName : '-'}</td>
                     <td>
                         <span class="badge bg-secondary">${book.totalNumber}</span> /
@@ -429,13 +425,13 @@
         document.getElementById('addBookBtn').addEventListener('click', () => {
             showBookModal();
         });
-        // ✅ 导出Excel按钮（新增）
+        //导出Excel按钮
         const exportBtn = document.getElementById('exportBookBtn');
         if (exportBtn) {
-            console.log('✅ 找到导出按钮，绑定事件');
+            console.log('找到导出按钮，绑定事件');
             exportBtn.addEventListener('click', exportBooksToExcel);
         } else {
-            console.error('❌ 未找到导出按钮: #exportBookBtn');
+            console.error('未找到导出按钮: #exportBookBtn');
         }
 
         // 保存图书按钮
@@ -446,13 +442,10 @@
             e.preventDefault();
             saveBook();
         });
-        // ✅ 确保有批量导入按钮事件绑定
         const importBtn = document.getElementById('importBookBtn');
         if (importBtn) {
             importBtn.addEventListener('click', showImportBookModal);
         }
-
-        // ✅ 确保有文件选择事件绑定
         const bookFileInput = document.getElementById('bookFile');
         if (bookFileInput) {
             bookFileInput.addEventListener('change', function() {
@@ -462,16 +455,13 @@
                 }
             });
         }
-
-        // ✅ 确保有开始导入按钮事件绑定
         const uploadBtn = document.getElementById('uploadBookBtn');
         if (uploadBtn) {
             uploadBtn.addEventListener('click', uploadBookFile);
         }
     }
-    // 在bindEvents函数后面添加这个函数
     async function exportBooksToExcel() {
-        console.log('📤 点击了导出按钮');
+        console.log('点击了导出按钮');
 
         if (!window.ExportManager) {
             alert('导出功能未初始化，请刷新页面重试');
@@ -483,7 +473,7 @@
         const author = document.getElementById('searchAuthor')?.value || '';
         const categoryId = document.getElementById('searchCategory')?.value || '';
 
-        console.log('🔍 搜索参数:', { bookname, author, categoryId });
+        console.log(' 搜索参数:', { bookname, author, categoryId });
 
         // 构建参数
         const params = new URLSearchParams();
@@ -506,7 +496,7 @@
             url += '?' + params.toString();
         }
 
-        console.log('🌐 导出URL:', url);
+        console.log('导出URL:', url);
 
         // 生成文件名
         const today = new Date();
@@ -581,11 +571,10 @@
 
         // 加载分类（会自动过滤ID=5的分类）
         loadCategories();
-
         // 模态框显示后检查
         const modalElement = document.getElementById('bookModal');
         modalElement.addEventListener('shown.bs.modal', function() {
-            // 再次确保分类5被过滤
+            //确保分类5被过滤
             const categorySelect = document.getElementById('categoryId');
             if (categorySelect) {
                 for (let i = 0; i < categorySelect.options.length; i++) {
@@ -730,11 +719,8 @@
      * 显示批量导入图书模态框
      */
     function showImportBookModal() {
-        // 检查模态框是否已存在
         let modalElement = document.getElementById('importBookModal');
-
         if (!modalElement) {
-            // 如果模态框不存在，创建它
             const modalHtml = `
                 <div class="modal fade" id="importBookModal" tabindex="-1">
                     <div class="modal-dialog modal-lg">
@@ -744,7 +730,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                <!-- 分类列表容器（动态加载） -->
+                                <!-- 分类列表容器-->
                                 <div id="categoryListContainer" class="mb-3"></div>
 
                                 <!-- 文件选择区域 -->
@@ -900,7 +886,7 @@
 
                 resultContainer.style.display = 'block';
 
-                // 如果全部成功，3秒后关闭模态框并刷新列表
+                // 如果全部成功3秒后关闭模态框并刷新列表
                 if (result.data.failed === 0) {
                     setTimeout(() => {
                         const modal = bootstrap.Modal.getInstance(document.getElementById('importBookModal'));
@@ -938,14 +924,14 @@
     }
     // 在book-manage.js的顶部添加
     (function ensureTransferCategoryFiltered() {
-        console.log('🔧 确保中转分类被过滤');
+        console.log('确保中转分类被过滤');
 
         // 存储原始函数
         const originalLoadCategories = window.loadCategories || function() {};
 
         // 重写函数
         window.loadCategories = async function() {
-            console.log('🚀 执行过滤版本的loadCategories');
+            console.log('执行过滤版本的loadCategories');
 
             const result = await originalLoadCategories();
 

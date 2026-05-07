@@ -336,9 +336,6 @@ class ProfileManager {
     }
 }
 
-// ================= 关键部分：按照你的模块系统注册模块 =================
-// 注意：必须通过 safeRegisterModule 函数注册模块
-// 模块配置必须包含 render 函数和可选的 onDestroy 函数
 
 const profileModule = {
     render: function() {

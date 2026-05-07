@@ -101,7 +101,7 @@
             font-style: italic;
             opacity: 0.8;
         }
-        /* ========== 输入框美化 ========== */
+        /*输入框美化*/
         .form-control {
             background-color: #FFF8DC !important; /* 玉米丝绸色 */
             border: 2px solid #D2B48C !important; /* 米色边框 */
@@ -120,7 +120,7 @@
             box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1) !important;
             outline: none !important;
         }
-        /* 输入框图标位置预留（不影响现有布局） */
+        /* 输入框图标位置预留 */
         .mb-3, .mb-4 {
             position: relative;
         }
@@ -142,7 +142,7 @@
         #username, #password {
             padding-left: 40px !important;
         }
-        /* ========== 按钮美化 ========== */
+        /*按钮美化*/
         .btn-primary {
             background: linear-gradient(135deg, #8B4513, #A0522D) !important;
             color: white !important;
@@ -174,7 +174,7 @@
             margin-right: 8px;
         }
 
-        /* ========== 链接样式 ========== */
+        /*链接样式*/
         a.text-decoration-none {
             color: #8B4513 !important;
             transition: all 0.3s ease !important;
@@ -199,7 +199,7 @@
             opacity: 1;
             left: -10px;
         }
-        /* ========== 模态框美化 ========== */
+        /*模态框美化*/
         .modal-content {
             background: #FAF0E6 !important; /* 亚麻色 */
             border: 3px solid #8B4513 !important;
@@ -304,8 +304,6 @@
             border-left: 4px solid #17a2b8 !important;
             color: #0c5460 !important;
         }
-        /* ========== 添加背景装饰元素 ========== */
-        /* 这些是纯装饰，不会影响功能 */
         body:before {
             content: "";
             position: fixed;
@@ -319,8 +317,6 @@
             pointer-events: none;
             z-index: -1;
         }
-
-        /* 添加飘动的装饰图标 */
         .book-decoration {
             position: fixed;
             font-size: 24px;
@@ -364,11 +360,11 @@
             }
 
             .form-control {
-                font-size: 16px !important; /* 防止iOS缩放 */
+                font-size: 16px !important;
             }
         }
         #message {
-            min-height: 24px; /* 为提示信息预留空间 */
+            min-height: 24px;
         }
     </style>
 </head>
@@ -457,7 +453,7 @@
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json' // 告诉后端我们发送的是JSON
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(requestData) // 将JS对象转为JSON字符串
                 });
@@ -570,10 +566,10 @@
 <script>
     // 忘记密码功能
     let currentStep = 1;
-    let countdownTimer = null; // 添加计时器变量
-    let resetEmail = ''; // 保存邮箱
-    let resetUsername = ''; // 新增：保存用户名
-    let isEmailRegistered = false; // 标记邮箱是否已注册
+    let countdownTimer = null;
+    let resetEmail = '';
+    let resetUsername = '';
+    let isEmailRegistered = false;
 
     async function nextStep() {
         if (currentStep === 1) {
@@ -611,8 +607,8 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        username: username,  // 新增：发送用户名
-                        email: email         // 保留：发送邮箱
+                        username: username,
+                        email: email
                     })
                 });
 
@@ -739,8 +735,8 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    username: resetUsername,  // 新增：发送用户名
-                    email: resetEmail         // 保留：发送邮箱
+                    username: resetUsername,
+                    email: resetEmail
                 })
             });
 
@@ -796,8 +792,8 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    username: resetUsername,  // 新增：发送用户名
-                    email: resetEmail,        // 保留：发送邮箱
+                    username: resetUsername,
+                    email: resetEmail,
                     code: code
                 })
             });
@@ -880,8 +876,8 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    username: resetUsername,  // 新增：发送用户名
-                    email: resetEmail,        // 保留：发送邮箱
+                    username: resetUsername,
+                    email: resetEmail,
                     newPassword: newPassword,
                     confirmPassword: confirmPassword
                 })
@@ -963,7 +959,7 @@
 
         currentStep = 1;
         resetEmail = '';
-        resetUsername = '';  // 新增：清空用户名
+        resetUsername = '';
         isEmailRegistered = false;
 
         // 隐藏消息

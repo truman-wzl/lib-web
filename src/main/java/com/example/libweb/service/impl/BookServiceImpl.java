@@ -29,7 +29,7 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public Book saveBook(Book book) {
-        // 1. 基本验证
+        //基本验证
         if (book.getBookname() == null || book.getBookname().trim().isEmpty()) {
             throw new RuntimeException("图书名称不能为空");
         }
@@ -42,12 +42,12 @@ public class BookServiceImpl implements BookService {
             throw new RuntimeException("可借数量必须大于等于0");
         }
 
-        // 2. 验证可借数量不超过总数
+        //验证可借数量不超过总数
         if (book.getCanBorrow() > book.getTotalNumber()) {
             throw new RuntimeException("可借数量不能大于图书总数");
         }
 
-        // 3. 验证分类
+        //验证分类
         if (book.getCategory() == null || book.getCategory().getCategoryId() == null) {
             throw new RuntimeException("图书必须关联到一个分类");
         }
@@ -60,25 +60,22 @@ public class BookServiceImpl implements BookService {
         // 设置关联的分类
         book.setCategory(category);
 
-        // 4. 更新操作的特殊处理
+        //更新操作的特殊处理
         if (book.getBookId() != null) {
             Optional<Book> existingBookOpt = bookRepository.findById(book.getBookId());
             if (existingBookOpt.isPresent()) {
                 Book existingBook = existingBookOpt.get();
                 // 计算已借出数量
                 int borrowed = existingBook.getTotalNumber() - existingBook.getCanBorrow();
-
                 // 验证新可借数量是否合理
                 if (book.getCanBorrow() < 0) {
                     throw new RuntimeException("可借数量不能为负数");
                 }
 
-                // 如果新的总数小于已借出数量，报错
                 if (book.getTotalNumber() < borrowed) {
                     throw new RuntimeException("图书总数不能小于已借出数量（当前已借出：" + borrowed + "本）");
                 }
 
-                // 自动计算可借数量，避免用户传错
                 book.setCanBorrow(book.getTotalNumber() - borrowed);
             }
         }
@@ -101,7 +98,6 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Page<Book> searchBooks(String bookname, String author, Long categoryId, Pageable pageable) {
-        // 处理空字符串
         String booknameParam = StringUtils.hasText(bookname) ? bookname : null;
         String authorParam = StringUtils.hasText(author) ? author : null;
         Long categoryIdParam = (categoryId != null && categoryId > 0) ? categoryId : null;
@@ -109,13 +105,9 @@ public class BookServiceImpl implements BookService {
         int pageSize = pageable.getPageSize();
         int startRow = (int) pageable.getOffset();
         int endRow = startRow + pageSize;
-
-        // 执行原生查询
         List<Book> content = bookRepository.searchBooksNative(
                 booknameParam, authorParam, categoryIdParam, startRow, endRow
         );
-
-        // 获取总数
         long total = bookRepository.countSearchBooksNative(
                 booknameParam, authorParam, categoryIdParam
         );
@@ -139,8 +131,6 @@ public class BookServiceImpl implements BookService {
     // BookServiceImpl.java
     @Override
     public Optional<Book> findByBooknameAndAuthorAndPublisher(String bookname, String author, String publisher) {
-        // 这里需要实现
-        // 如果BookRepository有这个方法，直接调用
         return bookRepository.findByBooknameAndAuthorAndPublisher(bookname, author, publisher);
     }
 

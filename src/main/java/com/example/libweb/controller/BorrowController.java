@@ -155,7 +155,7 @@ public class BorrowController {
         }
     }
     /**
-     * 查询用户的借阅记录（无分页，保持现有接口不变）
+     * 查询用户的借阅记录（无分页）
      * GET /api/borrow/user/{userId}
      */
     @GetMapping("/borrow/user/{userId}")
@@ -193,20 +193,20 @@ public class BorrowController {
         }
     }
     /**
-     * 查询当前登录用户的借阅记录（带后端分页和筛选）
-     * GET /api/borrow/records?page=0&size=10&status=BORROWED&keyword=计算机
+     * 查询当前登录用户的借阅记录（带分页和筛选）
+     * GET /api/borrow/records
      */
     @GetMapping("/borrow/records")
     public ResponseEntity<Map<String, Object>> getCurrentUserBorrowRecordsWithPagination(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String status,   // 新增：状态筛选
-            @RequestParam(required = false) String keyword) { // 新增：关键词搜索
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String keyword) {
 
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // 1. 从Session获取当前登录用户
+            //从Session获取当前用户
             Userdata currentUser = userService.getCurrentUserInfo();
             if (currentUser == null) {
                 response.put("success", false);
@@ -216,32 +216,31 @@ public class BorrowController {
 
             Long userId = currentUser.getUserId();
             System.out.println("从Session获取当前用户ID: " + userId);
-            // 🔥 新增：在查询前先更新该用户的逾期记录
+            //查询前先更新该用户的逾期记录
             try {
-                // 1. 查询该用户需要标记为逾期的记录
+
                 List<BorrowRecord> overdueRecords = borrowRecordRepository.findRecordsToMarkOverdueByUserId(userId);
 
-                // 2. 批量更新状态
+
                 int updatedCount = 0;
                 for (BorrowRecord record : overdueRecords) {
                     int result = borrowRecordRepository.markAsOverdue(record.getRecordId());
                     if (result > 0) {
                         updatedCount++;
-                        System.out.println("✅ 自动更新逾期状态: 记录ID=" + record.getRecordId()
+                        System.out.println(" 自动更新逾期状态: 记录ID=" + record.getRecordId()
                                 + ", 用户ID=" + userId);
                     }
                 }
 
                 if (updatedCount > 0) {
-                    System.out.println("🔄 用户ID=" + userId + " 的逾期记录已更新, 共" + updatedCount + "条");
+                    System.out.println(" 用户ID=" + userId + " 的逾期记录已更新, 共" + updatedCount + "条");
                 }
             } catch (Exception e) {
-                // 逾期更新失败不影响正常查询
-                System.err.println("⚠️ 逾期状态更新失败: " + e.getMessage());
+                System.err.println("逾期状态更新失败: " + e.getMessage());
             }
             System.out.println("筛选参数 - status: " + status + ", keyword: " + keyword);
 
-            // 2. 验证分页参数
+            //验证分页参数
             if (page < 0) {
                 page = 0;
             }
@@ -251,16 +250,15 @@ public class BorrowController {
                 size = 100; // 限制最大每页100条
             }
 
-            // 3. 计算分页参数（Oracle ROWNUM从1开始）
-            int startRow = page * size;      // 起始行（不包含）
-            int endRow = (page + 1) * size;  // 结束行（包含）
+            //计算分页参数（Oracle ROWNUM从1开始）
+            int startRow = page * size;
+            int endRow = (page + 1) * size;
 
-            // 4. 处理筛选参数
-            // 将空字符串转为null，以便SQL中的IS NULL判断
+            //处理筛选参数
+            //将空字符串转为null，以便SQL中的IS NULL判断
             if (status != null && status.trim().isEmpty()) {
                 status = null;
             } else if (status != null) {
-                // 统一状态值为大写，确保与数据库一致
                 status = status.toUpperCase();
             }
 
@@ -270,17 +268,16 @@ public class BorrowController {
 
             System.out.println("处理后的筛选参数 - status: " + status + ", keyword: " + keyword);
 
-            // 5. 查询当前页数据（带筛选条件）
+
             List<Object[]> results = null;
             int totalItems = 0;
 
             if ((status == null || "ALL".equalsIgnoreCase(status)) && keyword == null) {
-                // 如果没有筛选条件，使用原来的查询（性能更好）
+                //如果没有筛选条件，使用原来的查询
                 results = borrowRecordRepository.findByUserIdWithBookInfoPagination(userId, startRow, endRow);
                 totalItems = borrowRecordRepository.countByUserId(userId);
             } else {
-                // 如果有筛选条件，使用新的带筛选的查询
-                // 如果状态是"ALL"，则视为null，不过滤状态
+                // 如果状态是"ALL"，则视为null
                 if (status != null && "ALL".equalsIgnoreCase(status)) {
                     status = null;
                 }
@@ -316,13 +313,12 @@ public class BorrowController {
                 }
             }
 
-            // 7. 计算分页信息
+
             int totalPages = (int) Math.ceil((double) totalItems / size);
             if (totalPages == 0) {
                 totalPages = 1;
             }
 
-            // 8. 构建响应
             Map<String, Object> data = new HashMap<>();
             data.put("records", records);
             data.put("currentPage", page);
@@ -352,7 +348,7 @@ public class BorrowController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // 验证图书是否存在
+            //验证图书是否存在
             Optional<Book> bookOpt = bookRepository.findById(bookId);
             if (!bookOpt.isPresent()) {
                 response.put("success", false);
@@ -360,7 +356,7 @@ public class BorrowController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // 查询借阅记录
+            //查询借阅记录
             Book book = bookOpt.get();
             java.util.List<BorrowRecord> records = borrowRecordRepository.findByBookId(bookId);
 
@@ -392,7 +388,7 @@ public class BorrowController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // 1. 获取请求参数
+            //获取请求参数
             Long recordId = null;
             try {
                 Object recordIdObj = returnRequest.get("recordId");
@@ -415,7 +411,7 @@ public class BorrowController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // 2. 查询借阅记录
+            // 查询借阅记录
             Optional<BorrowRecord> recordOpt = borrowRecordRepository.findByRecordId(recordId);
             if (!recordOpt.isPresent()) {
                 response.put("success", false);
@@ -425,19 +421,19 @@ public class BorrowController {
 
             BorrowRecord record = recordOpt.get();
 
-            // 3. 检查是否已归还
+            // 检查是否已归还
             if (record.getReturnTime() != null) {
                 response.put("success", false);
                 response.put("message", "该图书已归还");
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // 4. 更新借阅记录
+            // 更新借阅记录
             record.setReturnTime(LocalDateTime.now());
             record.setStatus("RETURNED");
             borrowRecordRepository.save(record);
 
-            // 5. 更新图书库存
+            // 更新图书库存
             Long bookId = record.getBookId();
             Optional<Book> bookOpt = bookRepository.findById(bookId);
             if (bookOpt.isPresent()) {
@@ -445,10 +441,10 @@ public class BorrowController {
                 int newCanBorrow = book.getCanBorrow() + 1;
                 book.setCanBorrow(newCanBorrow);
                 bookRepository.save(book);
-                bookRepository.flush();  // 关键：强制立即同步到数据库
+                bookRepository.flush();  //强制立即同步到数据库
             }
 
-            // 6. 返回成功响应
+            // 返回成功响应
             response.put("success", true);
             response.put("message", "归还成功");
             response.put("data", Map.of(
@@ -476,7 +472,7 @@ public class BorrowController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // 1. 获取当前登录用户
+            //获取当前登录用户
             Userdata currentUser = userService.getCurrentUserInfo();
             if (currentUser == null) {
                 response.put("success", false);
@@ -486,7 +482,7 @@ public class BorrowController {
 
             Long currentUserId = currentUser.getUserId();
 
-            // 2. 获取请求参数
+            //获取请求参数
             if (request.get("recordId") == null) {
                 response.put("success", false);
                 response.put("message", "参数错误：recordId不能为空");
@@ -502,7 +498,7 @@ public class BorrowController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // 3. 查询借阅记录
+            //查询借阅记录
             Optional<BorrowRecord> recordOpt = borrowRecordRepository.findByRecordId(recordId);
             if (!recordOpt.isPresent()) {
                 response.put("success", false);
@@ -512,14 +508,14 @@ public class BorrowController {
 
             BorrowRecord record = recordOpt.get();
 
-            // 4. 验证权限：只能续借自己的记录
+            // 验证权限：只能续借自己的记录
             if (!record.getUserId().equals(currentUserId)) {
                 response.put("success", false);
                 response.put("message", "只能续借自己的借阅记录");
                 return ResponseEntity.status(403).body(response);
             }
 
-            // 5. 验证状态和日期
+            //验证状态和日期
             LocalDateTime now = LocalDateTime.now();
             if (!"BORROWED".equals(record.getStatus())) {
                 response.put("success", false);
@@ -533,13 +529,13 @@ public class BorrowController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // 6. 计算新的应还时间（当前应还时间+30天）
+            //计算新的应还时间（当前应还时间+30天）
             Calendar calendar = Calendar.getInstance();
             LocalDateTime newDueTime = record.getDueTime().plusDays(30);
             calendar.add(Calendar.DAY_OF_MONTH, 30);
             //Date newDueTime = calendar.getTime();
 
-            // 7. 执行原子更新
+            //原子更新
             int updatedRows = borrowRecordRepository.renewBorrowRecord(
                     recordId, currentUserId, newDueTime
             );
@@ -550,7 +546,7 @@ public class BorrowController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // 8. 返回成功响应
+
             response.put("success", true);
             response.put("message", "续借成功");
             response.put("data", Map.of(

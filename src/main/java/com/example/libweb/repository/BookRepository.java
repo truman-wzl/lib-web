@@ -39,7 +39,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     default boolean existsById(Long bookId) {
         return countByBookId(bookId) > 0;
     }
-    // ========== 新增：修复编译错误的方法 ==========
 
     /**
      * 搜索图书（分页，Oracle 11g兼容）
@@ -73,10 +72,9 @@ public interface BookRepository extends JpaRepository<Book, Long> {
             @Param("author") String author,
             @Param("categoryId") Long categoryId
     );
-    // 在BookRepository中添加这个方法
     @Modifying
     @Query("UPDATE Book b SET b.canBorrow = b.canBorrow - 1 WHERE b.bookId = :bookId AND b.canBorrow > 0")
     int decrementCanBorrow(@Param("bookId") Long bookId);
-    // 根据书名、作者、出版社查找图书（用于判断是否已存在）
+    // 根据书名、作者、出版社查找图书判断是否已存在
     Optional<Book> findByBooknameAndAuthorAndPublisher(String bookname, String author, String publisher);
 }

@@ -26,7 +26,7 @@ public interface BookService {
 
     // 获取所有图书（不分页，用于导出等）
     List<Book> getAllBooks();
-    // 添加批量导入需要的方法
+    //批量导入
     Optional<Book> findByBooknameAndAuthorAndPublisher(String bookname, String author, String publisher);
     List<Book> saveAll(List<Book> books);
 }

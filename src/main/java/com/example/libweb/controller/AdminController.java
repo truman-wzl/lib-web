@@ -4,12 +4,12 @@ import com.example.libweb.entity.Userdata;
 import com.example.libweb.repository.BorrowRecordRepository;
 import com.example.libweb.repository.UserdataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+//import org.springframework.data.domain.Page;
+//import org.springframework.data.domain.PageRequest;
+//import org.springframework.data.domain.Pageable;
+//import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
+//import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.SimpleDateFormat;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/admin")
 public class AdminController {
     @Autowired
-    private BorrowRecordRepository borrowRecordRepository;  // 用于执行原生 SQL
+    private BorrowRecordRepository borrowRecordRepository;  //原生的SQL
 
     @Autowired
     private UserdataRepository userdataRepository;
@@ -63,8 +63,6 @@ public class AdminController {
 
             // 计算总页数
             int totalPages = (int) Math.ceil((double) totalUsers / size);
-
-            // 转换为前端需要的格式
             List<Map<String, Object>> userMapList = userList.stream().map(user -> {
                 Map<String, Object> userMap = new HashMap<>();
                 userMap.put("userId", user.getUserId());
@@ -142,9 +140,8 @@ public class AdminController {
             // 获取普通用户数量
             long userCount = totalUsers - adminCount;
 
-            // 获取今天的注册用户数（需要扩展Repository）
-            // 这里假设您有按日期统计的方法，如果没有，可以先返回0
-            long todayRegistered = 0; // 暂时设为0，需要扩展Repository
+
+            long todayRegistered = 0; // 暂时设为0
 
             // 构建响应
             Map<String, Object> response = new HashMap<>();
@@ -275,10 +272,7 @@ public class AdminController {
     /**
      * 分页获取借阅记录（管理员）
      * 接口：GET /api/admin/borrows
-     * 参数：
-     *   page: 页码，从1开始（默认1）
-     *   size: 每页数量（默认10）
-     *   status: 状态筛选（可选：BORROWED, RETURNED, OVERDUE, RENEWED）
+   状态筛选（BORROWED, RETURNED, OVERDUE, RENEWED）
      */
     @GetMapping("/borrows")
     public ResponseEntity<?> getBorrowRecords(
@@ -304,8 +298,6 @@ public class AdminController {
 
             // 计算总页数
             int totalPages = (int) Math.ceil((double) total / size);
-
-            // 处理结果，转换为前端需要的格式
             List<Map<String, Object>> recordList = recordsData.stream().map(row -> {
                 Map<String, Object> record = new HashMap<>();
                 record.put("recordId", row[0]);

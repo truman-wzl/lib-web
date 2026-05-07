@@ -319,12 +319,9 @@
 
                     // 更新状态
                     this.state.records = data.records || [];
-
-                    // 注意：后端返回的 currentPage 是从 0 开始的
-                    // 但前端 state.currentPage 是从 1 开始的
                     this.state.totalItems = data.totalItems || 0;
                     this.state.totalPages = data.totalPages || 1;
-                    this.state.currentPage = (data.currentPage || 0) + 1;  // 转换为前端页码（从1开始）
+                    this.state.currentPage = (data.currentPage || 0) + 1;
 
                     console.log('更新后的状态:', {
                         记录数: this.state.records.length,
@@ -922,7 +919,7 @@
             }
 
             // 发送续借请求
-            fetch('/api/borrow/renew', {  // 注意：这里需要和修正后的后端接口路径一致
+            fetch('/api/borrow/renew', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

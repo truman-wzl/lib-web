@@ -337,8 +337,6 @@ console.log(' 模块系统已就绪');
 
                     //使用正确的字段名
                     let unreadCount = 0;
-
-                    // 从您的截图看，API返回的是 {success: true, unreadCount: 1}
                     if (data.unreadCount !== undefined && data.unreadCount !== null) {
                         unreadCount = parseInt(data.unreadCount) || 0;
                         console.log(` 使用unreadCount字段: ${unreadCount}`);

@@ -96,7 +96,6 @@
                                     </div>
                                     <div class="alert alert-info mb-0 small">
                                         <i class="bi bi-info-circle me-1"></i>
-                                        //借阅期限为30天，请按时归还
                                         借阅期限为1min，请按时归还
                                     </div>
                                 </div>

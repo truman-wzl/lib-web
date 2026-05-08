@@ -89,26 +89,20 @@ const statsManageModule = {
         `;
     },
     onRender: function() {
-        console.log('统计模块加载');
         this.bindEvents();
         this.waitForDOMReady();
     },
     waitForDOMReady: function() {
-        console.log('检查DOM就绪状态...');
         const checkDOM = () => {
             const trendChart = document.getElementById('trendChart');
             const categoryChart = document.getElementById('categoryChart');
-
-            console.log('DOM检查结果:');
             console.log('- trendChart:', trendChart ? '找到' : '未找到');
             console.log('- categoryChart:', categoryChart ? '找到' : '未找到');
 
             if (trendChart && categoryChart) {
-                console.log('所有图表元素就绪，开始初始化');
                 this.initCharts();
                 this.loadData();
             } else {
-                console.log('DOM未就绪，50ms后重试...');
                 setTimeout(checkDOM, 50);
             }
         };
@@ -126,13 +120,11 @@ const statsManageModule = {
     },
     loadData: function() {
         this.state.loading = true;
-        console.log('开始加载统计数据...');
         this.loadBorrowTrend();
         this.loadTopBooks();
         this.loadTopCategories();
     },
     loadBorrowTrend: function() {
-        console.log('加载借阅趋势数据...');
         const canvas = document.getElementById('trendChart');
         if (!canvas) {
             console.error('严重错误：trendChart元素不存在！');
@@ -235,9 +227,7 @@ const statsManageModule = {
             console.warn('没有借阅趋势数据，无法渲染图表');
             return;
         }
-
         console.log('渲染借阅趋势图表，数据:', this.state.trendData);
-
         const ctx = document.getElementById('trendChart');
         if (!ctx) {
             console.error('找不到trendChart元素');
@@ -448,17 +438,13 @@ const statsManageModule = {
     },
 
     loadTopCategories: function() {
-        console.log('加载热门类别数据...');
         const canvas = document.getElementById('categoryChart');
         if (!canvas) {
             console.error('categoryChart元素不存在！');
             return;
         }
-
         const detailBody = document.getElementById('categoryDetailBody');
-
         this.showLoadingOverlay(canvas, '加载类别数据...');
-
         if (detailBody) {
             detailBody.innerHTML = `
                 <tr>
@@ -649,14 +635,12 @@ const statsManageModule = {
     bindEvents: function() {
         const refreshBtn = document.getElementById('refreshTrendBtn');
         if (refreshBtn) {
-            console.log('绑定刷新按钮事件');
             refreshBtn.addEventListener('click', () => {
                 console.log('刷新按钮被点击');
                 this.loadData();
                 const originalText = refreshBtn.innerHTML;
                 refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> 刷新中...';
                 refreshBtn.disabled = true;
-
                 setTimeout(() => {
                     refreshBtn.innerHTML = originalText;
                     refreshBtn.disabled = false;
@@ -725,33 +709,24 @@ const statsManageModule = {
     }
 };
 (function() {
-    console.log('开始注册统计模块...');
-
     if (window.ModuleRegistry && window.ModuleRegistry['stats-manage']) {
         console.warn('警告：stats-manage模块已存在于ModuleRegistry');
     }
-
     if (window.modules && window.modules['stats-manage']) {
         console.warn('警告：stats-manage模块已存在于window.modules');
     }
-
     if (typeof safeRegisterModule === 'function') {
-        console.log('使用safeRegisterModule注册');
         safeRegisterModule('stats-manage', statsManageModule);
     } else if (typeof registerModule === 'function') {
-        console.log('使用registerModule注册');
         registerModule('stats-manage', statsManageModule);
     } else {
-        console.log('使用备用注册到window.modules');
         window.modules = window.modules || {};
         window.modules['stats-manage'] = statsManageModule;
         if (window.isModuleSystemReady === true) {
-            console.log('检测到模块系统就绪，手动注册到ModuleRegistry');
             if (typeof window.registerModule === 'function') {
                 window.registerModule('stats-manage', statsManageModule);
             }
         }
     }
-    console.log('统计模块注册完成');
     console.log('模块名称:', statsManageModule.name);
 })();

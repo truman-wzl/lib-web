@@ -92,8 +92,6 @@ const MessageModule = {
         }
     },
     loadMockData() {
-        console.log("加载模拟数据");
-
         const mockMessages = [
             {
                 id: 1,
@@ -124,13 +122,10 @@ const MessageModule = {
         });
     },
     renderMessages() {
-        console.log("渲染消息列表");
-
         if (!this.container) {
             console.error("容器不存在，无法渲染");
             return;
         }
-
         const { messages, loading, filter, expandedMessages, unreadCount } = this.state;
         let filteredMessages = messages;
         if (filter === 'UNREAD') {
@@ -272,8 +267,6 @@ const MessageModule = {
     },
 
     bindEvents() {
-        console.log("绑定消息模块事件");
-
         const refreshBtn = document.getElementById('refreshBtn');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', this.refreshMessages);

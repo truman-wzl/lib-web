@@ -252,8 +252,6 @@ console.log('模块系统已就绪');
             }, 30000);
         },
         checkUnreadCount: async function() {
-            console.log('开始检查未读消息...');
-
             try {
                 const response = await fetch('/api/messages/unread-count', {
                     method: 'GET',
@@ -391,17 +389,13 @@ window.addEventListener('menu-rendered', function(event) {
     console.log('收到菜单渲染完成事件，准备初始化泡泡', event.detail);
 
     if (!window.AppState.currentUser) {
-        console.log('用户未登录，跳过泡泡初始化');
         return;
     }
     setTimeout(() => {
-        console.log('检查泡泡管理器状态...');
         const existingBadge = document.querySelector('.message-badge');
         if (existingBadge) {
-            console.log('泡泡已存在，跳过重新初始化');
             return;
         }
-        console.log('初始化消息泡泡管理器');
         if (window.MessageBadgeManager) {
             if (window.MessageBadgeManager.checkInterval) {
                 clearInterval(window.MessageBadgeManager.checkInterval);

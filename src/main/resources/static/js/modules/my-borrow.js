@@ -832,7 +832,6 @@
         }
     };
     if (typeof window !== 'undefined') {
-        console.log('开始注册我的借阅模块...');
         if (typeof window.registerModule === 'function') {
             window.registerModule('my-borrow', myBorrowModule);
         }

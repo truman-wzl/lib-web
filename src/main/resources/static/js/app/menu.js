@@ -1,24 +1,20 @@
 // 菜单配置
 const menuConfig = {
     USER: [
-        { id: 'book-query', name: '🔍 图书查询', group: '用户功能' },
-        { id: 'my-borrow', name: '📖 我的借阅', group: '用户功能' },
-        { id: 'profile', name: '👤 个人中心', group: '用户功能' },
-        { id: 'message', name: 'ℹ️ 系统消息', group: '用户功能' },
-        { id: 'stats-manage', name: '📈 数据统计', group: '公共功能' }
+        { id: 'book-query', name: '图书查询', group: '用户功能' },
+        { id: 'my-borrow', name: '我的借阅', group: '用户功能' },
+        { id: 'profile', name: '个人中心', group: '用户功能' },
+        { id: 'message', name: '系统消息', group: '用户功能' },
+        { id: 'stats-manage', name: '数据统计', group: '公共功能' }
     ],
     ADMIN: [
-        { id: 'category-manage', name: '📂 分类管理', group: '管理功能' }, // 新增
-        { id: 'book-manage', name: '📚 图书管理', group: '管理功能' },
-        { id: 'user-manage', name: '👥 用户管理', group: '管理功能' },
-        { id: 'borrow-manage', name: '📊 借阅管理', group: '管理功能' },
-        { id: 'stats-manage', name: '📈 数据统计', group: '公共功能' }
+        { id: 'category-manage', name: '分类管理', group: '管理功能' }, // 新增
+        { id: 'book-manage', name: '图书管理', group: '管理功能' },
+        { id: 'user-manage', name: '用户管理', group: '管理功能' },
+        { id: 'borrow-manage', name: '借阅管理', group: '管理功能' },
+        { id: 'stats-manage', name: '数据统计', group: '公共功能' }
     ]
 };
-
-/**
- * 渲染左侧菜单
- */
 function renderSidebarMenu() {
     const sidebar = document.getElementById('sidebarMenu');
     const user = window.AppState.currentUser;
@@ -40,7 +36,6 @@ function renderSidebarMenu() {
     });
 
     sidebar.innerHTML = html;
-    // 绑定菜单点击事件
     sidebar.querySelectorAll('.menu-item').forEach(item => {
         item.addEventListener('click', function(e) {
             e.preventDefault();
@@ -53,12 +48,8 @@ function renderSidebarMenu() {
             window.loadModule(moduleId);
         });
     });
-
-    // ✅ 在菜单渲染完成后立即添加泡泡
     setTimeout(() => {
         addMessageBadgeToMenu();
-
-        // 立即检查未读消息
         if (window.MessageBadgeManager && window.MessageBadgeManager.checkUnreadCount) {
             setTimeout(() => {
                 window.MessageBadgeManager.checkUnreadCount();
@@ -67,21 +58,16 @@ function renderSidebarMenu() {
         }
     }, 100);
 }
-// menu.js 中添加函数
 function addMessageBadgeToMenu() {
     const messageLink = document.querySelector('a[data-module="message"]');
     if (!messageLink) {
         console.warn('未找到消息菜单项，无法添加泡泡');
         return false;
     }
-
-    // 移除已有的泡泡
     const existingBadge = messageLink.querySelector('.message-badge');
     if (existingBadge) {
         existingBadge.remove();
     }
-
-    // 创建泡泡
     const badge = document.createElement('span');
     badge.className = 'message-badge';
     badge.id = 'message-notification-badge';
@@ -104,16 +90,11 @@ function addMessageBadgeToMenu() {
         border: 1px solid white;
     `;
     badge.textContent = '0';
-
-    // 确保菜单项是相对定位
     messageLink.style.position = 'relative';
     messageLink.appendChild(badge);
 
     return badge;
 }
-/**
- * 检查模块ID是否有效
- */
 function isValidModule(moduleId) {
     const user = window.AppState.currentUser;
     const config = user.role === 'ADMIN' ? menuConfig.ADMIN : menuConfig.USER;

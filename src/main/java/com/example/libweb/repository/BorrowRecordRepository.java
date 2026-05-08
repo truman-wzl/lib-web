@@ -110,12 +110,10 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
     @Query(value = "UPDATE BORROW_RECORD SET STATUS = 'OVERDUE' WHERE RECORD_ID = :recordId", nativeQuery = true)
     int markAsOverdue(@Param("recordId") Long recordId);
 
-    // 根据用户ID查询需要标记为逾期的记录
     @Query(value = "SELECT * FROM BORROW_RECORD WHERE USER_ID = :userId AND STATUS IN ('BORROWED', 'RENEWED') AND DUE_TIME <= SYSDATE",
             nativeQuery = true)
     List<BorrowRecord> findRecordsToMarkOverdueByUserId(@Param("userId") Long userId);
 
-    // 查询逾期记录（包含用户和图书信息）
     @Query(value = """
 SELECT 
     br.RECORD_ID,
@@ -140,7 +138,6 @@ WHERE br.STATUS IN ('BORROWED', 'RENEWED')
   )
 """, nativeQuery = true)
     List<Object[]> findOverdueRecordsWithUserAndBook();
-
     // 管理员：查询所有借阅记录（分页+状态筛选）
     @Query(value = "SELECT br.RECORD_ID, br.USER_ID, br.BOOK_ID, br.BORROW_TIME, " +
             "br.DUE_TIME, br.RETURN_TIME, br.STATUS, br.CREATE_TIME, " +
@@ -183,7 +180,7 @@ WHERE br.STATUS IN ('BORROWED', 'RENEWED')
     """, nativeQuery = true)
     List<Object[]> findBorrowTrendLast7Days();
 
-    // 热门图书TOP5（排除默认分类ID=5）
+    // 热门图书TOP5（排除默认分类5）
     @Query(value = """
     SELECT * FROM (
         SELECT b.BOOK_ID, b.BOOKNAME, b.AUTHOR, b.PUBLISHER, COUNT(br.RECORD_ID) as borrow_count
@@ -196,7 +193,7 @@ WHERE br.STATUS IN ('BORROWED', 'RENEWED')
     """, nativeQuery = true)
     List<Object[]> findTop5PopularBooks();
 
-    // 热门类别TOP3（排除默认分类ID=5）
+    // 热门类别TOP3（排除默认分类5）
     @Query(value = """
     SELECT * FROM (
         SELECT c.CATEGORY_ID, c.CATEGORY_NAME, COUNT(br.RECORD_ID) as borrow_count

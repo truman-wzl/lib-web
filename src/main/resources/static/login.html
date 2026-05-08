@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>图书管理系统 - 登录</title>
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- 字体图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
@@ -17,7 +15,6 @@
                 #F5DEB3 75%,   /* 小麦色 */
                 #FAF0E6 100%   /* 亚麻色 */
             ) !important;
-            /* 纸质纹理 */
             background-image:
                 radial-gradient(circle at 10% 20%, rgba(255,255,255,0.1) 0%, transparent 20%),
                 radial-gradient(circle at 90% 80%, rgba(0,0,0,0.05) 0%, transparent 20%),
@@ -43,22 +40,26 @@
         }
         .login-container:before,
         .login-container:after {
-            content: "❧";
+            content: "";
             position: absolute;
-            color: #8B4513;
-            font-size: 20px;
+            width: 30px;
+            height: 30px;
+            border: 2px solid #8B4513;
             opacity: 0.5;
             z-index: 1;
         }
         .login-container:before {
             top: 10px;
             left: 10px;
+            border-right: none;
+            border-bottom: none;
         }
 
         .login-container:after {
             bottom: 10px;
             right: 10px;
-            transform: rotate(180deg);
+            border-left: none;
+            border-top: none;
         }
         .login-header h2 {
             color: #5C4033 !important;
@@ -318,7 +319,6 @@
             50% { transform: translateY(-20px) rotate(5deg); }
         }
 
-        /* 响应式调整 */
         @media (max-width: 768px) {
             .login-container {
                 margin: 20px !important;
@@ -369,7 +369,6 @@
     </div>
 </div>
 
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>

@@ -322,7 +322,6 @@ const statsManageModule = {
                     }
                 }
             });
-            console.log('借阅趋势图表渲染成功');
         } catch (error) {
             console.error('渲染借阅趋势图表失败:', error);
             const container = ctx.parentElement;
@@ -334,8 +333,6 @@ const statsManageModule = {
         }
     },
     loadTopBooks: function() {
-        console.log('加载热门图书数据...');
-
         const tableBody = document.getElementById('topBooksBody');
         if (!tableBody) {
             console.error('找不到topBooksBody元素');

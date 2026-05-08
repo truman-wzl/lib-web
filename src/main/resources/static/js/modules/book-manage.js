@@ -396,18 +396,21 @@
         `;
 
         pagination.innerHTML = html;
-
-        // 绑定分页事件
-        pagination.querySelectorAll('.page-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const page = parseInt(this.getAttribute('data-page'));
-                if (!isNaN(page)) {
-                    state.currentPage = page;
-                    loadBooks();
+        if (!pagination._hasClickHandler) {
+            pagination.addEventListener('click', function(e) {
+                const link = e.target.closest('.page-link');
+                if (link) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const page = parseInt(link.getAttribute('data-page'));
+                    if (!isNaN(page)) {
+                        state.currentPage = page;
+                        loadBooks();
+                    }
                 }
             });
-        });
+            pagination._hasClickHandler = true;
+        }
     }
 
     /**

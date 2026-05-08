@@ -728,10 +728,15 @@
                 // 新增：处理分页按钮
                 if (e.target.closest('.page-link')) {
                     e.preventDefault();
-                    const pageLink = e.target.closest('.page-link');
-                    const page = pageLink.getAttribute('data-page');
-                    if (page) {
-                        this.loadUserList(parseInt(page), this.searchKeyword);
+                    e.stopPropagation();
+                    const moduleContent = document.getElementById('moduleContent');
+                    const clickedElement = e.target.closest('#moduleContent');
+                    if (clickedElement && AppState.currentModule === 'user-manage') {
+                        const pageLink = e.target.closest('.page-link');
+                        const page = pageLink.getAttribute('data-page');
+                        if (page) {
+                            this.loadUserList(parseInt(page), this.searchKeyword);
+                        }
                     }
                 }
             });
@@ -815,8 +820,6 @@
             }
         }
     };
-
-    // ==== 模块注册 ====
     // 注册到全局模块系统
     if (typeof window.registerModule === 'function') {
         window.registerModule('user-manage', {

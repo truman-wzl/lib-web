@@ -34,8 +34,6 @@
 1. 复制 `application.example.properties` 为 `application.properties`
 2. 在 `application.properties` 中填写你的真实配置（数据库账号密码、邮箱 SMTP 授权码等）
 
-> 说明：为避免把密码提交到仓库，`.gitignore` 已忽略 `application.properties`，请不要把真实密码提交到 git。
-
 ### 3) 启动项目
 在项目根目录执行（Windows）：
 

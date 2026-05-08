@@ -1,4 +1,3 @@
-//提示工具
 class ToastHelper {
     static success(message) {
         this.show(message, 'success');

@@ -9,11 +9,11 @@
     <style>
         body {
             background: linear-gradient(135deg,
-                #8B5A2B 0%,    /* 深棕色 */
-                #A0522D 25%,   /* 赭色 */
-                #D2B48C 50%,   /* 米色 */
-                #F5DEB3 75%,   /* 小麦色 */
-                #FAF0E6 100%   /* 亚麻色 */
+                #8B5A2B 0%,
+                #A0522D 25%,
+                #D2B48C 50%,
+                #F5DEB3 75%,
+                #FAF0E6 100%
             ) !important;
             background-image:
                 radial-gradient(circle at 10% 20%, rgba(255,255,255,0.1) 0%, transparent 20%),
@@ -92,7 +92,7 @@
         }
         .form-control {
             background-color: #FFF8DC !important;
-            border: 2px solid #D2B48C !important;/*米色边框*/
+            border: 2px solid #D2B48C !important;
             border-radius: 8px !important;
             padding: 12px 15px !important;
             font-size: 16px !important;
@@ -101,7 +101,7 @@
             box-sizing: border-box !important;
         }
         .form-control:focus {
-            background-color: #FFFAF0 !important;/*花白色*/
+            background-color: #FFFAF0 !important;
             border-color: #8B4513 !important;
             box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1) !important;
             outline: none !important;
@@ -121,8 +121,27 @@
             z-index: 10;
         }
 
-        .mb-3:nth-of-type(1):before { content: "👤"; }
-        .mb-4:before { content: "🔒"; }
+        .mb-3:nth-of-type(1):before {
+            content: "";
+            width: 18px;
+            height: 18px;
+            background: #8B4513;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E") no-repeat center;
+            mask-size: contain;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E") no-repeat center;
+            -webkit-mask-size: contain;
+        }
+        .mb-4:before {
+            content: "";
+            width: 18px;
+            height: 18px;
+            background: #8B4513;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z'/%3E%3C/svg%3E") no-repeat center;
+            mask-size: contain;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z'/%3E%3C/svg%3E") no-repeat center;
+            -webkit-mask-size: contain;
+        }
+
         #username, #password {
             padding-left: 40px !important;
         }
@@ -163,7 +182,7 @@
         }
 
         a.text-decoration-none:before {
-            content: "→";
+            content: "->";
             position: absolute;
             left: -15px;
             opacity: 0;

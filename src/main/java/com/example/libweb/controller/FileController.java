@@ -3,7 +3,6 @@ package com.example.libweb.controller;
 import com.example.libweb.entity.*;
 import com.example.libweb.repository.*;
 import com.example.libweb.service.impl.BookServiceImpl;
-//import com.example.libweb.service.impl.UserServiceImpl;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +25,6 @@ public class FileController {
     @Autowired
     private CategoryRepository categoryRepository;
 
-//    @Autowired
-//    private BookRepository bookRepository;
-
     @Autowired
     private UserdataRepository userdataRepository;
 
@@ -37,13 +33,7 @@ public class FileController {
 
     @Autowired
     private BookServiceImpl bookService;
-//
-//    @Autowired
-//    private UserServiceImpl userdataService;
 
-    /**
-     * 导出分类数据
-     */
     @GetMapping("/category")
     public void exportCategory(HttpServletResponse response) throws IOException {
         List<Category> categories = categoryRepository.findAll();
@@ -51,14 +41,12 @@ public class FileController {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("分类列表");
 
-        // 创建表头
         Row headerRow = sheet.createRow(0);
         String[] headers = {"分类ID", "分类名称", "是否受保护"};
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
 
-            // 设置表头样式
             CellStyle headerStyle = workbook.createCellStyle();
             Font headerFont = workbook.createFont();
             headerFont.setBold(true);
@@ -68,7 +56,6 @@ public class FileController {
             cell.setCellStyle(headerStyle);
         }
 
-        // 填充数据
         int rowNum = 1;
         for (Category category : categories) {
             Row row = sheet.createRow(rowNum++);
@@ -77,31 +64,21 @@ public class FileController {
             row.createCell(2).setCellValue(category.getIsProtected() ? "是" : "否");
         }
 
-        // 自动调整列宽
         for (int i = 0; i < headers.length; i++) {
             sheet.autoSizeColumn(i);
         }
 
-        // 设置响应头
         setResponseHeader(response, "Category");
-
-        // 写入响应
         workbook.write(response.getOutputStream());
         workbook.close();
     }
 
-    /**
-     * 导出图书数据
-     */
     @GetMapping("/book")
     public void exportBook(HttpServletResponse response) throws IOException {
-        // 使用Service方法获取图书数据
         List<Book> books = bookService.getAllBooks();
 
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("图书列表");
-
-        // 创建表头
         Row headerRow = sheet.createRow(0);
         String[] headers = {"图书ID", "图书名称", "作者", "出版社", "分类", "总数量", "可借数量"};
         for (int i = 0; i < headers.length; i++) {
@@ -117,9 +94,7 @@ public class FileController {
             cell.setCellStyle(headerStyle);
         }
 
-        // 填充数据
         int rowNum = 1;
-        //SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         for (Book book : books) {
             Row row = sheet.createRow(rowNum++);
             row.createCell(0).setCellValue(book.getBookId());
@@ -127,7 +102,6 @@ public class FileController {
             row.createCell(2).setCellValue(book.getAuthor() != null ? book.getAuthor() : "");
             row.createCell(3).setCellValue(book.getPublisher() != null ? book.getPublisher() : "");
 
-            // 处理分类名称
             String categoryName = "";
             if (book.getCategory() != null && book.getCategory().getCategoryName() != null) {
                 categoryName = book.getCategory().getCategoryName();
@@ -138,7 +112,6 @@ public class FileController {
             row.createCell(6).setCellValue(book.getCanBorrow() != null ? book.getCanBorrow() : 0);
         }
 
-        // 自动调整列宽
         for (int i = 0; i < headers.length; i++) {
             sheet.autoSizeColumn(i);
         }
@@ -148,9 +121,6 @@ public class FileController {
         workbook.close();
     }
 
-    /**
-     * 导出用户数据
-     */
     @GetMapping("/user")
     public void exportUser(HttpServletResponse response) throws IOException {
         List<Userdata> users = userdataRepository.findAll();
@@ -158,7 +128,6 @@ public class FileController {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("用户列表");
 
-        // 创建表头
         Row headerRow = sheet.createRow(0);
         String[] headers = {"用户ID", "用户名", "真实姓名", "角色", "邮箱", "手机号", "状态", "最后登录时间"};
         for (int i = 0; i < headers.length; i++) {
@@ -174,7 +143,6 @@ public class FileController {
             cell.setCellStyle(headerStyle);
         }
 
-        // 填充数据
         int rowNum = 1;
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         for (Userdata user : users) {
@@ -187,7 +155,6 @@ public class FileController {
             row.createCell(5).setCellValue(user.getPhone() != null ? user.getPhone() : "");
             row.createCell(6).setCellValue(user.getStatus() != null ? user.getStatus() : "");
 
-            // 处理最后登录时间
             if (user.getLastLoginTime() != null) {
                 row.createCell(7).setCellValue(dateFormat.format(user.getLastLoginTime()));
             } else {
@@ -195,7 +162,6 @@ public class FileController {
             }
         }
 
-        // 自动调整列宽
         for (int i = 0; i < headers.length; i++) {
             sheet.autoSizeColumn(i);
         }
@@ -205,9 +171,6 @@ public class FileController {
         workbook.close();
     }
 
-    /**
-     * 导出借阅记录
-     */
     @GetMapping("/borrow")
     public void exportBorrow(
             HttpServletResponse response,
@@ -248,15 +211,10 @@ public class FileController {
                     Row dataRow = sheet.createRow(rowNum++);
 
                     Long recordId = row[0] != null ? ((Number) row[0]).longValue() : 0L;
-                    Long userId = row[1] != null ? ((Number) row[1]).longValue() : 0L;
-                    Long bookId = row[2] != null ? ((Number) row[2]).longValue() : 0L;
-
                     Object borrowTimeObj = row[3];
                     Object dueTimeObj = row[4];
                     Object returnTimeObj = row[5];
-
                     String recordStatus = row[6] != null ? row[6].toString() : "";
-
                     String username = row[8] != null ? row[8].toString() : "";
                     String realName = row[9] != null ? row[9].toString() : "";
                     String bookname = row[10] != null ? row[10].toString() : "";
@@ -290,7 +248,7 @@ public class FileController {
                     } else {
                         dataRow.createCell(8).setCellValue("");
                     }
-
+                    // 将状态码转换为中文显示
                     String statusChinese;
                     switch (recordStatus.toUpperCase()) {
                         case "BORROWED":
@@ -329,7 +287,7 @@ public class FileController {
             throw e;
         }
     }
-
+    // 处理不同日期类型的转换
     private Date convertToDate(Object dateObj) {
         if (dateObj == null) {
             return null;
@@ -352,14 +310,11 @@ public class FileController {
             return null;
         }
     }
-    /**
-     * 设置响应头
-     */
+
     private void setResponseHeader(HttpServletResponse response, String entityName) throws IOException {
         String date = new SimpleDateFormat("yyyyMMdd").format(new Date());
         String fileName = entityName + "_" + date + ".xlsx";
 
-        // 处理中文文件名
         fileName = new String(fileName.getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1);
 
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");

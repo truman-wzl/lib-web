@@ -178,7 +178,6 @@ window.dispatchEvent(new CustomEvent('module-system-ready', {
     }
 }));
 
-console.log('模块系统已就绪');
 (function() {
     'use strict';
     if (window.MessageBadgeManager) {
@@ -221,7 +220,6 @@ console.log('模块系统已就绪');
                     badge.textContent = unreadCount;
                     messageLink.style.position = 'relative';
                     messageLink.appendChild(badge);
-                    console.log('重新创建泡泡');
                 } else {
                     console.error('无法创建泡泡：找不到消息菜单项');
                     return;
@@ -237,7 +235,6 @@ console.log('模块系统已就绪');
                 console.log(`显示泡泡，数量: ${badge.textContent}`);
             } else {
                 badge.style.display = 'none';
-                console.log('隐藏泡泡，无未读消息');
             }
             if (unreadCount > 0) {
                 badge.style.animation = 'none';
@@ -311,7 +308,6 @@ class ExportManager {
         }
         try {
             ExportManager.showLoading(`正在导出${moduleName}，请稍候...`);
-
             //隐藏的a标签触发下载
             const a = document.createElement('a');
             a.href = url;
@@ -412,7 +408,6 @@ window.addEventListener('menu-rendered', function(event) {
 });
 document.addEventListener('pageChange', function(event) {
     if (event.detail && event.detail.module === 'message') {
-        console.log('切换到消息页面，刷新泡泡');
         setTimeout(() => {
             if (window.MessageBadgeManager && window.MessageBadgeManager.checkUnreadCount) {
                 window.MessageBadgeManager.checkUnreadCount();
@@ -421,7 +416,6 @@ document.addEventListener('pageChange', function(event) {
     }
 });
 document.addEventListener('message-read', function() {
-    console.log('收到消息已读事件，更新泡泡');
     setTimeout(() => {
         if (window.MessageBadgeManager && window.MessageBadgeManager.checkUnreadCount) {
             window.MessageBadgeManager.checkUnreadCount();

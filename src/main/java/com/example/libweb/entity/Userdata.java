@@ -39,7 +39,7 @@ public class Userdata {
 
     @Column(name = "LAST_LOGIN_TIME")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date lastLoginTime;  // 最后登录时间，默认为null
+    private Date lastLoginTime;
 
     public Userdata() {}
 

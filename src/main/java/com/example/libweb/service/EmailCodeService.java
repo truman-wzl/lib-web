@@ -39,7 +39,6 @@ public class EmailCodeService {
             if (username == null || username.trim().isEmpty()) {
                 throw new RuntimeException("用户名不能为空");
             }
-            //使用组合key
             String key = generateKey(email, username);
             EmailCode existingCode = codeStore.get(key);
             if (existingCode != null) {
@@ -53,7 +52,6 @@ public class EmailCodeService {
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime expireTime = now.plusMinutes(CODE_EXPIRE_MINUTES);
             codeStore.put(key, new EmailCode(code, expireTime, now,username,email));
-            System.out.println("生成的验证码: " + code + " 已存储，邮箱: " + email + ", 过期时间: " + expireTime);
             try {
                 sendEmail(email, code,username);
                 logger.info("邮件发送成功，邮箱: {}", email);
@@ -71,7 +69,6 @@ public class EmailCodeService {
             throw new RuntimeException("发送验证码时发生错误: " + e.getMessage());
         }
     }
-    //验证验证码
     public boolean verifyCode(String email, String username, String code) {
         if (email == null || code == null || code.trim().length() != 6) {
             return false;
@@ -103,8 +100,6 @@ public class EmailCodeService {
         }
         return isValid;
     }
-
-    // 移除验证码
     public void removeCode(String email) {
         removeCode(email, null);
     }
@@ -114,15 +109,6 @@ public class EmailCodeService {
         codeStore.remove(key);
         logger.info("移除验证码，邮箱: {}，用户名: {}", email, username);
     }
-
-    // 生成6位数字验证码
-    private String generateCode() {
-        Random random = new Random();
-        int code = 100000 + random.nextInt(900000);
-        return String.valueOf(code);
-    }
-
-    //发送邮件
     private void sendEmail(String toEmail, String code,String username) {
         if (mailSender == null) {
             logger.warn("邮件服务未配置，无法发送验证码到: {}，验证码为: {}", toEmail, code);
@@ -146,8 +132,6 @@ public class EmailCodeService {
             throw new RuntimeException("邮件发送失败: " + e.getMessage());
         }
     }
-
-    //存储验证码
     private static class EmailCode {
         private final String code;
         private final LocalDateTime expireTime;

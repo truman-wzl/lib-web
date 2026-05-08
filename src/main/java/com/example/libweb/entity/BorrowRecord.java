@@ -29,15 +29,12 @@ public class BorrowRecord {
     @Column(name = "RETURN_TIME")
     private LocalDateTime returnTime;
 
-
-
     @Column(name = "STATUS", nullable = false, length = 20)
     private String status;
 
     @Column(name = "CREATE_TIME", nullable = false)
     private LocalDateTime createTime;
 
-    // 构造器
     public BorrowRecord() {
         this.borrowTime = LocalDateTime.now();
         this.createTime = LocalDateTime.now();
@@ -50,8 +47,6 @@ public class BorrowRecord {
         this.bookId = bookId;
         this.dueTime = dueTime;
     }
-
-    // Getter 和 Setter
     public Long getRecordId() { return recordId; }
     public void setRecordId(Long recordId) { this.recordId = recordId; }
 
@@ -60,8 +55,6 @@ public class BorrowRecord {
 
     public Long getBookId() { return bookId; }
     public void setBookId(Long bookId) { this.bookId = bookId; }
-
-    // Getter 和 Setter 也要相应修改
     public LocalDateTime getBorrowTime() { return borrowTime; }
     public void setBorrowTime(LocalDateTime borrowTime) { this.borrowTime = borrowTime; }
 
@@ -77,7 +70,6 @@ public class BorrowRecord {
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
 
-    // toString 方法也需要修改
     @Override
     public String toString() {
         return "BorrowRecord{" +

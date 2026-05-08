@@ -19,24 +19,21 @@ public class Category {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "CREATE_TIME")
     private Date createTime = new Date();
-    // 🆕 新增：映射数据库中的IS_PROTECTED字段
+    // 是否受保护（true=不可删除）
     @Column(name = "IS_PROTECTED")
     private Boolean isProtected = false;  // 默认false
-    // 构造器
     public Category() {}
 
     public Category(String categoryName) {
         this.categoryName = categoryName;
     }
 
-    // Getter 和 Setter
     public Long getCategoryId() { return categoryId; }
     public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
     public String getCategoryName() { return categoryName; }
     public void setCategoryName(String categoryName) { this.categoryName = categoryName; }
     public Date getCreateTime() { return createTime; }
     public void setCreateTime(Date createTime) { this.createTime = createTime; }
-    //【补丁】isProtected 的 Getter 和 Setter
     public Boolean getIsProtected() {return isProtected;}
     public void setIsProtected(Boolean isProtected) {this.isProtected = isProtected;}
 }

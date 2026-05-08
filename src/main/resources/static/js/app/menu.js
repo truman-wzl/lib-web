@@ -8,7 +8,7 @@ const menuConfig = {
         { id: 'stats-manage', name: '数据统计', group: '公共功能' }
     ],
     ADMIN: [
-        { id: 'category-manage', name: '分类管理', group: '管理功能' }, // 新增
+        { id: 'category-manage', name: '分类管理', group: '管理功能' },
         { id: 'book-manage', name: '图书管理', group: '管理功能' },
         { id: 'user-manage', name: '用户管理', group: '管理功能' },
         { id: 'borrow-manage', name: '借阅管理', group: '管理功能' },

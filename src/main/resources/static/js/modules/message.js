@@ -100,10 +100,10 @@ const MessageModule = {
                 userId: 1,
                 borrowId: 1001,
                 title: "图书逾期提醒",
-                content: "您借阅的《Java编程思想》已逾期3天！\n\n借阅日期：2024-01-10\n⏰ 应还日期：2024-02-10\n🔖 图书编号：BK001\n\n请尽快到图书馆办理还书手续，以免产生更多逾期费用。",
+                content: "您借阅的《Java编程思想》已逾期3天！\n\n借阅日期：2024-01-10\n应还日期：2024-02-10\n图书编号：BK001\n\n请尽快到图书馆办理还书手续，以免产生更多逾期费用。",
                 msgType: "OVERDUE",
                 status: "UNREAD",
-                createTime: new Date(Date.now() - 3600000).toISOString() // 1小时前
+                createTime: new Date(Date.now() - 3600000).toISOString()
             },
             {
                 id: 2,
@@ -449,7 +449,6 @@ const MessageModule = {
             window.updateMessageBadge(this.getUnreadCount());
         }
     },
-    // 删除消息
     async deleteMessage(messageId) {
         console.log("删除消息:", messageId);
 

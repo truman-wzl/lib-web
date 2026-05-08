@@ -290,7 +290,7 @@
                     <td>${book.bookId}</td>
                     <td>${book.bookname}</td>
                     <td>${book.author || '-'}</td>
-                    <td>${publisherDisplay}</td>  <!-- 新增出版社列 -->
+                    <td>${publisherDisplay}</td>
                     <td>${book.category ? book.category.categoryName : '-'}</td>
                     <td>
                         <span class="badge bg-secondary">${book.totalNumber}</span> /

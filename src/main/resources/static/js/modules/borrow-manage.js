@@ -348,14 +348,10 @@
                         总页数: data.totalPages,
                         当前页: data.page
                     });
-
-                    // 更新状态
                     this.state.records = data.list || [];
                     this.state.totalItems = data.total || 0;
                     this.state.totalPages = data.totalPages || 1;
                     this.state.currentPage = data.page;
-
-                    // 渲染界面
                     this.renderTable();
                     this.renderPagination();
                     this.updatePageInfo();
@@ -432,8 +428,6 @@
             if (statOverdue) statOverdue.textContent = stats.overdue || 0;
             if (statReturned) statReturned.textContent = stats.returned || 0;
         },
-
-        // 更新页面信息
         updatePageInfo: function() {
             const currentPageCount = document.getElementById('currentPageCount');
             if (currentPageCount) {
@@ -657,18 +651,14 @@
                 endRecord = startRecord + this.state.records.length - 1;
             }
 
-            // 更新分页信息文本
             if (this.state.totalItems > 0) {
                 pageInfo.innerHTML = `显示第 ${startRecord} 到 ${endRecord} 条，共 ${this.state.totalItems} 条记录`;
             } else {
                 pageInfo.innerHTML = '暂无记录';
             }
-
-            // 渲染分页按钮
             this.renderPageButtons();
         },
 
-        // 渲染分页按钮
         renderPageButtons: function() {
             const pagination = document.getElementById('pagination');
             if (!pagination) return;
@@ -676,7 +666,6 @@
             const self = this;
             let html = '<ul class="pagination pagination-sm mb-0">';
 
-            // 上一页按钮
             if (this.state.currentPage > 1) {
                 html += `
                     <li class="page-item">
@@ -695,7 +684,6 @@
                 `;
             }
 
-            // 页码按钮
             const maxPages = 5;
             let startPage = Math.max(1, this.state.currentPage - Math.floor(maxPages / 2));
             let endPage = Math.min(this.state.totalPages, startPage + maxPages - 1);
@@ -720,7 +708,6 @@
                 }
             }
 
-            // 下一页按钮
             if (this.state.currentPage < this.state.totalPages) {
                 html += `
                     <li class="page-item">
@@ -753,8 +740,6 @@
                 });
             });
         },
-
-        // 显示加载状态
         showLoading: function() {
             const tbody = document.getElementById('recordsTableBody');
             if (tbody) {
@@ -768,8 +753,6 @@
                 `;
             }
         },
-
-        // 辅助方法
         formatDateTime: function(dateString) {
             if (!dateString) return '-';
             try {

@@ -191,7 +191,7 @@
                                         <th width="100">角色</th>
                                         <th width="80">状态</th>
                                         <th width="150">注册时间</th>
-                                        <th width="150">最后登录</th>  <!-- 新增列 -->
+                                        <th width="150">最后登录</th>
                                         <th width="120" class="text-center">操作</th>
                                     </tr>
                                 </thead>
@@ -358,7 +358,7 @@
                             <td>${roleBadge}</td>
                             <td>${statusBadge}</td>
                             <td><small>${createTime}</small></td>
-                            <td><small>${lastLoginTime}</small></td>  <!-- 新增列 -->
+                            <td><small>${lastLoginTime}</small></td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm" role="group">
                                     ${user.status === 'CANCELLED'
@@ -705,5 +705,4 @@
         console.log('用户管理模块注册成功 (通过 window.modules)');
     }
     window.userManager = UserManage;
-    console.log('用户管理模块加载完成');
 })();

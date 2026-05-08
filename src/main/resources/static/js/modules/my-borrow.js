@@ -568,7 +568,7 @@
                 return new Date(dateTimeStr);
             }
             if (dateTimeStr.includes('T')) {
-                return new Date(dateTimeStr + '+08:00');  // 添加北京时间时区
+                return new Date(dateTimeStr + '+08:00');
             }
             return new Date(dateTimeStr);
         },

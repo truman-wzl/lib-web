@@ -79,12 +79,11 @@ public class BorrowController {
             if (updatedRows == 0) {
                 return ResponseEntity.badRequest().body(buildErrorResponse("库存不足，已被其他同学借走"));
             }
-
             BorrowRecord record = new BorrowRecord();
             record.setUserId(userId);
             record.setBookId(bookId);
             record.setBorrowTime(LocalDateTime.now());
-            record.setDueTime(LocalDateTime.now().plusMinutes(1));// 测试环境设置为1分钟，生产环境应改为30天
+            record.setDueTime(LocalDateTime.now().plusMinutes(1));
             record.setStatus("BORROWED");
             record.setCreateTime(LocalDateTime.now());
 

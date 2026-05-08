@@ -32,7 +32,7 @@ public class OverdueCheckTask {
     }
     @Scheduled(fixedRate = 60000)
     public void testCheckOverdue() {
-        logger.info("测试任务执行: 当前时间 = {}", LocalDateTime.now());
+        logger.info("任务执行: 当前时间 = {}", LocalDateTime.now());
         checkOverdueRecords();
     }
 

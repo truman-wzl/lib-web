@@ -368,7 +368,7 @@ const MessageModule = {
                 message.status = 'READ';
                 this.state.unreadCount = Math.max(0, this.state.unreadCount - 1);
             }
-            this.showSuccess('操作成功', '消息已标记为已读（模拟）');
+            this.showSuccess('操作成功', '消息已标记为已读');
             this.renderMessages();
         }
     },
@@ -482,7 +482,7 @@ const MessageModule = {
                     }
                     this.state.messages.splice(index, 1);
                 }
-                this.showSuccess('删除成功', '消息已删除（测试）');
+                this.showSuccess('删除成功', '消息已删除');
                 this.renderMessages();
             }
         } catch (error) {

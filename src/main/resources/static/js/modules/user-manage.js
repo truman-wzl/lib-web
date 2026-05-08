@@ -667,7 +667,6 @@
                 UserManage.onDestroy();
             }
         });
-        console.log('用户管理模块注册成功 (通过 registerModule)');
     } else if (typeof safeRegisterModule === 'function') {
         safeRegisterModule('user-manage', {
             render: function() {
@@ -677,7 +676,6 @@
                 UserManage.onDestroy();
             }
         });
-        console.log('用户管理模块注册成功 (通过 safeRegisterModule)');
     } else {
         window.modules = window.modules || {};
         window.modules['user-manage'] = {
@@ -688,7 +686,6 @@
                 UserManage.onDestroy();
             }
         };
-        console.log('用户管理模块注册成功 (通过 window.modules)');
     }
     window.userManager = UserManage;
 })();

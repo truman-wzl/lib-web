@@ -10,11 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-//import org.springframework.transaction.annotation.Transactional;
-
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 
@@ -29,7 +25,6 @@ public class OverdueCheckTask {
     @Autowired
     private MessageService messageService;
 
-    //应用启动时执行一次
     @PostConstruct
     public void init() {
         logger.info("OverdueCheckTask 初始化完成");

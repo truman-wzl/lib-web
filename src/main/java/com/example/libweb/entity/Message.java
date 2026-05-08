@@ -15,7 +15,7 @@ public class Message {
     //关联用户ID
     @Column(name = "USER_ID", nullable = false)
     private Long userId;
-    // 关联借阅记录ID（可为空）
+    //关联借阅记录ID
     @Column(name = "BORROW_ID")
     private Long borrowId;
 
@@ -28,13 +28,13 @@ public class Message {
     @Column(name = "MSG_TYPE", nullable = false, length = 20)
     private String msgType;
 
-    public static final String TYPE_OVERDUE = "OVERDUE";         // 逾期提醒
-    public static final String TYPE_ACHIEVEMENT = "ACHIEVEMENT"; // 成就消息
+    public static final String TYPE_OVERDUE = "OVERDUE";
+    public static final String TYPE_ACHIEVEMENT = "ACHIEVEMENT";
 
     @Column(name = "STATUS", nullable = false, length = 20)
     private String status = STATUS_UNREAD;
-    public static final String STATUS_UNREAD = "UNREAD";         // 未读
-    public static final String STATUS_READ = "READ";             // 已读
+    public static final String STATUS_UNREAD = "UNREAD";
+    public static final String STATUS_READ = "READ";
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "CREATE_TIME", nullable = false)
@@ -106,7 +106,6 @@ public class Message {
         return message;
     }
 
-    //Getter和Setter
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

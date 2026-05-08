@@ -17,27 +17,23 @@ import java.util.*;
 
 @Service
 public class MessageService {
-    // 添加这行：声明 logger
     private static final Logger logger = LoggerFactory.getLogger(MessageService.class);
     @Autowired
     private MessageRepository messageRepository;
     @Autowired
-    private UserdataRepository userdataRepository;  // 需要获取用户邮箱
+    private UserdataRepository userdataRepository;
 
     @Autowired(required = false)
-    private JavaMailSender mailSender;  // 注入邮件发送器
+    private JavaMailSender mailSender;
 
     @Value("${spring.mail.username:noreply@libsystem.com}")
     private String fromEmail;
-    // 获取用户消息
     public Map<String, Object> getUserMessages(Long userId) {
         Map<String, Object> result = new HashMap<>();
 
         try {
-            // 获取用户所有消息
             List<Message> messages = messageRepository.findByUserIdOrderByCreateTimeDesc(userId);
 
-            // 统计未读消息
             long unreadCount = messageRepository.countByUserIdAndStatus(userId, "UNREAD");
 
             result.put("success", true);
@@ -51,7 +47,6 @@ public class MessageService {
         return result;
     }
 
-    // 标记消息为已读
     @Transactional
     public Map<String, Object> markAsRead(Long messageId, Long userId) {
         Map<String, Object> result = new HashMap<>();
@@ -74,7 +69,6 @@ public class MessageService {
         return result;
     }
 
-    // 标记所有消息为已读
     @Transactional
     public Map<String, Object> markAllAsRead(Long userId) {
         Map<String, Object> result = new HashMap<>();
@@ -92,7 +86,6 @@ public class MessageService {
         return result;
     }
 
-    // 删除消息
     @Transactional
     public Map<String, Object> deleteMessage(Long messageId, Long userId) {
         Map<String, Object> result = new HashMap<>();
@@ -114,43 +107,29 @@ public class MessageService {
 
         return result;
     }
-
-    // 发送消息
-//    public Message sendMessage(Message message) {
-//        return messageRepository.save(message);
-//    }
-    // MessageService.java 中添加
     public Message sendOverdueMessage(Long userId, Long borrowId, String bookName,
                                       Date borrowTime, Date dueTime, String bookId) {
         try {
-            // 1. 检查是否已存在该借阅的逾期消息
             List<Message> existingMessages = messageRepository.findOverdueMessageByBorrowId(borrowId);
             Message message = null;
 
-            int currentReminder = 1;  // 当前是第几次提醒
-            Integer remainingCount = 0;  // 剩余提醒次数
+            int currentReminder = 1;
+            Integer remainingCount = 0;
 
             if (existingMessages != null && !existingMessages.isEmpty()) {
-                // 2. 已存在逾期消息，获取最新的一个
                 message = existingMessages.get(0);
 
-                // 3. 检查提醒次数
                 remainingCount = message.getRemindCount();
                 if (remainingCount == null || remainingCount <= 0) {
-                    // 提醒次数已用完，不发送
                     logger.info("借阅记录 {} 的逾期提醒次数已用完，不再发送", borrowId);
                     return null;
                 }
 
-                // 4. 计算这是第几次提醒
                 currentReminder = 3 - (remainingCount - 1);
 
-                // 5. 减少提醒次数
                 int newRemainingCount = remainingCount - 1;
                 message.setRemindCount(newRemainingCount);
                 remainingCount = newRemainingCount;
-
-                // 6. 更新消息内容和时间
                 String newContent = updateReminderContent(bookName, borrowTime, dueTime,
                         bookId, newRemainingCount, currentReminder);
                 message.setContent(newContent);
@@ -158,16 +137,15 @@ public class MessageService {
                 message.setStatus(Message.STATUS_UNREAD);
 
             } else {
-                // 7. 创建新的逾期消息
                 currentReminder = 1;
-                remainingCount = 2;  // 第一次提醒后剩余2次
+                remainingCount = 2;
 
                 String content = String.format(
                         "您借阅的图书《%s》已逾期！(第1次提醒)\n\n" +
-                                "📅 借阅日期：%tF\n" +
-                                "⏰ 应还日期：%tF\n" +
-                                "🔖 图书编号：%s\n" +
-                                "⏳ 剩余提醒次数：%d次\n\n" +
+                                "借阅日期：%tF\n" +
+                                "应还日期：%tF\n" +
+                                "图书编号：%s\n" +
+                                "剩余提醒次数：%d次\n\n" +
                                 "请尽快到图书馆办理还书手续，以免产生更多逾期费用。",
                         bookName, borrowTime, dueTime, bookId, remainingCount
                 );
@@ -175,20 +153,15 @@ public class MessageService {
                 message = new Message();
                 message.setUserId(userId);
                 message.setBorrowId(borrowId);
-                message.setTitle("📚 图书逾期提醒");
+                message.setTitle("图书逾期提醒");
                 message.setContent(content);
                 message.setMsgType(Message.TYPE_OVERDUE);
                 message.setStatus(Message.STATUS_UNREAD);
                 message.setRemindCount(remainingCount);
                 message.setCreateTime(new Date());
             }
-
-            // 8. 保存消息
             Message savedMessage = messageRepository.save(message);
-
-            // 9. 发送邮件
             sendOverdueReminderEmail(userId, bookName, dueTime, remainingCount, currentReminder);
-
             return savedMessage;
 
         } catch (Exception e) {
@@ -213,17 +186,15 @@ public class MessageService {
                                          int remainingCount, int currentReminder) {
         return String.format(
                 "您借阅的图书《%s》已逾期！(第%d次提醒)\n\n" +
-                        "📅 借阅日期：%tF\n" +
-                        "⏰ 应还日期：%tF\n" +
-                        "🔖 图书编号：%s\n" +
-                        "⏳ 剩余提醒次数：%d次\n\n" +
+                        "借阅日期：%tF\n" +
+                        "应还日期：%tF\n" +
+                        "图书编号：%s\n" +
+                        "剩余提醒次数：%d次\n\n" +
                         "请尽快到图书馆办理还书手续，以免产生更多逾期费用。",
                 bookName, currentReminder, borrowTime, dueTime, bookId, remainingCount
         );
     }
-    /**
-     * 发送逾期提醒邮件
-     */
+    //发送逾期提醒邮件
     private void sendOverdueReminderEmail(Long userId, String bookName,
                                           Date dueTime, Integer remainingCount,
                                           int currentReminder) {
@@ -232,30 +203,22 @@ public class MessageService {
                 logger.warn("邮件服务未配置，跳过邮件发送");
                 return;
             }
-
-            // 1. 获取用户信息
             Userdata user = userdataRepository.findById(userId).orElse(null);
             if (user == null) {
                 logger.warn("用户不存在，用户ID: {}", userId);
                 return;
             }
-
-            // 2. 检查用户是否有邮箱
             String userEmail = user.getEmail();
             if (userEmail == null || userEmail.trim().isEmpty()) {
                 logger.warn("用户 {} 没有邮箱，无法发送逾期提醒邮件", user.getUsername());
                 return;
             }
-
-            // 3. 计算逾期天数
             long overdueDays = 0;
             if (dueTime != null) {
                 Date now = new Date();
                 overdueDays = (now.getTime() - dueTime.getTime()) / (1000 * 60 * 60 * 24);
                 if (overdueDays < 0) overdueDays = 0;
             }
-
-            // 4. 构建邮件内容
             SimpleMailMessage mailMessage = new SimpleMailMessage();
             mailMessage.setFrom(fromEmail);
             mailMessage.setTo(userEmail);
@@ -264,15 +227,15 @@ public class MessageService {
             String emailContent = String.format(
                     "亲爱的 %s 用户：\n\n" +
                             "您借阅的图书《%s》已逾期%s%s！\n\n" +
-                            "📅 应还日期：%tF\n" +
-                            "📅 今天日期：%tF\n" +
-                            "⏰ 逾期天数：%d 天\n" +
-                            "🔔 当前提醒：第%d次提醒\n" +
-                            "⏳ 剩余提醒次数：%d 次\n\n" +
+                            "应还日期：%tF\n" +
+                            "今天日期：%tF\n" +
+                            "逾期天数：%d 天\n" +
+                            "当前提醒：第%d次提醒\n" +
+                            "剩余提醒次数：%d 次\n\n" +
                             "请尽快登录系统处理，或前往图书馆办理还书手续。\n\n" +
                             "逾期费用计算：\n" +
-                            "• 普通图书：每天 0.5 元\n" +
-                            "• 热门图书：每天 1.0 元\n\n" +
+                            "•普通图书：每天 0.5 元\n" +
+                            "•热门图书：每天 1.0 元\n\n" +
                             "如需帮助，请联系图书馆管理员。\n\n" +
                             "此致\n" +
                             "图书管理系统\n" +
@@ -291,16 +254,11 @@ public class MessageService {
             );
 
             mailMessage.setText(emailContent);
-
-            // 5. 发送邮件
             mailSender.send(mailMessage);
-
-            logger.info("✅ 已发送第{}次逾期提醒邮件到: {}, 图书: {}",
+            logger.info("已发送第{}次逾期提醒邮件到: {}, 图书: {}",
                     currentReminder, userEmail, bookName);
-
         } catch (Exception e) {
-            logger.error("❌ 发送逾期提醒邮件失败: {}", e.getMessage());
-            // 邮件发送失败不影响系统运行
+            logger.error("发送逾期提醒邮件失败: {}", e.getMessage());
         }
     }
 }

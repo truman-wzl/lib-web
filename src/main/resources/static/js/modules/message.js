@@ -408,7 +408,6 @@ const MessageModule = {
                     this.notifyBadgeUpdate();
                 }
             } else {
-                // 模拟成功
                 this.state.messages.forEach(msg => {
                     if (msg.status === 'UNREAD') {
                         msg.status = 'READ';
@@ -416,7 +415,7 @@ const MessageModule = {
                 });
                 this.state.unreadCount = 0;
 
-                this.showSuccess('操作成功', '已标记所有消息为已读（测试）');
+                this.showSuccess('操作成功', '已标记所有消息为已读');
                 this.renderMessages();
             }
         } catch (error) {
@@ -427,7 +426,7 @@ const MessageModule = {
                 }
             });
             this.state.unreadCount = 0;
-            this.showSuccess('操作成功', '已标记所有消息为已读（模拟）');
+            this.showSuccess('操作成功', '已标记所有消息为已读');
             this.renderMessages();
         }
     },
@@ -496,7 +495,7 @@ const MessageModule = {
                 }
                 this.state.messages.splice(index, 1);
             }
-            this.showSuccess('删除成功', '消息已删除（模拟）');
+            this.showSuccess('删除成功', '消息已删除');
             this.renderMessages();
         }
     },
@@ -511,7 +510,7 @@ const MessageModule = {
     getMessageIcon(msgType) {
         switch(msgType) {
             case 'OVERDUE': return 'bi-exclamation-triangle';
-            case 'ACHIEVEMENT': return 'bi-trophy';  // 奖杯图标表示成就
+            case 'ACHIEVEMENT': return 'bi-trophy';
             default: return 'bi-info-circle';
         }
     },

@@ -29,8 +29,6 @@ public class EmailCodeService {
     private JavaMailSender mailSender;
     @Value("${spring.mail.username:noreply@example.com}")
     private String fromEmail;
-
-    //发送验证码到指定邮箱
     public String sendCode(String email,String username) {
         try {
             if (email == null || email.trim().isEmpty() || !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {

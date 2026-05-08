@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>图书管理系统 - 注册</title>
-    <!-- 引入 Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -37,15 +36,12 @@
 <body>
 <div class="container d-flex justify-content-center">
     <div class="register-container">
-        <!-- 页面标题 -->
         <div class="register-header">
             <h2>图书管理系统</h2>
             <p class="text-muted">创建新账户</p>
         </div>
 
-        <!-- 注册表单 -->
         <form id="registerForm">
-            <!-- 用户名 -->
             <div class="mb-3">
                 <label for="username" class="form-label">用户名 *</label>
                 <input type="text" class="form-control" id="username" name="username"
@@ -53,48 +49,36 @@
                 <div class="form-text">用户名将用于登录，创建后不可更改</div>
             </div>
 
-            <!-- 密码 -->
             <div class="mb-3">
                 <label for="password" class="form-label">密码 *</label>
                 <input type="password" class="form-control" id="password" name="password"
                        placeholder="请输入密码（至少6位）" required>
             </div>
 
-            <!-- 确认密码 -->
             <div class="mb-3">
                 <label for="confirmPassword" class="form-label">确认密码 *</label>
                 <input type="password" class="form-control" id="confirmPassword" name="confirmPassword"
                        placeholder="请再次输入密码" required>
             </div>
-
-            <!-- 真实姓名 -->
             <div class="mb-3">
                 <label for="realName" class="form-label">真实姓名</label>
                 <input type="text" class="form-control" id="realName" name="realName"
                        placeholder="请输入您的真实姓名">
             </div>
-
-            <!-- 邮箱 -->
             <div class="mb-3">
                 <label for="email" class="form-label">邮箱</label>
                 <input type="email" class="form-control" id="email" name="email"
                        placeholder="example@domain.com">
             </div>
-
-            <!-- 手机号 -->
             <div class="mb-4">
                 <label for="phone" class="form-label">手机号</label>
                 <input type="tel" class="form-control" id="phone" name="phone"
                        placeholder="11位手机号码">
             </div>
-
-            <!-- 注册按钮 -->
             <button type="submit" class="btn btn-primary w-100 mb-3" id="registerBtn">
                 <span id="btnText">注册</span>
                 <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
             </button>
-
-            <!-- 提示信息和登录链接 -->
             <div id="message" class="text-center mb-2"></div>
             <div class="text-center">
                 <a href="login.html" class="text-decoration-none">已有账户？去登录</a>
@@ -102,8 +86,6 @@
         </form>
     </div>
 </div>
-
-<!-- 引入 Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
@@ -113,25 +95,17 @@
         const btnText = document.getElementById('btnText');
         const btnSpinner = document.getElementById('btnSpinner');
         const messageDiv = document.getElementById('message');
-
-        // 处理表单提交事件
         registerForm.addEventListener('submit', async function(event) {
             event.preventDefault();
-
-            // 1. 获取表单数据
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const realName = document.getElementById('realName').value.trim();
             const email = document.getElementById('email').value.trim();
             const phone = document.getElementById('phone').value.trim();
-
-            // 2. 客户端验证
             if (!validateForm(username, password, confirmPassword)) {
                 return;
             }
-
-            // 3. 准备发送给后端的数据
             const userData = {
                 username: username,
                 password: password,
@@ -139,12 +113,9 @@
                 email: email || null,
                 phone: phone || null
             };
-
-            // 4. 显示注册中。。。
             setLoadingState(true);
 
             try {
-                // 5. 调用后端注册API
                 const response = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: {
@@ -152,14 +123,9 @@
                     },
                     body: JSON.stringify(userData)
                 });
-
-                // 6. 解析响应
                 const result = await response.json();
-
-                // 7. 处理响应
                 if (result.success) {
                     showMessage(`注册成功！欢迎 ${result.data.username}。正在跳转到登录页...`, 'success');
-                    // 注册成功后跳转到登录页
                     setTimeout(() => {
                         window.location.href = 'login.html';
                     }, 2500);
@@ -174,22 +140,15 @@
                 setLoadingState(false);
             }
         });
-
-        // 客户端验证函数
         function validateForm(username, password, confirmPassword) {
-            // 用户名验证
             if (username.length < 3 || username.length > 50) {
                 showMessage('用户名长度必须在3-50个字符之间', 'warning');
                 return false;
             }
-
-            // 密码验证
             if (password.length < 6) {
                 showMessage('密码长度至少6位', 'warning');
                 return false;
             }
-
-            // 确认密码验证
             if (password !== confirmPassword) {
                 showMessage('两次输入的密码不一致', 'warning');
                 return false;
@@ -197,16 +156,12 @@
 
             return true;
         }
-
-        // 显示提示信息的函数
         function showMessage(text, type) {
             messageDiv.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
                 ${text}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>`;
         }
-
-        // 设置按钮加载状态的函数
         function setLoadingState(isLoading) {
             if (isLoading) {
                 btnText.textContent = '注册中...';

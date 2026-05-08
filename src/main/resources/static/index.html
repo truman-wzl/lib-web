@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>图书管理系统 - 工作台</title>
-    <!-- 引入 Bootstrap 5 CSS -->
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- 在 index.html 的 <head> 部分添加 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <!-- Font Awesome 图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -36,7 +35,6 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
             transform: translate(25%, -25%); /* 调整位置 */
         }
-        /* 泡泡动画 */
         @keyframes badgePulse {
             0% { transform: translate(25%, -25%) scale(1); }
             50% { transform: translate(25%, -25%) scale(1.2); }
@@ -97,7 +95,6 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        /* 保护状态徽章样式 */
         .badge.bg-warning {
             background-color: #ffc107 !important;
             color: #000;
@@ -110,47 +107,35 @@
 </head>
 
 <body>
-<!-- ************ 公共导航栏 ************ -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <div class="container-fluid">
-        <a class="navbar-brand" href="index.html">📚 图书管理系统</a>
+        <a class="navbar-brand" href="index.html">图书管理系统</a>
         <div class="navbar-nav">
             <a class="nav-link" href="#" id="logoutLink">退出登录</a>
         </div>
         <span class="navbar-text" id="currentUserInfo">
-                <!-- 当前用户信息将由JS填充 -->
         </span>
     </div>
 </nav>
 
-<!-- ************ 主工作区布局 ************ -->
 <div class="container-fluid">
-    <!-- 左侧菜单栏 -->
     <aside class="sidebar" id="sidebarMenu">
-        <!-- 菜单将由JS动态生成 -->
     </aside>
-
-    <!-- 右侧内容区 -->
     <main class="content-area" id="contentArea">
-        <!-- 初始欢迎内容 -->
         <div class="welcome-card card">
             <div class="card-body text-center py-5">
                 <h2 id="welcomeTitle" class="card-title">正在加载...</h2>
                 <p class="card-text text-muted">请从左侧菜单选择功能开始使用</p>
             </div>
         </div>
-        <!-- 模块内容将在这里动态渲染 -->
         <div id="moduleContent" class="module-content"></div>
     </main>
 </div>
-
-<!-- ************ 公共页脚 ************ -->
 <footer class="bg-light text-center py-3" style="margin-left: var(--sidebar-width);">
     <div class="container">
         <span class="text-muted">图书管理系统</span>
     </div>
 </footer>
-<!-- 退出登录确认模态框 -->
 <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -173,22 +158,19 @@
     </div>
 </div>
 
-<!-- 操作提示容器 -->
 <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999">
-    <!-- 提示框将动态添加到这里 -->
 </div>
 
-<!-- 引入 Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Chart.js 图表库 -->
+<!-- Chart.js图表库 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- 引入应用核心JS -->
+<!-- 应用核心JS -->
 <script src="js/app/core.js"></script>
 <script src="js/app/auth.js"></script>
 <script src="js/app/menu.js"></script>
-<script src="js/app/toast.js"></script> <!-- 新增 -->
-<!-- 导入所有模块文件（保持现有注册逻辑不变） -->
+<script src="js/app/toast.js"></script>
+<!-- 所有模块文件 -->
 <script src="js/modules/stats-manage.js"></script>
 <script src="js/modules/user-manage.js"></script>
 <script src="js/modules/book-manage.js"></script>
@@ -199,26 +181,16 @@
 <script src="js/modules/profile.js"></script>
 <script src="js/modules/message.js"></script>
 <script>
-    /**
-     * 主初始化函数
-     */
     async function initializePage() {
         console.log('开始初始化工作台...');
 
-        // 1. 获取当前用户
         await fetchCurrentUser();
         if (!window.AppState.currentUser) {
             console.log('用户未登录，已跳转至登录页。');
             return;
         }
-
-        // 2. 渲染公共部分
         renderCommonParts();
-
-        // 3. 渲染左侧菜单（会自动调用addMessageBadgeToMenu）
         renderSidebarMenu();
-
-        // 4. 检查URL参数
         const urlParams = new URLSearchParams(window.location.search);
         const moduleParam = urlParams.get('module');
         if (moduleParam && isValidModule(moduleParam)) {
@@ -226,8 +198,6 @@
         } else {
             showWelcome();
         }
-
-        // 5. 监听消息更新事件
         document.addEventListener('message-updated', function(event) {
             if (event.detail && event.detail.unreadCount !== undefined) {
                 if (window.MessageBadgeManager && window.MessageBadgeManager.updateBadge) {
@@ -236,10 +206,6 @@
             }
         });
     }
-
-    /**
-     * 显示欢迎界面
-     */
     function showWelcome() {
         document.querySelector('.welcome-card').style.display = 'block';
         document.getElementById('moduleContent').style.display = 'none';
@@ -249,10 +215,7 @@
         window.AppState.currentModule = null;
     }
 
-    // 页面加载完成后初始化
     document.addEventListener('DOMContentLoaded', initializePage);
-
-    // 支持浏览器前进/后退按钮
     window.addEventListener('popstate', function() {
         const urlParams = new URLSearchParams(window.location.search);
         const moduleParam = urlParams.get('module');

@@ -1,18 +1,9 @@
-/**
- * 管理员借阅管理模块
- * 修改说明：
- * 1. 修复模块加载逻辑，与core.js模块系统匹配
- * 2. API地址改为相对路径
- */
+//借阅管理模块
 (function() {
     'use strict';
-
     console.log('=== borrow-manage.js 加载开始 ===');
-
     const borrowManageModule = {
-        // 模块配置
         config: {
-            // 使用相对路径，避免跨域
             apiBase: '/api',
             statusMap: {
                 'BORROWED': { text: '借阅中', class: 'primary' },
@@ -21,8 +12,6 @@
                 'RENEWED': { text: '已续借', class: 'info' }
             }
         },
-
-        // 模块状态
         state: {
             currentPage: 1,
             pageSize: 10,
@@ -39,11 +28,8 @@
                 renewed: 0
             }
         },
-
-        // 核心：渲染方法 - 返回HTML字符串
         render: function() {
             console.log(' 渲染管理员借阅管理模块');
-            // 正确的：先返回HTML字符串
             return `
                 <div class="container-fluid">
                     <!-- 页面标题 -->
@@ -60,10 +46,7 @@
                             <p class="text-muted mb-0">管理所有用户的图书借阅记录</p>
                         </div>
                     </div>
-
-                    <!-- 统计卡片 -->
                     <div class="row g-4 mb-4">
-                        <!-- 总借阅记录 -->
                         <div class="col-md-6 col-lg-3">
                             <div class="card border-primary border-2">
                                 <div class="card-body">
@@ -79,8 +62,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 借阅中 -->
                         <div class="col-md-6 col-lg-3">
                             <div class="card border-warning border-2">
                                 <div class="card-body">
@@ -99,8 +80,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 已逾期 -->
                         <div class="col-md-6 col-lg-3">
                             <div class="card border-danger border-2">
                                 <div class="card-body">
@@ -119,8 +98,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 已归还 -->
                         <div class="col-md-6 col-lg-3">
                             <div class="card border-success border-2">
                                 <div class="card-body">
@@ -140,12 +117,9 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- 筛选和搜索 -->
                     <div class="card shadow-sm mb-4">
                         <div class="card-body">
                             <div class="row g-3">
-                                <!-- 状态筛选 -->
                                 <div class="col-md-8">
                                     <label class="form-label">
                                         <i class="bi bi-filter-circle me-1"></i>状态筛选
@@ -158,8 +132,6 @@
                                         <option value="RENEWED">已续借</option>
                                     </select>
                                 </div>
-
-                                <!-- 操作按钮 -->
                                 <div class="col-md-4 d-flex align-items-end">
                                     <button class="btn btn-outline-secondary me-2" id="resetBtn" title="重置筛选条件">
                                         <i class="bi bi-arrow-clockwise"></i> 重置
@@ -171,8 +143,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- 借阅记录表格 -->
                     <div class="card shadow-sm">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">
@@ -208,18 +178,13 @@
                                     </tbody>
                                 </table>
                             </div>
-
-                            <!-- 分页 -->
                             <div id="paginationContainer" class="d-flex justify-content-between align-items-center p-3 border-top">
                                 <div id="pageInfo" class="text-muted">正在加载分页信息...</div>
                                 <nav id="pagination">
-                                    <!-- 分页按钮将动态生成 -->
                                 </nav>
                             </div>
                         </div>
                     </div>
-
-                    <!-- 详情模态框 -->
                     <div class="modal fade" id="recordDetailModal" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-lg">
                             <div class="modal-content">
@@ -228,7 +193,6 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
                                 </div>
                                 <div class="modal-body" id="recordDetailContent">
-                                    <!-- 详情内容将通过JS动态填充 -->
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
@@ -239,12 +203,8 @@
                 </div>
             `;
         },
-
-        // 初始化模块 - 在render之后调用
         onRender: function() {
-            console.log('🚀 初始化管理员借阅管理模块');
-
-            // 重置状态
+            console.log('初始化管理员借阅管理模块');
             this.state = {
                 currentPage: 1,
                 pageSize: 10,
@@ -261,32 +221,19 @@
                     renewed: 0
                 }
             };
-
-            // 绑定事件
             this.bindEvents();
-
-            // 加载统计数据
             this.loadBorrowStats();
-
-            // 加载借阅记录
             this.loadBorrowRecords();
         },
-
-        // 模块销毁时清理
         onDestroy: function() {
-            console.log('🧹 清理管理员借阅管理模块资源');
-            // 清理事件监听器
+            console.log('清理管理员借阅管理模块资源');
             const events = ['change', 'click'];
             events.forEach(event => {
                 document.removeEventListener(event, this.handleEvent);
             });
         },
-
-        // 绑定事件监听器
         bindEvents: function() {
             const self = this;
-
-            // 状态筛选
             const statusFilter = document.getElementById('statusFilter');
             if (statusFilter) {
                 statusFilter.addEventListener('change', function(e) {
@@ -295,8 +242,6 @@
                     self.loadBorrowRecords();
                 });
             }
-
-            // 重置按钮
             const resetBtn = document.getElementById('resetBtn');
             if (resetBtn) {
                 resetBtn.addEventListener('click', function() {
@@ -310,7 +255,6 @@
                 });
             }
 
-            // 刷新按钮
             const refreshBtn = document.getElementById('refreshBtn');
             if (refreshBtn) {
                 refreshBtn.addEventListener('click', function() {
@@ -318,23 +262,19 @@
                     self.loadBorrowRecords();
                 });
             }
-            // 添加导出按钮事件绑定
             this.bindExportEvent();
         },
-        // 新增：绑定导出按钮事件
         bindExportEvent: function() {
             const exportBtn = document.getElementById('exportBorrowBtn');
             if (exportBtn) {
                 exportBtn.addEventListener('click', () => {
                     this.exportBorrowRecords();
                 });
-                console.log('✅ 借阅记录导出按钮事件已绑定');
+                console.log('借阅记录导出按钮事件已绑定');
             } else {
-                console.warn('⚠️ 未找到借阅记录导出按钮');
+                console.warn('未找到借阅记录导出按钮');
             }
         },
-
-        // 新增：导出借阅记录函数
         exportBorrowRecords: function() {
             if (!window.ExportManager) {
                 alert('导出功能未初始化，请刷新页面重试');
@@ -359,14 +299,10 @@
             const dateStr = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
             const filename = `借阅记录_${dateStr}.xlsx`;
 
-            console.log('📤 开始导出借阅记录，URL:', url);
+            console.log('开始导出借阅记录，URL:', url);
 
             window.ExportManager.exportToExcel(url, '借阅记录', filename);
         },
-
-
-
-        // 加载借阅记录
         loadBorrowRecords: async function() {
             try {
                 if (this.state.loading) return;

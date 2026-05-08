@@ -1,67 +1,48 @@
-/**
- * 用户管理模块
- */
+//用户管理模块
 (function() {
     'use strict';
 
-    console.log('📦 用户管理模块加载中...');
-
-    // 用户管理对象
+    console.log('用户管理模块加载中...');
     const UserManage = {
-        // 分页参数
         currentPage: 1,
         pageSize: 10,
         searchKeyword: '',
-
-        // ==== 新增：获取认证Token ====
         getAuthToken: function() {
-            // 尝试从多种位置获取token
             const token = localStorage.getItem('authToken') ||
                           localStorage.getItem('token') ||
                           sessionStorage.getItem('authToken') ||
                           sessionStorage.getItem('token') ||
                           '';
 
-            console.log('🔐 获取认证token:', token ? '找到token' : '未找到token');
+            console.log('获取认证token:', token ? '找到token' : '未找到token');
             return token;
         },
-
-        // ==== 新增：加载用户统计信息 ====
         loadUserStats: function() {
-            console.log('📈 开始加载用户统计信息...');
-
+            console.log('开始加载用户统计信息...');
             const token = this.getAuthToken();
-
-            // 准备请求头
             const headers = {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             };
-
-            // 如果有token，添加到请求头
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
             } else {
-                console.warn('⚠️ 未找到认证token，可能以未登录状态访问统计接口');
+                console.warn('未找到认证token，可能以未登录状态访问统计接口');
             }
-
-            // 发送统计请求
             fetch('/api/admin/users/stats', {
                 method: 'GET',
                 headers: headers,
-                credentials: 'include'  // 包含cookie，如果使用session
+                credentials: 'include'
             })
             .then(response => {
-                console.log('📊 统计接口响应状态:', response.status, response.statusText);
-
+                console.log('统计接口响应状态:', response.status, response.statusText);
                 if (response.status === 401) {
-                    console.warn('❌ 未授权访问统计接口 (401)');
+                    console.warn('未授权访问统计接口 (401)');
                     this.updateUserStats({totalUsers: '未授权'});
                     return null;
                 }
-
                 if (response.status === 403) {
-                    console.warn('⛔ 权限不足 (403)');
+                    console.warn('权限不足 (403)');
                     this.updateUserStats({totalUsers: '无权限'});
                     return null;
                 }
@@ -74,73 +55,54 @@
             })
             .then(data => {
                 if (!data) {
-                    // 401/403 已处理
                     return;
                 }
 
-                console.log('📈 用户统计接口返回数据:', data);
+                console.log('用户统计接口返回数据:', data);
 
                 if (data && data.success && data.data) {
-                    // 成功获取统计信息
                     this.updateUserStats(data.data);
                 } else {
-                    // 接口返回失败
-                    console.error('❌ 获取用户统计失败:', data?.message || '未知错误');
+                    console.error('获取用户统计失败:', data?.message || '未知错误');
                     this.updateUserStats({totalUsers: '加载失败'});
                 }
             })
             .catch(error => {
-                console.error('❌ 加载用户统计信息失败:', error);
-
-                // 如果统计接口失败，尝试从用户列表数据获取统计
+                console.error('加载用户统计信息失败:', error);
                 setTimeout(() => {
                     this.fallbackToUserListStats();
                 }, 1000);
             });
         },
-
-        // ==== 新增：更新用户统计显示 ====
         updateUserStats: function(stats) {
-            console.log('🔄 更新用户统计显示:', stats);
+            console.log('更新用户统计显示:', stats);
 
             const totalUsersEl = document.getElementById('totalUsers');
             if (!totalUsersEl) {
-                console.warn('⚠️ 未找到totalUsers元素');
+                console.warn('未找到totalUsers元素');
                 return;
             }
 
             if (stats.totalUsers !== undefined && stats.totalUsers !== null) {
-                // 更新总数显示
                 totalUsersEl.textContent = stats.totalUsers;
                 totalUsersEl.className = 'text-primary fw-bold';
-
-                // 记录统计信息
-                console.log(`✅ 用户统计更新成功: ${stats.totalUsers} 个用户`);
+                console.log(`用户统计更新成功: ${stats.totalUsers} 个用户`);
             } else {
-                // 统计信息无效
-                console.warn('⚠️ 统计信息无效:', stats);
+                console.warn('统计信息无效:', stats);
                 totalUsersEl.textContent = 'N/A';
                 totalUsersEl.className = 'text-muted';
             }
         },
-
-        // ==== 新增：备用方案 - 从用户列表获取统计 ====
         fallbackToUserListStats: function() {
-            console.log('🔄 尝试从用户列表数据获取统计...');
-
-            // 在用户列表加载成功后，会通过renderUserTable更新统计
-            // 这里只是确保界面不会一直显示0
+            console.log('尝试从用户列表数据获取统计...');
             const totalUsersEl = document.getElementById('totalUsers');
             if (totalUsersEl && totalUsersEl.textContent === '0') {
                 totalUsersEl.textContent = '...';
                 totalUsersEl.className = 'text-warning';
             }
         },
-
-        // ==== 新增：显示登录提示 ====
         showLoginPrompt: function() {
             if (confirm('您的登录已过期，需要重新登录。\n\n点击确定前往登录页面')) {
-                // 跳转到登录页
                 if (window.location.pathname.includes('index.html')) {
                     window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.href);
                 } else {
@@ -148,68 +110,44 @@
                 }
             }
         },
-
-        // 模块的render函数（被core.js调用）
         render: function() {
-            console.log('🚀 开始渲染用户管理模块');
+            console.log('开始渲染用户管理模块');
             this.init();
         },
-
-        // 模块销毁函数
         onDestroy: function() {
-            console.log('🧹 清理用户管理模块');
-            // 清理事件监听器等资源
+            console.log('清理用户管理模块');
         },
-
-        // 初始化模块
         init: function() {
-            console.log('🔄 初始化用户管理模块');
-
-            // 1. 渲染UI
-            console.log('🎨 渲染用户管理界面...');
+            console.log('初始化用户管理模块');
+            console.log('渲染用户管理界面...');
             const uiRendered = this.renderUI();
-
             if (!uiRendered) {
-                console.error('❌ UI渲染失败');
+                console.error('UI渲染失败');
                 this.showErrorMessage('用户管理界面初始化失败');
                 return;
             }
-
-            console.log('✅ UI渲染成功');
-
-            // ==== 新增：先加载用户统计信息 ====
-            console.log('📈 加载用户统计信息...');
+            console.log('UI渲染成功');
+            console.log('加载用户统计信息...');
             this.loadUserStats();
-
-            // 2. 加载用户列表
-            console.log('📥 加载用户列表数据...');
+            console.log('加载用户列表数据...');
             this.loadUserList();
-
-            // 3. 绑定事件
-            console.log('🔗 绑定事件监听器...');
+            console.log('绑定事件监听器...');
             this.bindEvents();
-
-            console.log('🎉 用户管理模块初始化完成');
+            console.log('用户管理模块初始化完成');
         },
-
-        // 渲染用户管理界面
         renderUI: function() {
-            console.log('🔍 查找模块容器...');
+            console.log('查找模块容器...');
             const moduleContent = document.getElementById('moduleContent');
 
             if (!moduleContent) {
-                console.error('❌ 错误：找不到模块内容容器 (moduleContent)');
+                console.error('错误：找不到模块内容容器 (moduleContent)');
                 console.error('当前页面结构：');
                 console.error(document.body.innerHTML);
                 return false;
             }
-
-            console.log('✅ 找到模块容器，开始构建界面');
-
-            // 构建用户管理界面HTML
+            console.log('找到模块容器，开始构建界面');
             moduleContent.innerHTML = `
                 <div class="container-fluid">
-                    <!-- 标题和操作按钮 -->
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4><i class="fas fa-users me-2"></i>用户管理</h4>
                         <div>
@@ -221,8 +159,6 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- 搜索区域 -->
                     <div class="card mb-3">
                         <div class="card-body py-2">
                             <div class="row align-items-center">
@@ -242,8 +178,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- 用户表格 -->
                     <div class="card">
                         <div class="table-responsive">
                             <table class="table table-hover table-sm mb-0">
@@ -271,8 +205,6 @@
                                 </tbody>
                             </table>
                         </div>
-
-                        <!-- 分页 -->
                         <div class="card-footer py-2">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="text-muted small">
@@ -288,21 +220,17 @@
                     </div>
                 </div>
             `;
-
             return true;
         },
 
-        // 加载用户列表
         loadUserList: function(page = 1, keyword = '') {
-            console.log(`📊 加载用户列表，页码: ${page}, 关键词: "${keyword}"`);
+            console.log(`加载用户列表，页码: ${page}, 关键词: "${keyword}"`);
 
             this.currentPage = page;
             this.searchKeyword = keyword;
-
-            // 检查表格元素是否存在
             const tableBody = document.getElementById('userTableBody');
             if (!tableBody) {
-                console.error('❌ 错误：找不到表格内容区域 (userTableBody)');
+                console.error('错误：找不到表格内容区域 (userTableBody)');
                 console.log('重新渲染UI并重试...');
                 setTimeout(() => {
                     this.renderUI();
@@ -310,8 +238,6 @@
                 }, 100);
                 return;
             }
-
-            // 显示加载状态
             tableBody.innerHTML = `
                 <tr>
                     <td colspan="10" class="text-center py-4">
@@ -320,14 +246,10 @@
                     </td>
                 </tr>
             `;
-
-            // 构建API URL
             let url = `/api/admin/users?page=${page}&size=${this.pageSize}`;
             if (keyword && keyword.trim()) {
                 url += `&keyword=${encodeURIComponent(keyword.trim())}`;
             }
-
-            // 发送请求
             fetch(url)
                 .then(response => {
                     if (!response.ok) {
@@ -338,16 +260,13 @@
                 .then(data => {
                     if (data && data.success) {
                         this.renderUserTable(data);
-
-                        // ==== 新增：用户列表加载成功后，也更新右上角的统计显示 ====
-                        // 如果统计接口失败，可以用列表的总数作为备用
                         const total = data.data?.total || 0;
                         const totalUsersEl = document.getElementById('totalUsers');
                         if (totalUsersEl && (totalUsersEl.textContent === '0' ||
                             totalUsersEl.textContent === '...' ||
                             totalUsersEl.textContent === '加载失败' ||
                             totalUsersEl.textContent === 'N/A')) {
-                            console.log('📈 使用用户列表数据更新统计显示:', total);
+                            console.log('使用用户列表数据更新统计显示:', total);
                             totalUsersEl.textContent = total;
                             totalUsersEl.className = 'text-info fw-bold';
                         }
@@ -361,22 +280,17 @@
                     this.showError('加载用户列表失败: ' + error.message);
                 });
         },
-
-        // 渲染用户表格
         renderUserTable: function(data) {
             const tableBody = document.getElementById('userTableBody');
             if (!tableBody) return;
-
             const users = data.data?.list || [];
             const total = data.data?.total || 0;
             const currentPage = data.data?.page || 1;
             const totalPages = data.data?.totalPages || 1;
 
-            // 更新总数显示
             const totalCountEl = document.getElementById('totalCount');
             if (totalCountEl) totalCountEl.textContent = total;
 
-            // 更新分页信息
             const pageInfoStartEl = document.getElementById('pageInfoStart');
             const pageInfoEndEl = document.getElementById('pageInfoEnd');
             if (pageInfoStartEl && pageInfoEndEl) {
@@ -399,7 +313,6 @@
             } else {
                 let rows = '';
                 users.forEach(user => {
-                    // 支持三种状态的代码：
                     let statusBadge = '';
                     switch(user.status) {
                         case 'ACTIVE':
@@ -418,27 +331,20 @@
                     const roleBadge = user.role === 'ADMIN'
                         ? '<span class="badge bg-primary">管理员</span>'
                         : '<span class="badge bg-secondary">普通用户</span>';
-
-                    // 格式化注册时间
                     const createTime = user.createTime ? new Date(user.createTime).toLocaleString() : '未知';
-                    // 修改后：
                     let lastLoginTime = '从未登录';
                     if (user.lastLoginTime && user.lastLoginTime !== 'null' && user.lastLoginTime !== '') {
                         try {
                             const date = new Date(user.lastLoginTime);
                             if (!isNaN(date.getTime())) {
-                                // 如果日期有效，则显示注册时间
                                 lastLoginTime = date.toLocaleString('zh-CN');
                             } else {
-                                // 如果无效，显示注册时间
                                 lastLoginTime = createTime || '从未登录';
                             }
                         } catch (e) {
-                            // 解析失败，显示注册时间
                             lastLoginTime = createTime || '从未登录';
                         }
                     } else {
-                        // 如果没有最后登录时间，显示注册时间
                         lastLoginTime = createTime || '从未登录';
                     }
 
@@ -458,7 +364,6 @@
                                     ${user.status === 'CANCELLED'
                                         ? '<span class="badge bg-secondary">已注销</span>'
                                         : `
-                                            <!-- 锁定/解锁按钮（合并为一个） -->
                                             <button type="button" class="btn btn-sm ${user.status === 'LOCKED' ? 'btn-outline-success' : 'btn-outline-warning'} toggle-lock-btn"
                                                     data-id="${user.userId}"
                                                     data-current-status="${user.status}"
@@ -466,7 +371,6 @@
                                                 <i class="fas ${user.status === 'LOCKED' ? 'fa-unlock' : 'fa-lock'}"></i>
                                             </button>
 
-                                            <!-- 注销按钮 -->
                                             <button type="button" class="btn btn-sm btn-outline-danger cancel-user-btn"
                                                     data-id="${user.userId}"
                                                     title="注销用户">
@@ -482,11 +386,9 @@
                 tableBody.innerHTML = rows;
             }
 
-            // 渲染分页
             this.renderPagination(currentPage, totalPages);
         },
 
-        // 渲染分页
         renderPagination: function(currentPage, totalPages) {
             const paginationEl = document.getElementById('pagination');
             if (!paginationEl || totalPages <= 1) {
@@ -496,7 +398,6 @@
 
             let paginationHtml = '';
 
-            // 上一页按钮
             if (currentPage > 1) {
                 paginationHtml += `
                     <li class="page-item">
@@ -509,7 +410,6 @@
                 paginationHtml += '<li class="page-item disabled"><a class="page-link" href="#">上一页</a></li>';
             }
 
-            // 页码按钮
             const maxVisiblePages = 5;
             let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
             let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
@@ -532,7 +432,6 @@
                 }
             }
 
-            // 下一页按钮
             if (currentPage < totalPages) {
                 paginationHtml += `
                     <li class="page-item">
@@ -547,8 +446,6 @@
 
             paginationEl.innerHTML = paginationHtml;
         },
-
-        // ==== 新增：锁定/解锁切换功能 ====
         toggleUserLock: function(userId, currentStatus, username) {
             const newStatus = currentStatus === 'LOCKED' ? 'ACTIVE' : 'LOCKED';
             const action = newStatus === 'ACTIVE' ? '解锁' : '锁定';
@@ -567,8 +464,6 @@
                 if (data && data.success) {
                     alert(`${action}成功`);
                     this.loadUserList(this.currentPage, this.searchKeyword);
-
-                    // ==== 新增：操作成功后重新加载统计 ====
                     setTimeout(() => {
                         this.loadUserStats();
                     }, 500);
@@ -582,21 +477,15 @@
                 alert(`${action}失败: ${error.message}`);
             });
         },
-
-        // ==== 新增：注销功能 ====
         cancelUser: function(userId, username) {
-            if (!confirm(`⚠️ 确定要注销用户 "${username}" 吗？\n\n注意：\n1. 注销后用户将无法登录\n2. 此操作不可恢复\n3. 用户需要重新注册才能再次使用`)) {
+            if (!confirm(`确定要注销用户 "${username}" 吗？\n\n注意：\n1. 注销后用户将无法登录\n2. 此操作不可恢复\n3. 用户需要重新注册才能再次使用`)) {
                 return;
             }
-
-            //const reason = prompt('请输入注销原因（可选）：', '管理员注销');
-
             fetch(`/api/admin/users/${userId}/status`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     status: 'CANCELLED',
-                    //reason: reason || '管理员注销'
                 })
             })
             .then(response => response.json())
@@ -605,7 +494,6 @@
                     alert('用户已成功注销！');
                     this.loadUserList(this.currentPage, this.searchKeyword);
 
-                    // ==== 新增：操作成功后重新加载统计 ====
                     setTimeout(() => {
                         this.loadUserStats();
                     }, 500);
@@ -619,8 +507,6 @@
                 alert('注销失败: ' + error.message);
             });
         },
-
-        // 切换用户状态
         toggleUserStatus: function(userId, newStatus, username) {
             const action = newStatus === 'ACTIVE' ? '启用' : '停用';
             if (!confirm(`确定要${action}用户 "${username}" 吗？`)) {
@@ -637,8 +523,6 @@
                 if (data && data.success) {
                     alert(`${action}成功`);
                     this.loadUserList(this.currentPage, this.searchKeyword);
-
-                    // ==== 新增：操作成功后重新加载统计 ====
                     setTimeout(() => {
                         this.loadUserStats();
                     }, 500);
@@ -652,17 +536,12 @@
                 alert(`${action}失败: ${error.message}`);
             });
         },
-
-        // 绑定事件
         bindEvents: function() {
-            // 搜索按钮
             const searchBtn = document.getElementById('searchBtn');
             if (searchBtn) {
                 searchBtn.addEventListener('click', () => {
                     const keyword = document.getElementById('searchInput')?.value || '';
-
-                    // ==== 新增：搜索时也重新加载统计 ====
-                    console.log('🔍 搜索用户，重新加载统计...');
+                    console.log('搜索用户，重新加载统计...');
                     this.loadUserStats();
                     this.loadUserList(1, keyword);
                 });
@@ -674,16 +553,12 @@
                 searchInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
                         const keyword = searchInput.value || '';
-
-                        // ==== 新增：搜索时也重新加载统计 ====
-                        console.log('🔍 搜索用户（回车），重新加载统计...');
+                        console.log('搜索用户（回车），重新加载统计...');
                         this.loadUserStats();
                         this.loadUserList(1, keyword);
                     }
                 });
             }
-
-            // 刷新按钮
             const refreshBtn = document.getElementById('refreshBtn');
             if (refreshBtn) {
                 refreshBtn.addEventListener('click', () => {
@@ -691,23 +566,18 @@
                         searchInput.value = '';
                         this.searchKeyword = '';
                     }
-
-                    // ==== 新增：刷新时也重新加载统计 ====
-                    console.log('🔄 刷新用户数据和统计...');
+                    console.log('刷新用户数据和统计...');
                     this.loadUserStats();
                     this.loadUserList(1);
                 });
             }
-            // 🔴 在这里添加导出按钮绑定（放在刷新按钮事件后面）
             const exportBtn = document.getElementById('exportUserBtn');
             if (exportBtn) {
                 exportBtn.addEventListener('click', () => {
                     this.exportUsersToExcel();
                 });
             }
-            // 事件委托处理动态生成的元素
             document.addEventListener('click', (e) => {
-                // 处理锁定/解锁按钮
                 if (e.target.closest('.toggle-lock-btn')) {
                     e.preventDefault();
                     const button = e.target.closest('.toggle-lock-btn');
@@ -741,43 +611,29 @@
                 }
             });
         },
-        // 🔴 在这里添加导出函数（在showErrorMessage之前）
-        // 导出用户数据到Excel
         exportUsersToExcel: function() {
-            console.log('📤 点击了用户导出按钮');
+            console.log('点击了用户导出按钮');
 
             if (!window.ExportManager) {
                 alert('导出功能未初始化，请刷新页面重试');
                 return;
             }
-
-            // 获取当前搜索条件
             const keyword = document.getElementById('searchInput')?.value || '';
-            console.log('🔍 搜索参数:', { keyword });
-
-            // 构建参数
+            console.log('搜索参数:', { keyword });
             const params = new URLSearchParams();
             if (keyword && keyword.trim() !== '') {
                 params.append('keyword', keyword.trim());
             }
-
-            // 构建完整的URL
             let url = '/api/export/user';
             if (params.toString()) {
                 url += '?' + params.toString();
             }
-
-            console.log('🌐 用户导出URL:', url);
-
-            // 生成文件名
+            console.log('用户导出URL:', url);
             const today = new Date();
             const dateStr = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
             const filename = `用户列表_${dateStr}.xlsx`;
-
-            // 调用通用导出管理器
             window.ExportManager.exportToExcel(url, '用户数据', filename);
         },
-        // 显示错误信息
         showError: function(message) {
             const tableBody = document.getElementById('userTableBody');
             if (tableBody) {
@@ -794,8 +650,6 @@
                 `;
             }
         },
-
-        // 显示错误信息（完整）
         showErrorMessage: function(message) {
             const moduleContent = document.getElementById('moduleContent');
             if (moduleContent) {
@@ -820,7 +674,6 @@
             }
         }
     };
-    // 注册到全局模块系统
     if (typeof window.registerModule === 'function') {
         window.registerModule('user-manage', {
             render: function() {
@@ -830,7 +683,7 @@
                 UserManage.onDestroy();
             }
         });
-        console.log('✅ 用户管理模块注册成功 (通过 registerModule)');
+        console.log('用户管理模块注册成功 (通过 registerModule)');
     } else if (typeof safeRegisterModule === 'function') {
         safeRegisterModule('user-manage', {
             render: function() {
@@ -840,7 +693,7 @@
                 UserManage.onDestroy();
             }
         });
-        console.log('✅ 用户管理模块注册成功 (通过 safeRegisterModule)');
+        console.log('用户管理模块注册成功 (通过 safeRegisterModule)');
     } else {
         window.modules = window.modules || {};
         window.modules['user-manage'] = {
@@ -851,11 +704,8 @@
                 UserManage.onDestroy();
             }
         };
-        console.log('✅ 用户管理模块注册成功 (通过 window.modules)');
+        console.log('用户管理模块注册成功 (通过 window.modules)');
     }
-
-    // 全局访问
     window.userManager = UserManage;
-
-    console.log('🎯 用户管理模块加载完成');
+    console.log('用户管理模块加载完成');
 })();

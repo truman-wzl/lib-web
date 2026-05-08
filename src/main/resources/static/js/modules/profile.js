@@ -1,6 +1,3 @@
-// js/modules/profile.js
-// 修复版本 - 完全适配你的模块系统
-
 class ProfileManager {
     constructor(container) {
         this.container = container;
@@ -56,7 +53,6 @@ class ProfileManager {
     renderUserInfo(user) {
         const container = document.getElementById('user-info-area');
         if (!container) return;
-
         container.innerHTML = `
             <div class="row">
                 <div class="col-md-8 offset-md-2">
@@ -79,7 +75,6 @@ class ProfileManager {
                                     </form>
                                 </td>
                             </tr>
-                            <!-- 真实姓名 -->
                             <tr>
                                 <th>真实姓名</th>
                                 <td>
@@ -98,7 +93,6 @@ class ProfileManager {
                                 </td>
                             </tr>
 
-                            <!-- 邮箱 -->
                             <tr>
                                 <th>邮箱</th>
                                 <td>
@@ -117,7 +111,6 @@ class ProfileManager {
                                 </td>
                             </tr>
 
-                            <!-- 电话 -->
                             <tr>
                                 <th>联系电话</th>
                                 <td>
@@ -157,7 +150,6 @@ class ProfileManager {
     }
 
     bindEvents() {
-        // 修改用户名
         document.getElementById('change-username-btn')?.addEventListener('click', () => {
             document.getElementById('username-form').style.display = 'block';
         });
@@ -165,7 +157,6 @@ class ProfileManager {
         document.getElementById('cancel-username-btn')?.addEventListener('click', () => {
             document.getElementById('username-form').style.display = 'none';
         });
-        //修改用户名
         document.getElementById('save-username-btn')?.addEventListener('click', async () => {
             const newUsername = document.getElementById('new-username').value.trim();
             if (!newUsername) {
@@ -193,7 +184,6 @@ class ProfileManager {
                 alert('网络错误，请重试');
             }
         });
-        // 修改真实姓名
         this.bindFieldEvent('realname', '真实姓名', async (value) => {
             const response = await fetch('/api/auth/update-info', {
                 method: 'POST',
@@ -203,10 +193,7 @@ class ProfileManager {
             });
             return response.json();
         });
-
-        // 修改邮箱
         this.bindFieldEvent('email', '邮箱', async (value) => {
-            // 邮箱格式验证
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(value)) {
                 throw new Error('邮箱格式不正确');
@@ -220,10 +207,7 @@ class ProfileManager {
             });
             return response.json();
         });
-
-        // 修改电话
         this.bindFieldEvent('phone', '电话', async (value) => {
-            // 电话格式验证
             const phoneRegex = /^1[3-9]\d{9}$/;
             if (!phoneRegex.test(value)) {
                 throw new Error('请输入有效的手机号');
@@ -238,7 +222,6 @@ class ProfileManager {
             return response.json();
         });
     }
-    // 辅助函数：绑定字段编辑事件
     bindFieldEvent(fieldName, fieldLabel, apiCall) {
         const changeBtn = document.getElementById(`change-${fieldName}-btn`);
         const cancelBtn = document.getElementById(`cancel-${fieldName}-btn`);
@@ -292,7 +275,6 @@ class ProfileManager {
             }
         });
     }
-    // 工具函数
     escape(html) {
         if (!html) return '';
         const div = document.createElement('div');
@@ -328,33 +310,19 @@ class ProfileManager {
         const map = { 'ACTIVE': '正常', 'LOCKED': '已锁定' };
         return map[status] || '未知';
     }
-
-    // 清理函数
     onDestroy() {
-        // 清理事件监听器等资源
         console.log('profile模块清理完成');
     }
 }
-
-// ================= 关键部分：按照你的模块系统注册模块 =================
-// 注意：必须通过 safeRegisterModule 函数注册模块
-// 模块配置必须包含 render 函数和可选的 onDestroy 函数
-
 const profileModule = {
     render: function() {
-        // 这个函数会被模块系统调用
         console.log('开始渲染 profile 模块');
-
-        // 创建 ProfileManager 实例
         const profileManager = new ProfileManager(document.getElementById('moduleContent'));
         profileManager.init();
-
-        // 可以将实例存储起来，方便在 onDestroy 中清理
         this.profileManager = profileManager;
     },
 
     onDestroy: function() {
-        // 清理函数
         console.log('清理 profile 模块');
         if (this.profileManager && this.profileManager.onDestroy) {
             this.profileManager.onDestroy();
@@ -362,7 +330,6 @@ const profileModule = {
     }
 };
 
-// 使用 safeRegisterModule 注册模块
 if (typeof safeRegisterModule === 'function') {
     console.log('通过 safeRegisterModule 注册 profile 模块');
     safeRegisterModule('profile', profileModule);
@@ -370,7 +337,6 @@ if (typeof safeRegisterModule === 'function') {
     console.log('通过 registerModule 注册 profile 模块');
     registerModule('profile', profileModule);
 } else {
-    // 如果模块系统尚未加载，将模块配置保存到 window.modules
     console.log('模块系统未就绪，将 profile 模块保存到 window.modules');
     if (!window.modules) window.modules = {};
     window.modules.profile = profileModule;

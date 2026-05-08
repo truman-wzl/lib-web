@@ -1,24 +1,17 @@
-// js/modules/stats-manage.js
 const statsManageModule = {
     name: '数据统计',
-
-    // 模块状态
     state: {
         loading: false,
         trendData: null,
         topBooks: null,
         topCategories: null,
-        trendChart: null,    // Chart.js折线图实例
-        categoryChart: null  // Chart.js环形图实例
+        trendChart: null,
+        categoryChart: null
     },
-
-    // 渲染方法
     render: function() {
         return `
             <div class="container-fluid py-3">
-                <h4 class="mb-4">📈 数据统计</h4>
-
-                <!-- 借阅趋势卡片 -->
+                <h4 class="mb-4">数据统计</h4>
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">借阅趋势（最近7天）</h5>
@@ -34,7 +27,6 @@ const statsManageModule = {
                 </div>
 
                 <div class="row">
-                    <!-- 热门图书TOP 5 -->
                     <div class="col-md-6">
                         <div class="card h-100">
                             <div class="card-header">
@@ -52,7 +44,6 @@ const statsManageModule = {
                                             </tr>
                                         </thead>
                                         <tbody id="topBooksBody">
-                                            <!-- 数据会动态加载到这里 -->
                                             <tr>
                                                 <td colspan="4" class="text-center text-muted py-4">
                                                     <div class="spinner-border spinner-border-sm" role="status">
@@ -67,8 +58,6 @@ const statsManageModule = {
                             </div>
                         </div>
                     </div>
-
-                    <!-- 热门类别TOP 3 -->
                     <div class="col-md-6">
                         <div class="card h-100">
                             <div class="card-header">
@@ -78,11 +67,9 @@ const statsManageModule = {
                                 <div class="chart-container" style="position: relative; height:250px;">
                                     <canvas id="categoryChart"></canvas>
                                 </div>
-                                <!-- 类别详情表格 -->
                                 <div class="mt-3" id="categoryDetail">
                                     <table class="table table-sm table-borderless mb-0">
                                         <tbody id="categoryDetailBody">
-                                            <!-- 数据动态加载 -->
                                             <tr>
                                                 <td colspan="2" class="text-center text-muted">
                                                     <div class="spinner-border spinner-border-sm" role="status">
@@ -101,19 +88,13 @@ const statsManageModule = {
             </div>
         `;
     },
-
-    // 修改 onRender 方法
     onRender: function() {
         console.log('统计模块加载');
         this.bindEvents();
-
-        // 先检查DOM元素
         this.waitForDOMReady();
     },
-    // 新增：等待DOM就绪的方法
     waitForDOMReady: function() {
         console.log('检查DOM就绪状态...');
-
         const checkDOM = () => {
             const trendChart = document.getElementById('trendChart');
             const categoryChart = document.getElementById('categoryChart');
@@ -123,21 +104,17 @@ const statsManageModule = {
             console.log('- categoryChart:', categoryChart ? '找到 ✓' : '未找到 ✗');
 
             if (trendChart && categoryChart) {
-                console.log('✅ 所有图表元素就绪，开始初始化');
+                console.log('所有图表元素就绪，开始初始化');
                 this.initCharts();
                 this.loadData();
             } else {
-                console.log('⏳ DOM未就绪，50ms后重试...');
+                console.log('DOM未就绪，50ms后重试...');
                 setTimeout(checkDOM, 50);
             }
         };
-
-        // 立即开始检查
         checkDOM();
     },
-    // 初始化图表实例
     initCharts: function() {
-        // 销毁已存在的图表实例
         if (this.state.trendChart) {
             this.state.trendChart.destroy();
             this.state.trendChart = null;
@@ -147,8 +124,6 @@ const statsManageModule = {
             this.state.categoryChart = null;
         }
     },
-
-    // 加载数据
     loadData: function() {
         this.state.loading = true;
         console.log('开始加载统计数据...');
@@ -156,23 +131,19 @@ const statsManageModule = {
         this.loadTopBooks();
         this.loadTopCategories();
     },
-
-    // 加载借阅趋势数据
     loadBorrowTrend: function() {
         console.log('加载借阅趋势数据...');
-        // 直接获取canvas元素，不延迟
         const canvas = document.getElementById('trendChart');
         if (!canvas) {
-            console.error('❌ 严重错误：trendChart元素不存在！');
+            console.error('严重错误：trendChart元素不存在！');
             return;
         }
 
         const chartContainer = canvas.parentElement;
         if (!chartContainer) {
-            console.error('❌ 找不到trendChart的父元素');
+            console.error('找不到trendChart的父元素');
             return;
         }
-        // ✅ 改为添加加载遮罩，而不是替换整个容器
         this.showLoadingOverlay(canvas, '加载借阅趋势数据...');
 
         fetch('/api/stats/borrow-trend')
@@ -182,7 +153,7 @@ const statsManageModule = {
             })
             .then(data => {
                 console.log('借阅趋势数据:', data);
-                this.removeLoadingOverlay(canvas);  // 移除遮罩
+                this.removeLoadingOverlay(canvas);
                 if (data.success) {
                     this.state.trendData = data.data;
                     this.renderTrendChart();
@@ -196,11 +167,8 @@ const statsManageModule = {
                 this.showErrorOverlay(canvas, `加载失败: ${error.message}`);
             });
     },
-    // 添加辅助方法
     showLoadingOverlay: function(canvas, message) {
         const container = canvas.parentElement;
-
-        // 创建遮罩层
         const overlay = document.createElement('div');
         overlay.className = 'chart-loading-overlay';
         overlay.style.cssText = `
@@ -226,14 +194,8 @@ const statsManageModule = {
 
         overlay.appendChild(spinner);
         overlay.appendChild(text);
-
-        // 保存遮罩引用
         canvas.chartOverlay = overlay;
-
-        // 确保容器是相对定位
         container.style.position = 'relative';
-
-        // 将遮罩插入到canvas前面
         container.insertBefore(overlay, canvas);
     },
 
@@ -262,15 +224,12 @@ const statsManageModule = {
         `;
 
         container.appendChild(errorDiv);
-
-        // 5秒后自动移除
         setTimeout(() => {
             if (errorDiv.parentNode) {
                 errorDiv.parentNode.removeChild(errorDiv);
             }
         }, 5000);
     },
-    // 渲染借阅趋势图表
     renderTrendChart: function() {
         if (!this.state.trendData) {
             console.warn('没有借阅趋势数据，无法渲染图表');
@@ -290,16 +249,12 @@ const statsManageModule = {
             console.error('无法获取canvas上下文');
             return;
         }
-
-        // 销毁旧的图表实例
         if (this.state.trendChart) {
             this.state.trendChart.destroy();
         }
 
         const dates = this.state.trendData.dates;
         const counts = this.state.trendData.counts;
-
-        // 处理日期显示：如果是同年，只显示月日；如果跨年，显示完整日期
         const displayDates = dates.map(date => {
             const year = date.substring(0, 4);
             const currentYear = new Date().getFullYear().toString();
@@ -377,7 +332,6 @@ const statsManageModule = {
                     }
                 }
             });
-
             console.log('借阅趋势图表渲染成功');
         } catch (error) {
             console.error('渲染借阅趋势图表失败:', error);
@@ -389,8 +343,6 @@ const statsManageModule = {
             `;
         }
     },
-
-    // 加载热门图书TOP5
     loadTopBooks: function() {
         console.log('加载热门图书数据...');
 
@@ -440,7 +392,6 @@ const statsManageModule = {
             });
     },
 
-    // 渲染热门图书表格
     renderTopBooks: function() {
         if (!this.state.topBooks) {
             console.warn('没有热门图书数据，无法渲染表格');
@@ -469,7 +420,6 @@ const statsManageModule = {
 
         let html = '';
 
-        // 奖牌颜色
         const rankColors = ['#FFD700', '#C0C0C0', '#CD7F32', '#3498db', '#2ecc71']; // 金、银、铜、蓝、绿
 
         this.state.topBooks.forEach((book, index) => {
@@ -497,21 +447,18 @@ const statsManageModule = {
         tableBody.innerHTML = html;
     },
 
-    // 加载热门类别TOP3
     loadTopCategories: function() {
         console.log('加载热门类别数据...');
         const canvas = document.getElementById('categoryChart');
         if (!canvas) {
-            console.error('❌ categoryChart元素不存在！');
+            console.error('categoryChart元素不存在！');
             return;
         }
 
         const detailBody = document.getElementById('categoryDetailBody');
 
-        // ✅ 使用遮罩层，不删除canvas
         this.showLoadingOverlay(canvas, '加载类别数据...');
 
-        // 更新详情表格的加载状态
         if (detailBody) {
             detailBody.innerHTML = `
                 <tr>
@@ -533,7 +480,6 @@ const statsManageModule = {
             .then(data => {
                 console.log('热门类别数据:', data);
 
-                // 移除遮罩层
                 this.removeLoadingOverlay(canvas);
 
                 if (data.success) {
@@ -546,13 +492,10 @@ const statsManageModule = {
             .catch(error => {
                 console.error('加载热门类别失败:', error);
 
-                // 移除遮罩层
                 this.removeLoadingOverlay(canvas);
 
-                // 显示错误遮罩
                 this.showErrorOverlay(canvas, `加载类别数据失败: ${error.message}`);
 
-                // 更新详情表格的错误状态
                 if (detailBody) {
                     detailBody.innerHTML = `
                         <tr>
@@ -566,7 +509,6 @@ const statsManageModule = {
             });
     },
 
-    // 渲染类别图表
     renderCategoryChart: function() {
         if (!this.state.topCategories) {
             console.warn('没有热门类别数据，无法渲染图表');
@@ -586,8 +528,6 @@ const statsManageModule = {
             console.error('无法获取canvas上下文');
             return;
         }
-
-        // 销毁旧的图表实例
         if (this.state.categoryChart) {
             this.state.categoryChart.destroy();
         }
@@ -595,13 +535,12 @@ const statsManageModule = {
         const labels = this.state.topCategories.map(cat => cat.categoryName);
         const data = this.state.topCategories.map(cat => cat.borrowCount);
 
-        // 鲜艳的颜色数组
         const colors = [
-            'rgba(255, 99, 132, 0.8)',    // 红色
-            'rgba(54, 162, 235, 0.8)',    // 蓝色
-            'rgba(255, 206, 86, 0.8)',     // 黄色
-            'rgba(75, 192, 192, 0.8)',    // 青色
-            'rgba(153, 102, 255, 0.8)'    // 紫色
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 206, 86, 0.8)',
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(153, 102, 255, 0.8)'
         ];
 
         const borderColors = [
@@ -655,8 +594,6 @@ const statsManageModule = {
             });
 
             console.log('类别图表渲染成功');
-
-            // 渲染类别详情表格
             this.renderCategoryDetails();
 
         } catch (error) {
@@ -669,8 +606,6 @@ const statsManageModule = {
             `;
         }
     },
-
-    // 渲染类别详情表格
     renderCategoryDetails: function() {
         if (!this.state.topCategories || this.state.topCategories.length === 0) {
             console.warn('没有类别数据，无法渲染详情表格');
@@ -688,8 +623,6 @@ const statsManageModule = {
         this.state.topCategories.forEach((category, index) => {
             const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'];
             const color = colors[index] || '#6c757d';
-
-            // 计算百分比
             const total = this.state.topCategories.reduce((sum, cat) => sum + cat.borrowCount, 0);
             const percentage = total > 0 ? Math.round((category.borrowCount / total) * 100) : 0;
 
@@ -713,8 +646,6 @@ const statsManageModule = {
 
         detailBody.innerHTML = html;
     },
-
-    // 绑定事件
     bindEvents: function() {
         const refreshBtn = document.getElementById('refreshTrendBtn');
         if (refreshBtn) {
@@ -722,8 +653,6 @@ const statsManageModule = {
             refreshBtn.addEventListener('click', () => {
                 console.log('刷新按钮被点击');
                 this.loadData();
-
-                // 显示刷新提示
                 const originalText = refreshBtn.innerHTML;
                 refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> 刷新中...';
                 refreshBtn.disabled = true;
@@ -731,8 +660,6 @@ const statsManageModule = {
                 setTimeout(() => {
                     refreshBtn.innerHTML = originalText;
                     refreshBtn.disabled = false;
-
-                    // 显示刷新成功提示
                     this.showToast('数据刷新成功！', 'success');
                 }, 1000);
             });
@@ -741,9 +668,7 @@ const statsManageModule = {
         }
     },
 
-    // 显示提示消息
     showToast: function(message, type = 'success') {
-        // 检查是否已有toast容器
         let toastContainer = document.getElementById('toastContainer');
         if (!toastContainer) {
             toastContainer = document.createElement('div');
@@ -770,14 +695,11 @@ const statsManageModule = {
         const toastEl = document.getElementById(toastId);
         const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
         toast.show();
-
-        // 清理
         toastEl.addEventListener('hidden.bs.toast', () => {
             toastEl.remove();
         });
     },
 
-    // HTML转义
     escapeHtml: function(text) {
         if (text === null || text === undefined) {
             return '';
@@ -786,8 +708,6 @@ const statsManageModule = {
         div.textContent = text;
         return div.innerHTML;
     },
-
-    // 销毁方法
     onDestroy: function() {
         console.log('销毁统计模块资源');
         if (this.state.trendChart) {
@@ -798,47 +718,40 @@ const statsManageModule = {
             this.state.categoryChart.destroy();
             this.state.categoryChart = null;
         }
-
-        // 移除事件监听器
         const refreshBtn = document.getElementById('refreshTrendBtn');
         if (refreshBtn) {
             refreshBtn.replaceWith(refreshBtn.cloneNode(true));
         }
     }
 };
-// === 文件末尾的模块注册 ===
 (function() {
-    console.log('📦 开始注册统计模块...');
+    console.log('开始注册统计模块...');
 
-    // 检查模块是否已存在
     if (window.ModuleRegistry && window.ModuleRegistry['stats-manage']) {
-        console.warn('⚠️ 警告：stats-manage模块已存在于ModuleRegistry');
+        console.warn('警告：stats-manage模块已存在于ModuleRegistry');
     }
 
     if (window.modules && window.modules['stats-manage']) {
-        console.warn('⚠️ 警告：stats-manage模块已存在于window.modules');
+        console.warn('警告：stats-manage模块已存在于window.modules');
     }
 
-    // 使用你的模块注册系统
     if (typeof safeRegisterModule === 'function') {
-        console.log('✅ 使用safeRegisterModule注册');
+        console.log('使用safeRegisterModule注册');
         safeRegisterModule('stats-manage', statsManageModule);
     } else if (typeof registerModule === 'function') {
-        console.log('✅ 使用registerModule注册');
+        console.log('使用registerModule注册');
         registerModule('stats-manage', statsManageModule);
     } else {
-        console.log('⚠️ 使用备用注册到window.modules');
+        console.log('使用备用注册到window.modules');
         window.modules = window.modules || {};
         window.modules['stats-manage'] = statsManageModule;
-
-        // 如果模块系统就绪，立即注册
         if (window.isModuleSystemReady === true) {
-            console.log('🔧 检测到模块系统就绪，手动注册到ModuleRegistry');
+            console.log('检测到模块系统就绪，手动注册到ModuleRegistry');
             if (typeof window.registerModule === 'function') {
                 window.registerModule('stats-manage', statsManageModule);
             }
         }
     }
-    console.log('✅ 统计模块注册完成');
+    console.log('统计模块注册完成');
     console.log('模块名称:', statsManageModule.name);
 })();

@@ -494,14 +494,12 @@
     if (typeof window !== 'undefined') {
         if (typeof window.registerModule === 'function') {
             window.registerModule('book-query', bookQueryModule);
-            console.log('通过 window.registerModule 注册成功');
         }
         else {
             if (!window.modules) {
                 window.modules = {};
             }
             window.modules['book-query'] = bookQueryModule;
-            console.log('通过 window.modules 注册成功');
         }
         window.borrowBook = async function(bookId, bookName, author, publisher, category) {
             console.log('[全局函数] 借阅图书，ID:', bookId, '书名:', bookName);
@@ -633,7 +631,5 @@
                 }
             });
         };
-
-        console.log('book-query 模块和全局函数已注册完成');
     }
 })();

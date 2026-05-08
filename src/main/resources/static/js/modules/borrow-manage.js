@@ -1,4 +1,3 @@
-//借阅管理模块
 (function() {
     'use strict';
     const borrowManageModule = {

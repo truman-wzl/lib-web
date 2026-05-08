@@ -1,4 +1,3 @@
-//图书查询与借阅
 (function() {
     'use strict';
     const bookQueryModule = {

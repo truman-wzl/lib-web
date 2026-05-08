@@ -1,4 +1,3 @@
-//图书管理模块
 (function() {
     const MODULE_ID = 'book-manage';
 

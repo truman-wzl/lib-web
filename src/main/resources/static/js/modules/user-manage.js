@@ -1,4 +1,3 @@
-//用户管理模块
 (function() {
     'use strict';
     const UserManage = {
@@ -532,8 +531,6 @@
                     this.loadUserList(1, keyword);
                 });
             }
-
-            // 搜索框回车
             const searchInput = document.getElementById('searchInput');
             if (searchInput) {
                 searchInput.addEventListener('keypress', (e) => {
@@ -579,7 +576,6 @@
                     const username = button.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
                     this.cancelUser(userId, username);
                 }
-                //处理分页按钮
                 if (e.target.closest('.page-link')) {
                     e.preventDefault();
                     e.stopPropagation();

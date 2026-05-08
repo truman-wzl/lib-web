@@ -1,4 +1,3 @@
-//用户消息中心
 const MessageModule = {
     name: '系统消息',
     render: function() {

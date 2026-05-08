@@ -1,4 +1,3 @@
-// 分类管理模块
 (function() {
     const MODULE_ID = 'category-manage';
     window.registerModule(MODULE_ID, {

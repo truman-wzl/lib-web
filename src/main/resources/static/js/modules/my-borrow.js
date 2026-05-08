@@ -1,4 +1,3 @@
-//我的借阅模块
 (function() {
     'use strict';
     const myBorrowModule = {

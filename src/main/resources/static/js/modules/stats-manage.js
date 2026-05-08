@@ -100,8 +100,8 @@ const statsManageModule = {
             const categoryChart = document.getElementById('categoryChart');
 
             console.log('DOM检查结果:');
-            console.log('- trendChart:', trendChart ? '找到 ✓' : '未找到 ✗');
-            console.log('- categoryChart:', categoryChart ? '找到 ✓' : '未找到 ✗');
+            console.log('- trendChart:', trendChart ? '找到' : '未找到');
+            console.log('- categoryChart:', categoryChart ? '找到' : '未找到');
 
             if (trendChart && categoryChart) {
                 console.log('所有图表元素就绪，开始初始化');

@@ -22,31 +22,25 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     long countByUserIdAndStatus(Long userId, String status);
 
-    // 标记消息为已读
     @Modifying
     @Transactional
     @Query("UPDATE Message m SET m.status = 'READ', m.readTime = :readTime WHERE m.id = :messageId AND m.userId = :userId")
     int markAsRead(@Param("messageId") Long messageId, @Param("userId") Long userId, @Param("readTime") Date readTime);
 
-    // 标记用户所有未读消息为已读
     @Modifying
     @Transactional
     @Query("UPDATE Message m SET m.status = 'READ', m.readTime = :readTime WHERE m.userId = :userId AND m.status = 'UNREAD'")
     int markAllAsRead(@Param("userId") Long userId, @Param("readTime") Date readTime);
 
-    // 根据借阅ID查询逾期消息
     @Query("SELECT m FROM Message m WHERE m.borrowId = :borrowId AND m.msgType = 'OVERDUE' ORDER BY m.createTime DESC")
     List<Message> findOverdueMessageByBorrowId(@Param("borrowId") Long borrowId);
 
-    // 删除用户的消息
     @Modifying
     @Transactional
     @Query("DELETE FROM Message m WHERE m.id = :messageId AND m.userId = :userId")
     int deleteByUserIdAndMessageId(@Param("messageId") Long messageId, @Param("userId") Long userId);
 
     int countByUserIdAndStatus(long userId, String status);
-
-    // 根据借阅ID、消息类型和时间范围查询
     List<Message> findByBorrowIdAndMsgTypeAndCreateTimeBetween(
             @Param("borrowId") Long borrowId,
             @Param("msgType") String msgType,

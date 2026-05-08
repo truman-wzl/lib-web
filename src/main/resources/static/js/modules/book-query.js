@@ -501,14 +501,14 @@
         console.log('注册图书查询模块...');
         if (typeof window.registerModule === 'function') {
             window.registerModule('book-query', bookQueryModule);
-            console.log('✓ 通过 window.registerModule 注册成功');
+            console.log('通过 window.registerModule 注册成功');
         }
         else {
             if (!window.modules) {
                 window.modules = {};
             }
             window.modules['book-query'] = bookQueryModule;
-            console.log('✓ 通过 window.modules 注册成功');
+            console.log('通过 window.modules 注册成功');
         }
         window.borrowBook = async function(bookId, bookName, author, publisher, category) {
             console.log('[全局函数] 借阅图书，ID:', bookId, '书名:', bookName);

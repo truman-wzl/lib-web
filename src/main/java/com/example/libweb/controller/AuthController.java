@@ -60,7 +60,7 @@ public class AuthController {
             }
 
             Userdata user = userService.login(username, password);
-            Date lastLoginTime = new Date();// 更新最后登录时间
+            Date lastLoginTime = new Date();
             userdataRepository.updateLastLoginTime(user.getUserId(), lastLoginTime);
             user.setLastLoginTime(lastLoginTime);
 

@@ -2,7 +2,6 @@ package com.example.libweb;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-// 可以添加下面这行，显式启用JPA仓库扫描（更保险）
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 

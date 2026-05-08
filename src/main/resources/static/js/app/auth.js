@@ -1,6 +1,3 @@
-/**
- * 获取当前登录用户信息
- */
 async function fetchCurrentUser() {
     try {
         const response = await fetch('/api/auth/me');
@@ -21,29 +18,18 @@ async function fetchCurrentUser() {
         return null;
     }
 }
-
-/**
- * 渲染公共部分（用户信息、退出按钮）
- */
 function renderCommonParts() {
     const user = window.AppState.currentUser;
     document.getElementById('welcomeTitle').textContent =
         `欢迎回来，${user.realName || user.username}！`;
-
     document.getElementById('currentUserInfo').innerHTML = `
         <strong>${user.username}</strong> (${user.role === 'ADMIN' ? '管理员' : '普通用户'})
     `;
-
-    // 移除旧的 confirm 方式，改为使用 Bootstrap Modal
     document.getElementById('logoutLink').addEventListener('click', function(e) {
         e.preventDefault();
-
-        // 显示退出确认模态框
         const logoutModal = new bootstrap.Modal(document.getElementById('logoutConfirmModal'));
         logoutModal.show();
     });
-
-    // 绑定确认退出按钮事件
     document.getElementById('confirmLogoutBtn').addEventListener('click', function() {
         window.location.href = 'login.html';
     });

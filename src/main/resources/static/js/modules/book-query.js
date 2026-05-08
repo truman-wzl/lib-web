@@ -141,7 +141,6 @@
             const categorySelect = document.getElementById('category');
 
             try {
-                console.log('开始加载分类数据...');
                 const response = await fetch('/api/categories');
                 const result = await response.json();
 
@@ -160,14 +159,11 @@
                             categorySelect.appendChild(option);
                         }
                     });
-
-                    console.log('分类下拉框已更新，排除中转分类(ID=5)');
                 } else {
                     console.error('分类API返回失败:', result.message);
                 }
             } catch (error) {
                 console.error('加载分类失败:', error);
-                // 显示错误提示但不阻塞页面
                 const errorOption = document.createElement('option');
                 errorOption.value = "";
                 errorOption.textContent = "加载分类失败";
@@ -428,7 +424,6 @@
             }
 
             if (page === this.state.currentPage) {
-                console.log('页码未变化，跳过');
                 return;
             }
 
@@ -498,7 +493,6 @@
         }
     };
     if (typeof window !== 'undefined') {
-        console.log('注册图书查询模块...');
         if (typeof window.registerModule === 'function') {
             window.registerModule('book-query', bookQueryModule);
             console.log('通过 window.registerModule 注册成功');

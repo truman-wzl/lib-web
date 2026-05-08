@@ -172,9 +172,6 @@
     async function loadCategories() {
         const categorySelect = document.getElementById('categoryId');
         const searchCategorySelect = document.getElementById('searchCategory');
-
-        console.log('开始加载分类数据...');
-
         if (!categorySelect) {
             console.error('找不到分类下拉框元素: #categoryId');
             return;
@@ -487,7 +484,6 @@
             if (categorySelect) {
                 for (let i = 0; i < categorySelect.options.length; i++) {
                     if (categorySelect.options[i].value === '5') {
-                        console.log('发现分类5，立即移除');
                         categorySelect.remove(i);
                         break;
                     }

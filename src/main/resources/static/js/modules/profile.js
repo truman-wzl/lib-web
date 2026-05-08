@@ -316,14 +316,12 @@ class ProfileManager {
 }
 const profileModule = {
     render: function() {
-        console.log('开始渲染 profile 模块');
         const profileManager = new ProfileManager(document.getElementById('moduleContent'));
         profileManager.init();
         this.profileManager = profileManager;
     },
 
     onDestroy: function() {
-        console.log('清理 profile 模块');
         if (this.profileManager && this.profileManager.onDestroy) {
             this.profileManager.onDestroy();
         }
@@ -331,13 +329,10 @@ const profileModule = {
 };
 
 if (typeof safeRegisterModule === 'function') {
-    console.log('通过 safeRegisterModule 注册 profile 模块');
     safeRegisterModule('profile', profileModule);
 } else if (typeof registerModule === 'function') {
-    console.log('通过 registerModule 注册 profile 模块');
     registerModule('profile', profileModule);
 } else {
-    console.log('模块系统未就绪，将 profile 模块保存到 window.modules');
     if (!window.modules) window.modules = {};
     window.modules.profile = profileModule;
 }

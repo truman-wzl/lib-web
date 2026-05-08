@@ -12,7 +12,6 @@ const pendingModuleRegistrations = [];
 function registerModule(moduleName, moduleConfig) {
     ModuleRegistry[moduleName] = moduleConfig;
     console.log(`模块注册成功: ${moduleName}`);
-
     const event = new CustomEvent('module-registered', {
         detail: { moduleName, moduleConfig }
     });

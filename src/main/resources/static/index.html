@@ -182,11 +182,8 @@
 <script src="js/modules/message.js"></script>
 <script>
     async function initializePage() {
-        console.log('开始初始化工作台...');
-
         await fetchCurrentUser();
         if (!window.AppState.currentUser) {
-            console.log('用户未登录，已跳转至登录页。');
             return;
         }
         renderCommonParts();

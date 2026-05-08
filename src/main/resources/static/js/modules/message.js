@@ -587,7 +587,6 @@ const MessageModule = {
 
 };
 console.log("定义消息模块完成");
-console.log("开始注册消息模块...");
 if (typeof window !== 'undefined') {
     if (typeof window.safeRegisterModule === 'function') {
         window.safeRegisterModule('message', MessageModule);

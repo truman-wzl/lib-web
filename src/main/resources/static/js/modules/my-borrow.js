@@ -23,7 +23,6 @@
         },
         moduleContent: null,
         render: function() {
-            console.log('my-borrow模块渲染函数被调用');
             this.moduleContent = document.getElementById('moduleContent');
             this.moduleContent.innerHTML = this.getTemplate();
             this.initModule();
@@ -148,7 +147,6 @@
         },
 
         initModule: function() {
-            console.log('初始化my-borrow模块');
             this.state = {
                 currentPage: 1,
                 pageSize: 10,
@@ -837,18 +835,15 @@
         console.log('开始注册我的借阅模块...');
         if (typeof window.registerModule === 'function') {
             window.registerModule('my-borrow', myBorrowModule);
-            console.log('通过 window.registerModule 注册成功');
         }
         else {
             if (!window.modules) {
                 window.modules = {};
             }
             window.modules['my-borrow'] = myBorrowModule;
-            console.log('通过 window.modules 注册成功');
         }
         if (typeof ModuleRegistry !== 'undefined') {
             ModuleRegistry['my-borrow'] = myBorrowModule;
-            console.log('直接注册到 ModuleRegistry 成功');
         }
 
         console.log('my-borrow 模块注册完成，模块对象:', Object.keys(myBorrowModule));

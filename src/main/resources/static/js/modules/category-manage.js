@@ -427,8 +427,6 @@
         }
     }
     async function exportCategoriesToExcel() {
-        console.log('点击了分类导出按钮');
-
         if (!window.ExportManager) {
             alert('导出功能未初始化，请刷新页面重试');
             return;

@@ -1,8 +1,6 @@
 //用户管理模块
 (function() {
     'use strict';
-
-    console.log('用户管理模块加载中...');
     const UserManage = {
         currentPage: 1,
         pageSize: 10,
@@ -18,7 +16,6 @@
             return token;
         },
         loadUserStats: function() {
-            console.log('开始加载用户统计信息...');
             const token = this.getAuthToken();
             const headers = {
                 'Content-Type': 'application/json',
@@ -94,7 +91,6 @@
             }
         },
         fallbackToUserListStats: function() {
-            console.log('尝试从用户列表数据获取统计...');
             const totalUsersEl = document.getElementById('totalUsers');
             if (totalUsersEl && totalUsersEl.textContent === '0') {
                 totalUsersEl.textContent = '...';
@@ -111,32 +107,23 @@
             }
         },
         render: function() {
-            console.log('开始渲染用户管理模块');
             this.init();
         },
         onDestroy: function() {
             console.log('清理用户管理模块');
         },
         init: function() {
-            console.log('初始化用户管理模块');
-            console.log('渲染用户管理界面...');
             const uiRendered = this.renderUI();
             if (!uiRendered) {
                 console.error('UI渲染失败');
                 this.showErrorMessage('用户管理界面初始化失败');
                 return;
             }
-            console.log('UI渲染成功');
-            console.log('加载用户统计信息...');
             this.loadUserStats();
-            console.log('加载用户列表数据...');
             this.loadUserList();
-            console.log('绑定事件监听器...');
             this.bindEvents();
-            console.log('用户管理模块初始化完成');
         },
         renderUI: function() {
-            console.log('查找模块容器...');
             const moduleContent = document.getElementById('moduleContent');
 
             if (!moduleContent) {
@@ -145,7 +132,6 @@
                 console.error(document.body.innerHTML);
                 return false;
             }
-            console.log('找到模块容器，开始构建界面');
             moduleContent.innerHTML = `
                 <div class="container-fluid">
                     <div class="d-flex justify-content-between align-items-center mb-3">

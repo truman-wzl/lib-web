@@ -28,7 +28,6 @@
             }
         },
         render: function() {
-            console.log(' 渲染管理员借阅管理模块');
             return `
                 <div class="container-fluid">
                     <!-- 页面标题 -->
@@ -203,7 +202,6 @@
             `;
         },
         onRender: function() {
-            console.log('初始化管理员借阅管理模块');
             this.state = {
                 currentPage: 1,
                 pageSize: 10,
@@ -225,7 +223,6 @@
             this.loadBorrowRecords();
         },
         onDestroy: function() {
-            console.log('清理管理员借阅管理模块资源');
             const events = ['change', 'click'];
             events.forEach(event => {
                 document.removeEventListener(event, this.handleEvent);
@@ -269,7 +266,6 @@
                 exportBtn.addEventListener('click', () => {
                     this.exportBorrowRecords();
                 });
-                console.log('借阅记录导出按钮事件已绑定');
             } else {
                 console.warn('未找到借阅记录导出按钮');
             }

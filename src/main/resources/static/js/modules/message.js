@@ -1,5 +1,4 @@
 //用户消息中心
-console.log("!!! message.js 开始执行 !!!");
 const MessageModule = {
     name: '系统消息',
     render: function() {
@@ -588,23 +587,14 @@ const MessageModule = {
     }
 
 };
-
 console.log("定义消息模块完成");
-
-// 注册模块
 console.log("开始注册消息模块...");
 if (typeof window !== 'undefined') {
     if (typeof window.safeRegisterModule === 'function') {
         window.safeRegisterModule('message', MessageModule);
-        console.log("✅ 通过 window.safeRegisterModule 注册消息模块");
     } else if (typeof window.registerModule === 'function') {
         window.registerModule('message', MessageModule);
-        console.log("✅ 通过 window.registerModule 注册消息模块");
     } else {
-        // 备用方案
         window.MessageModule = MessageModule;
-        console.log("⚠️ MessageModule 已设置为全局变量，但未自动注册");
     }
 }
-
-console.log("!!! message.js 执行结束 !!!");

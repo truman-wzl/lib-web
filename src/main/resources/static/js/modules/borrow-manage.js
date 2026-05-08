@@ -1,7 +1,6 @@
 //借阅管理模块
 (function() {
     'use strict';
-    console.log('=== borrow-manage.js 加载开始 ===');
     const borrowManageModule = {
         config: {
             apiBase: '/api',
@@ -856,35 +855,24 @@
             }
         }
     };
-    console.log('🔧 borrow-manage.js 模块定义完成');
-
-    // ✅ 模块注册代码（必须在模块对象外部）
-    // 方法1：使用 safeRegisterModule（如果可用）
+    console.log('borrow-manage.js 模块定义完成');
     if (typeof window.safeRegisterModule === 'function') {
         window.safeRegisterModule('borrow-manage', borrowManageModule);
-        console.log('✅ 通过 safeRegisterModule 注册成功');
     }
-    // 方法2：使用 registerModule（如果可用）
     else if (typeof window.registerModule === 'function') {
         window.registerModule('borrow-manage', borrowManageModule);
-        console.log('✅ 通过 registerModule 注册成功');
     }
-    // 方法3：直接注册到 ModuleRegistry
     else if (typeof ModuleRegistry !== 'undefined') {
         ModuleRegistry['borrow-manage'] = borrowManageModule;
-        console.log('✅ 直接注册到 ModuleRegistry 成功');
     }
-    // 方法4：注册到全局 modules
     else {
         window.modules = window.modules || {};
         window.modules['borrow-manage'] = borrowManageModule;
-        console.log('✅ 注册到 window.modules 作为备用');
     }
-    console.log('📦 模块注册状态:', {
+    console.log('模块注册状态:', {
         '已注册到safeRegisterModule': typeof window.safeRegisterModule === 'function',
         '已注册到registerModule': typeof window.registerModule === 'function',
         '已注册到ModuleRegistry': !!ModuleRegistry && !!ModuleRegistry['borrow-manage'],
         '已注册到window.modules': window.modules && window.modules['borrow-manage']
     });
-
 })();

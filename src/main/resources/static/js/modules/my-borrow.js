@@ -1,7 +1,6 @@
 //我的借阅模块
 (function() {
     'use strict';
-    console.log('=== my-borrow.js 开始执行 ===');
     const myBorrowModule = {
         state: {
             currentPage: 1,
@@ -870,5 +869,4 @@
             }, 100);
         }
     });
-    console.log('=== my-borrow.js 执行结束 ===');
 })();

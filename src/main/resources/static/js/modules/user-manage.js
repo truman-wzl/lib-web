@@ -586,8 +586,6 @@
                     const username = button.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
                     this.toggleUserLock(userId, currentStatus, username);
                 }
-
-                // 处理注销按钮
                 if (e.target.closest('.cancel-user-btn')) {
                     e.preventDefault();
                     const button = e.target.closest('.cancel-user-btn');
@@ -595,7 +593,7 @@
                     const username = button.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
                     this.cancelUser(userId, username);
                 }
-                // 新增：处理分页按钮
+                //处理分页按钮
                 if (e.target.closest('.page-link')) {
                     e.preventDefault();
                     e.stopPropagation();

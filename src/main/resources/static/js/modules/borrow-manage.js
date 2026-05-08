@@ -373,33 +373,23 @@
                 this.state.loading = true;
 
                 this.showLoading();
-
-                // 获取筛选参数
-                const page = this.state.currentPage - 1;  // 后端从0开始
+                const page = this.state.currentPage;
                 const size = this.state.pageSize;
                 const status = this.state.filterStatus;
-
-                // 构建URL
                 let url = `${this.config.apiBase}/admin/borrows?page=${page}&size=${size}`;
-
-                // 添加状态筛选参数
                 if (status && status !== 'all') {
                     url += `&status=${encodeURIComponent(status)}`;
                 }
 
                 console.log('正在请求借阅记录:', url);
-
-                // 调用后端接口
                 const response = await fetch(url, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    credentials: 'include'  // 携带Cookie
+                    credentials: 'include'
                 });
-
-                // 处理401未登录状态
                 if (response.status === 401) {
                     this.showMessage("请先登录！", "warning");
                     setTimeout(() => {
@@ -512,10 +502,14 @@
         updatePageInfo: function() {
             const currentPageCount = document.getElementById('currentPageCount');
             if (currentPageCount) {
-                // 修复为显示更详细的信息：
                 const start = (this.state.currentPage - 1) * this.state.pageSize + 1;
-                const end = start + this.state.records.length - 1;
-                currentPageCount.textContent = `第 ${start} 到 ${end} 条，共 ${this.state.totalItems} 条记录`;
+                const end = Math.min(start + this.state.records.length - 1, this.state.totalItems);
+
+                if (this.state.totalItems > 0) {
+                    currentPageCount.textContent = `显示第 ${start} 到 ${end} 条，共 ${this.state.totalItems} 条记录`;
+                } else {
+                    currentPageCount.textContent = '暂无记录';
+                }
             }
         },
 
@@ -539,7 +533,7 @@
 
             let html = '';
             this.state.records.forEach((record, index) => {
-                const recordNum = index + 1;  // 或者使用后端返回的实际位置
+                const recordNum = (this.state.currentPage - 1) * this.state.pageSize + index + 1;
                 const status = record.status || 'BORROWED';
                 const isOverdue = this.isRecordOverdue(record);
                 const overdueDays = this.getOverdueDays(record);
@@ -815,6 +809,7 @@
             pagination.querySelectorAll('.page-link[data-page]').forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
+                    e.stopPropagation();
                     const page = parseInt(this.getAttribute('data-page'));
                     if (!isNaN(page) && page !== self.state.currentPage) {
                         self.state.currentPage = page;

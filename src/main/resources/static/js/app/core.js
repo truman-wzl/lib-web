@@ -230,11 +230,9 @@ window.dispatchEvent(new CustomEvent('module-system-ready', {
                     }
                     else if (data.count !== undefined && data.count !== null) {
                         unreadCount = parseInt(data.count) || 0;
-                        console.log(`使用count字段: ${unreadCount}`);
                     }
                     else if (data.data !== undefined && data.data !== null) {
                         unreadCount = parseInt(data.data) || 0;
-                        console.log(`使用data字段: ${unreadCount}`);
                     }
                     else {
                         console.warn('API返回格式不明确，尝试查找数值字段...');
@@ -242,12 +240,10 @@ window.dispatchEvent(new CustomEvent('module-system-ready', {
                         for (let key in data) {
                             if (typeof data[key] === 'number') {
                                 unreadCount = data[key];
-                                console.log(`使用字段 ${key}: ${unreadCount}`);
                                 break;
                             }
                         }
                     }
-                    console.log(`最终未读数量: ${unreadCount}`);
                     this.updateBadge(unreadCount);
 
                 } else {

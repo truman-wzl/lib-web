@@ -298,7 +298,6 @@
             try {
                 if (this.state.loading) return;
                 this.state.loading = true;
-
                 this.showLoading();
                 const page = this.state.currentPage;
                 const size = this.state.pageSize;
@@ -307,8 +306,6 @@
                 if (status && status !== 'all') {
                     url += `&status=${encodeURIComponent(status)}`;
                 }
-
-                console.log('正在请求借阅记录:', url);
                 const response = await fetch(url, {
                     method: 'GET',
                     headers: {

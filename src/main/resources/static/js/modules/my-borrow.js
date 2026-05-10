@@ -629,12 +629,6 @@
         },
         showRenewModal: function(recordId, bookId, bookName, dueTimeStr) {
             const self = this;
-            console.log('showRenewModal 参数:', {
-                recordId,
-                bookId,
-                bookName,
-                dueTimeStr
-            });
             const formatDateDisplay = (dateStr) => {
                 if (!dateStr || dateStr.trim() === '') {
                     return '未知日期';

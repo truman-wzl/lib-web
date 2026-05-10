@@ -310,9 +310,7 @@ class ProfileManager {
         const map = { 'ACTIVE': '正常', 'LOCKED': '已锁定' };
         return map[status] || '未知';
     }
-    onDestroy() {
-        console.log('profile模块清理完成');
-    }
+    onDestroy() {}
 }
 const profileModule = {
     render: function() {

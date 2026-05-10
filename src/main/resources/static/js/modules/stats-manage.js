@@ -96,9 +96,6 @@ const statsManageModule = {
         const checkDOM = () => {
             const trendChart = document.getElementById('trendChart');
             const categoryChart = document.getElementById('categoryChart');
-            console.log('- trendChart:', trendChart ? '找到' : '未找到');
-            console.log('- categoryChart:', categoryChart ? '找到' : '未找到');
-
             if (trendChart && categoryChart) {
                 this.initCharts();
                 this.loadData();
@@ -144,7 +141,6 @@ const statsManageModule = {
                 return response.json();
             })
             .then(data => {
-                console.log('借阅趋势数据:', data);
                 this.removeLoadingOverlay(canvas);
                 if (data.success) {
                     this.state.trendData = data.data;
@@ -224,10 +220,8 @@ const statsManageModule = {
     },
     renderTrendChart: function() {
         if (!this.state.trendData) {
-            console.warn('没有借阅趋势数据，无法渲染图表');
             return;
         }
-        console.log('渲染借阅趋势图表，数据:', this.state.trendData);
         const ctx = document.getElementById('trendChart');
         if (!ctx) {
             console.error('找不到trendChart元素');
@@ -358,7 +352,6 @@ const statsManageModule = {
                 return response.json();
             })
             .then(data => {
-                console.log('热门图书数据:', data);
                 if (data.success) {
                     this.state.topBooks = data.data;
                     this.renderTopBooks();
@@ -381,12 +374,8 @@ const statsManageModule = {
 
     renderTopBooks: function() {
         if (!this.state.topBooks) {
-            console.warn('没有热门图书数据，无法渲染表格');
             return;
         }
-
-        console.log('渲染热门图书表格，数据:', this.state.topBooks);
-
         const tableBody = document.getElementById('topBooksBody');
         if (!tableBody) {
             console.error('找不到topBooksBody元素');
@@ -406,12 +395,9 @@ const statsManageModule = {
         }
 
         let html = '';
-
-        const rankColors = ['#FFD700', '#C0C0C0', '#CD7F32', '#3498db', '#2ecc71']; // 金、银、铜、蓝、绿
-
+        const rankColors = ['#FFD700', '#C0C0C0', '#CD7F32', '#3498db', '#2ecc71'];
         this.state.topBooks.forEach((book, index) => {
             const rankColor = rankColors[index] || '#6c757d';
-
             html += `
                 <tr>
                     <td>
@@ -461,8 +447,6 @@ const statsManageModule = {
                 return response.json();
             })
             .then(data => {
-                console.log('热门类别数据:', data);
-
                 this.removeLoadingOverlay(canvas);
 
                 if (data.success) {
@@ -474,9 +458,7 @@ const statsManageModule = {
             })
             .catch(error => {
                 console.error('加载热门类别失败:', error);
-
                 this.removeLoadingOverlay(canvas);
-
                 this.showErrorOverlay(canvas, `加载类别数据失败: ${error.message}`);
 
                 if (detailBody) {
@@ -494,12 +476,8 @@ const statsManageModule = {
 
     renderCategoryChart: function() {
         if (!this.state.topCategories) {
-            console.warn('没有热门类别数据，无法渲染图表');
             return;
         }
-
-        console.log('渲染热门类别图表，数据:', this.state.topCategories);
-
         const ctx = document.getElementById('categoryChart');
         if (!ctx) {
             console.error('找不到categoryChart元素');
@@ -575,10 +553,7 @@ const statsManageModule = {
                     cutout: '50%'
                 }
             });
-
-            console.log('类别图表渲染成功');
             this.renderCategoryDetails();
-
         } catch (error) {
             console.error('渲染类别图表失败:', error);
             const container = ctx.parentElement;
@@ -591,10 +566,8 @@ const statsManageModule = {
     },
     renderCategoryDetails: function() {
         if (!this.state.topCategories || this.state.topCategories.length === 0) {
-            console.warn('没有类别数据，无法渲染详情表格');
             return;
         }
-
         const detailBody = document.getElementById('categoryDetailBody');
         if (!detailBody) {
             console.error('找不到categoryDetailBody元素');
@@ -602,7 +575,6 @@ const statsManageModule = {
         }
 
         let html = '';
-
         this.state.topCategories.forEach((category, index) => {
             const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'];
             const color = colors[index] || '#6c757d';
@@ -633,7 +605,6 @@ const statsManageModule = {
         const refreshBtn = document.getElementById('refreshTrendBtn');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => {
-                console.log('刷新按钮被点击');
                 this.loadData();
                 const originalText = refreshBtn.innerHTML;
                 refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> 刷新中...';
@@ -644,8 +615,6 @@ const statsManageModule = {
                     this.showToast('数据刷新成功！', 'success');
                 }, 1000);
             });
-        } else {
-            console.warn('未找到刷新按钮元素');
         }
     },
 
@@ -690,7 +659,6 @@ const statsManageModule = {
         return div.innerHTML;
     },
     onDestroy: function() {
-        console.log('销毁统计模块资源');
         if (this.state.trendChart) {
             this.state.trendChart.destroy();
             this.state.trendChart = null;
@@ -706,12 +674,6 @@ const statsManageModule = {
     }
 };
 (function() {
-    if (window.ModuleRegistry && window.ModuleRegistry['stats-manage']) {
-        console.warn('警告：stats-manage模块已存在于ModuleRegistry');
-    }
-    if (window.modules && window.modules['stats-manage']) {
-        console.warn('警告：stats-manage模块已存在于window.modules');
-    }
     if (typeof safeRegisterModule === 'function') {
         safeRegisterModule('stats-manage', statsManageModule);
     } else if (typeof registerModule === 'function') {
@@ -725,5 +687,4 @@ const statsManageModule = {
             }
         }
     }
-    console.log('模块名称:', statsManageModule.name);
 })();

@@ -328,13 +328,6 @@
 
                 if (result.success) {
                     const data = result.data;
-
-                    console.log('后端返回数据详情:', {
-                        记录数: data.list ? data.list.length : 0,
-                        总条数: data.total,
-                        总页数: data.totalPages,
-                        当前页: data.page
-                    });
                     this.state.records = data.list || [];
                     this.state.totalItems = data.total || 0;
                     this.state.totalPages = data.totalPages || 1;
@@ -388,8 +381,6 @@
                     };
 
                     this.renderStats();
-                } else {
-                    console.warn("加载统计信息失败:", result.message);
                 }
             } catch (error) {
                 console.error("加载统计信息失败:", error);

@@ -404,7 +404,6 @@
 
         changePage: function(page) {
             if (page < 1) {
-                console.warn('页码不能小于1');
                 return;
             }
 
@@ -479,26 +478,19 @@
             window.modules['book-query'] = bookQueryModule;
         }
         window.borrowBook = async function(bookId, bookName, author, publisher, category) {
-            console.log('[全局函数] 借阅图书，ID:', bookId, '书名:', bookName);
             const currentUser = window.AppState?.currentUser;
             if (!currentUser || !currentUser.userId) {
                 window.showBorrowResult('error', '请先登录后再借阅图书');
                 return;
             }
-
             const userId = currentUser.userId;
-            console.log('借阅用户ID:', userId, '图书ID:', bookId);
-
             try {
                 const response = await fetch('/api/borrow', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId, bookId })
                 });
-
                 const result = await response.json();
-                console.log('借阅结果:', result);
-
                 if (result.success) {
                     const dueDate = new Date(result.data.dueTime);
                     const dueStr = dueDate.toLocaleDateString('zh-CN', {
@@ -534,7 +526,6 @@
                 event.preventDefault();
                 event.stopPropagation();
             }
-            console.log('[全局函数] 显示借阅确认框，图书:', bookName, 'ID:', bookId);
             const currentUser = window.AppState?.currentUser;
             if (!currentUser || !currentUser.userId) {
                 window.showBorrowResult('error', '请先登录后再借阅图书');
@@ -551,7 +542,6 @@
             document.getElementById('bookConfirmInfo').innerHTML = bookInfoHtml;
             const confirmBtn = document.getElementById('confirmBorrowBtn');
             confirmBtn.onclick = function() {
-                console.log('用户确认借阅，图书ID:', bookId);
                 window.borrowBook(bookId, bookName, author, publisher, category);
                 const modal = bootstrap.Modal.getInstance(document.getElementById('borrowConfirmModal'));
                 if (modal) {

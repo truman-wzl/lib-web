@@ -196,8 +196,6 @@
                             searchCategorySelect.innerHTML += `<option value="${category.categoryId}">${category.categoryName}</option>`;
                         }
                         loadedCount++;
-                    } else {
-                        console.log(`过滤掉中转分类: ID=${category.categoryId}, 名称=${category.categoryName}`);
                     }
                 });
             } else {

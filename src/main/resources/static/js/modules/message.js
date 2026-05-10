@@ -310,16 +310,13 @@ const MessageModule = {
     },
 
     refreshMessages() {
-        console.log("刷新消息");
         this.loadMessages();
     },
     changeFilter(filter) {
-        console.log("切换筛选条件:", filter);
         this.state.filter = filter;
         this.renderMessages();
     },
     toggleMessage(messageId) {
-        console.log("切换消息展开状态:", messageId);
         this.state.expandedMessages[messageId] = !this.state.expandedMessages[messageId];
         this.renderMessages();
     },
@@ -330,7 +327,6 @@ const MessageModule = {
         return this.state.messages.filter(msg => msg.status === 'UNREAD').length;
     },
     async markAsRead(messageId) {
-        console.log("标记消息为已读:", messageId);
         try {
             const response = await fetch(`/api/messages/${messageId}/read`, {
                 method: 'POST',
@@ -373,8 +369,6 @@ const MessageModule = {
         }
     },
     markAllAsRead: async function() {
-        console.log("全部标记为已读");
-
         if (this.state.unreadCount === 0) {
             this.showInfo('提示', '没有未读消息');
             return;
@@ -430,8 +424,6 @@ const MessageModule = {
         }
     },
     notifyBadgeUpdate: function() {
-        console.log('消息状态变化，通知泡泡更新');
-
         const event = new CustomEvent('message-updated', {
             detail: { unreadCount: this.getUnreadCount() }
         });
@@ -441,8 +433,6 @@ const MessageModule = {
         }
     },
     async deleteMessage(messageId) {
-        console.log("删除消息:", messageId);
-
         const message = this.state.messages.find(m => m.id === messageId);
         if (!message) return;
 

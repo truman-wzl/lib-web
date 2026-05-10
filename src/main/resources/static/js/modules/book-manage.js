@@ -748,9 +748,7 @@
             uploadBtn.disabled = false;
         }
     }
-    function cleanup() {
-        console.log('清理图书管理模块资源');
-    }
+    function cleanup() {}
     (function ensureTransferCategoryFiltered() {
         const originalLoadCategories = window.loadCategories || function() {};
         window.loadCategories = async function() {

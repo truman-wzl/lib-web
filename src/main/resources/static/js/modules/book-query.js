@@ -392,13 +392,9 @@
             container.addEventListener('click', function(e) {
                 const target = e.target;
                 const pageButton = target.closest('.page-link');
-
                 if (pageButton && pageButton.hasAttribute('data-page')) {
                     e.preventDefault();
-
                     const page = parseInt(pageButton.getAttribute('data-page'));
-                    console.log('点击分页按钮，目标页码:', page, '当前页码:', self.state.currentPage);
-
                     if (!isNaN(page) && page !== self.state.currentPage) {
                         self.changePage(page);
                     }

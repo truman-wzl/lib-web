@@ -265,8 +265,6 @@
                 exportBtn.addEventListener('click', () => {
                     this.exportBorrowRecords();
                 });
-            } else {
-                console.warn('未找到借阅记录导出按钮');
             }
         },
         exportBorrowRecords: function() {
@@ -363,7 +361,7 @@
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    credentials: 'include'  // 携带Cookie
+                    credentials: 'include'
                 });
 
                 if (response.status === 401) {
@@ -398,7 +396,6 @@
             }
         },
 
-        // 渲染统计信息
         renderStats: function() {
             const stats = this.state.stats;
 
@@ -426,7 +423,6 @@
             }
         },
 
-        // 渲染表格
         renderTable: function() {
             const tbody = document.getElementById('recordsTableBody');
             if (!tbody) return;
@@ -451,7 +447,6 @@
                 const isOverdue = this.isRecordOverdue(record);
                 const overdueDays = this.getOverdueDays(record);
 
-                // 格式化用户信息
                 const userInfo = record.username ?
                     `<div>
                         <div class="fw-medium">${record.realName || record.username}</div>
@@ -459,7 +454,6 @@
                     </div>` :
                     '<div class="text-muted">未知用户</div>';
 
-                // 格式化图书信息
                 const bookInfo = `
                     <div>
                         <div class="fw-medium">${record.bookname || '未知图书'}</div>
@@ -496,14 +490,10 @@
                     </tr>
                 `;
             });
-
             tbody.innerHTML = html;
-
-            // 绑定详情查看事件
             this.bindDetailViewEvents();
         },
 
-        // 绑定详情查看事件
         bindDetailViewEvents: function() {
             const self = this;
 
@@ -515,28 +505,20 @@
                 });
             });
         },
-
-        // 显示记录详情
         showRecordDetail: async function(recordId) {
             try {
-                console.log('查看记录详情:', recordId);
-
-                // 从当前记录中查找
                 const record = this.state.records.find(r => r.recordId == recordId);
-
                 if (!record) {
                     this.showMessage("未找到该记录", "error");
                     return;
                 }
 
-                // 构建详情内容
                 const detailContent = this.getRecordDetailHtml(record);
                 const detailContentEl = document.getElementById('recordDetailContent');
                 if (detailContentEl) {
                     detailContentEl.innerHTML = detailContent;
                 }
 
-                // 显示模态框
                 const modal = new bootstrap.Modal(document.getElementById('recordDetailModal'));
                 modal.show();
 
@@ -546,7 +528,6 @@
             }
         },
 
-        // 获取记录详情HTML
         getRecordDetailHtml: function(record) {
             const statusInfo = this.config.statusMap[record.status] || { text: record.status, class: 'secondary' };
             const isOverdue = this.isRecordOverdue(record);

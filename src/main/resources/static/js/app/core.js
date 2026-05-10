@@ -28,13 +28,9 @@ function safeRegisterModule(moduleName, moduleConfig) {
     }
 }
 async function loadModule(moduleName) {
-    console.log('ModuleRegistry:', Object.keys(ModuleRegistry));
-
     if (AppState.currentModule === moduleName) {
         return;
     }
-
-    console.log(`加载模块: ${moduleName}`);
     AppState.currentModule = moduleName;
 
     updateMenuActive(moduleName);
@@ -66,7 +62,6 @@ async function loadModule(moduleName) {
                     if (window.modules && window.modules[moduleName]) {
                         ModuleRegistry[moduleName] = window.modules[moduleName];
                         moduleRegistered = true;
-                        console.log(`模块 ${moduleName} 从 window.modules 移动到 ModuleRegistry`);
                         break;
                     }
                     await new Promise(resolve => setTimeout(resolve, checkInterval));
@@ -97,18 +92,12 @@ async function loadModule(moduleName) {
             const html = ModuleRegistry[moduleName].render();
             if (html && typeof html === 'string') {
                 contentArea.innerHTML = html;
-            } else {
-                console.warn(`模块 ${moduleName} 的render函数没有返回字符串`);
             }
             if (typeof ModuleRegistry[moduleName].onRender === 'function') {
-                console.log(`调用模块的onRender函数: ${moduleName}`);
                 ModuleRegistry[moduleName].onRender();
-            } else {
-                console.log(`模块 ${moduleName} 没有onRender函数`);
             }
     } else {
         console.error(`模块${moduleName}未找到render方法`);
-        console.log(`ModuleRegistry[${moduleName}]:`, ModuleRegistry[moduleName]);
         showError(`模块${moduleName}加载失败：缺少render方法`);
     }
 }
@@ -170,7 +159,6 @@ window.dispatchEvent(new CustomEvent('module-system-ready', {
                         document.querySelector('.message-badge');
 
             if (!badge) {
-                console.warn('泡泡元素不存在，尝试重新创建...');
                 const messageLink = document.querySelector('a[data-module="message"]');
                 if (messageLink) {
                     badge = document.createElement('span');
@@ -354,8 +342,6 @@ window.registerModule = registerModule;
 window.safeRegisterModule = safeRegisterModule;
 window.MessageBadgeManager.init();
 window.addEventListener('menu-rendered', function(event) {
-    console.log('收到菜单渲染完成事件，准备初始化泡泡', event.detail);
-
     if (!window.AppState.currentUser) {
         return;
     }

@@ -235,8 +235,6 @@ window.dispatchEvent(new CustomEvent('module-system-ready', {
                         unreadCount = parseInt(data.data) || 0;
                     }
                     else {
-                        console.warn('API返回格式不明确，尝试查找数值字段...');
-                        console.log('数据所有字段:', Object.keys(data));
                         for (let key in data) {
                             if (typeof data[key] === 'number') {
                                 unreadCount = data[key];
@@ -245,9 +243,7 @@ window.dispatchEvent(new CustomEvent('module-system-ready', {
                         }
                     }
                     this.updateBadge(unreadCount);
-
                 } else {
-                    console.warn(`API请求失败: ${response.status}`);
                     this.updateBadge(0);
                 }
             } catch (error) {

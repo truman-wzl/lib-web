@@ -61,7 +61,6 @@ function renderSidebarMenu() {
 function addMessageBadgeToMenu() {
     const messageLink = document.querySelector('a[data-module="message"]');
     if (!messageLink) {
-        console.warn('未找到消息菜单项，无法添加泡泡');
         return false;
     }
     const existingBadge = messageLink.querySelector('.message-badge');

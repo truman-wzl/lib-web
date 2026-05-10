@@ -143,8 +143,6 @@
                 const result = await response.json();
 
                 if (result.success && result.data) {
-                    console.log('分类数据加载成功，数量:', result.data.length);
-
                     while (categorySelect.options.length > 1) {
                         categorySelect.remove(1);
                     }
@@ -214,13 +212,10 @@
                 if (this.state.searchParams.categoryId) {
                     params.append('categoryId', this.state.searchParams.categoryId);
                 }
-
-                console.log('请求图书列表，参数:', Object.fromEntries(params));
                 const response = await fetch(`/api/books/search?${params}`);
                 const result = await response.json();
 
                 if (result.success) {
-                    console.log('图书数据加载成功，数量:', result.data.length, '总页数:', result.totalPages);
                     this.renderBooks(result.data);
                     this.renderPagination(result.totalPages, result.currentPage);
                 } else {
@@ -310,8 +305,6 @@
                 container.innerHTML = '';
                 return;
             }
-
-            console.log('渲染分页，总页数:', totalPages, '当前页(后端索引):', currentPage, '当前页(前端索引):', this.state.currentPage);
             const currentPageOneBased = currentPage + 1;
 
             let html = `

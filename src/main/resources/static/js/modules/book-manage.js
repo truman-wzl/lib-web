@@ -752,13 +752,8 @@
         console.log('清理图书管理模块资源');
     }
     (function ensureTransferCategoryFiltered() {
-        console.log('确保中转分类被过滤');
-
         const originalLoadCategories = window.loadCategories || function() {};
-
         window.loadCategories = async function() {
-            console.log('执行过滤版本的loadCategories');
-
             const result = await originalLoadCategories();
             setTimeout(() => {
                 cleanTransferCategoryFromSelects();
@@ -772,7 +767,6 @@
                 for (let i = 0; i < select.options.length; i++) {
                     const option = select.options[i];
                     if (option.text === '5中转类5' || option.value === '5') {
-                        console.log(`清理下拉框: 移除 ${option.text}`);
                         select.remove(i);
                         i--;
                     }

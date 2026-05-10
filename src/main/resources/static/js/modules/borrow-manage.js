@@ -794,7 +794,6 @@
             }
         }
     };
-    console.log('borrow-manage.js 模块定义完成');
     if (typeof window.safeRegisterModule === 'function') {
         window.safeRegisterModule('borrow-manage', borrowManageModule);
     }
@@ -808,10 +807,4 @@
         window.modules = window.modules || {};
         window.modules['borrow-manage'] = borrowManageModule;
     }
-    console.log('模块注册状态:', {
-        '已注册到safeRegisterModule': typeof window.safeRegisterModule === 'function',
-        '已注册到registerModule': typeof window.registerModule === 'function',
-        '已注册到ModuleRegistry': !!ModuleRegistry && !!ModuleRegistry['borrow-manage'],
-        '已注册到window.modules': window.modules && window.modules['borrow-manage']
-    });
 })();

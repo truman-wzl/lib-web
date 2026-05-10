@@ -64,16 +64,12 @@
         updateUserStats: function(stats) {
             const totalUsersEl = document.getElementById('totalUsers');
             if (!totalUsersEl) {
-                console.warn('未找到totalUsers元素');
                 return;
             }
-
             if (stats.totalUsers !== undefined && stats.totalUsers !== null) {
                 totalUsersEl.textContent = stats.totalUsers;
                 totalUsersEl.className = 'text-primary fw-bold';
-                console.log(`用户统计更新成功: ${stats.totalUsers} 个用户`);
             } else {
-                console.warn('统计信息无效:', stats);
                 totalUsersEl.textContent = 'N/A';
                 totalUsersEl.className = 'text-muted';
             }
@@ -510,7 +506,6 @@
             if (searchBtn) {
                 searchBtn.addEventListener('click', () => {
                     const keyword = document.getElementById('searchInput')?.value || '';
-                    console.log('搜索用户，重新加载统计...');
                     this.loadUserStats();
                     this.loadUserList(1, keyword);
                 });
@@ -520,7 +515,6 @@
                 searchInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
                         const keyword = searchInput.value || '';
-                        console.log('搜索用户（回车），重新加载统计...');
                         this.loadUserStats();
                         this.loadUserList(1, keyword);
                     }
@@ -533,7 +527,6 @@
                         searchInput.value = '';
                         this.searchKeyword = '';
                     }
-                    console.log('刷新用户数据和统计...');
                     this.loadUserStats();
                     this.loadUserList(1);
                 });
@@ -576,14 +569,11 @@
             });
         },
         exportUsersToExcel: function() {
-            console.log('点击了用户导出按钮');
-
             if (!window.ExportManager) {
                 alert('导出功能未初始化，请刷新页面重试');
                 return;
             }
             const keyword = document.getElementById('searchInput')?.value || '';
-            console.log('搜索参数:', { keyword });
             const params = new URLSearchParams();
             if (keyword && keyword.trim() !== '') {
                 params.append('keyword', keyword.trim());
@@ -592,7 +582,6 @@
             if (params.toString()) {
                 url += '?' + params.toString();
             }
-            console.log('用户导出URL:', url);
             const today = new Date();
             const dateStr = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
             const filename = `用户列表_${dateStr}.xlsx`;

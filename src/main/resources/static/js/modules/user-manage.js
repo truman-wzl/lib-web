@@ -11,7 +11,6 @@
                           sessionStorage.getItem('token') ||
                           '';
 
-            console.log('获取认证token:', token ? '找到token' : '未找到token');
             return token;
         },
         loadUserStats: function() {
@@ -22,8 +21,6 @@
             };
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
-            } else {
-                console.warn('未找到认证token，可能以未登录状态访问统计接口');
             }
             fetch('/api/admin/users/stats', {
                 method: 'GET',
@@ -31,14 +28,11 @@
                 credentials: 'include'
             })
             .then(response => {
-                console.log('统计接口响应状态:', response.status, response.statusText);
                 if (response.status === 401) {
-                    console.warn('未授权访问统计接口 (401)');
                     this.updateUserStats({totalUsers: '未授权'});
                     return null;
                 }
                 if (response.status === 403) {
-                    console.warn('权限不足 (403)');
                     this.updateUserStats({totalUsers: '无权限'});
                     return null;
                 }
@@ -53,9 +47,6 @@
                 if (!data) {
                     return;
                 }
-
-                console.log('用户统计接口返回数据:', data);
-
                 if (data && data.success && data.data) {
                     this.updateUserStats(data.data);
                 } else {
@@ -71,8 +62,6 @@
             });
         },
         updateUserStats: function(stats) {
-            console.log('更新用户统计显示:', stats);
-
             const totalUsersEl = document.getElementById('totalUsers');
             if (!totalUsersEl) {
                 console.warn('未找到totalUsers元素');
@@ -108,9 +97,7 @@
         render: function() {
             this.init();
         },
-        onDestroy: function() {
-            console.log('清理用户管理模块');
-        },
+        onDestroy: function() {},
         init: function() {
             const uiRendered = this.renderUI();
             if (!uiRendered) {
@@ -209,14 +196,11 @@
         },
 
         loadUserList: function(page = 1, keyword = '') {
-            console.log(`加载用户列表，页码: ${page}, 关键词: "${keyword}"`);
-
             this.currentPage = page;
             this.searchKeyword = keyword;
             const tableBody = document.getElementById('userTableBody');
             if (!tableBody) {
                 console.error('错误：找不到表格内容区域 (userTableBody)');
-                console.log('重新渲染UI并重试...');
                 setTimeout(() => {
                     this.renderUI();
                     this.loadUserList(page, keyword);

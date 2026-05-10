@@ -180,11 +180,7 @@
             // 强制不缓存
             const timestamp = Date.now();
             const response = await fetch(`/api/categories?_=${timestamp}`);
-            console.log('分类API响应状态:', response.status);
-
             const result = await response.json();
-            console.log('分类API返回数据:', result);
-
             if (result.success && result.data) {
                 categorySelect.innerHTML = '<option value="">请选择分类</option>';
                 if (searchCategorySelect) {
@@ -204,8 +200,6 @@
                         console.log(`过滤掉中转分类: ID=${category.categoryId}, 名称=${category.categoryName}`);
                     }
                 });
-
-                console.log(`成功加载 ${loadedCount} 个分类，已过滤ID=5的中转分类`);
             } else {
                 console.error('分类API返回失败:', result.message);
             }
@@ -238,7 +232,6 @@
             if (state.searchParams.categoryId) {
                 params.append('categoryId', state.searchParams.categoryId);
             }
-            console.log('请求URL:', `/api/books/search?${params}`);
             const response = await fetch(`/api/books/search?${params}`);
             const result = await response.json();
 
@@ -364,7 +357,6 @@
         });
         const exportBtn = document.getElementById('exportBookBtn');
         if (exportBtn) {
-            console.log('找到导出按钮，绑定事件');
             exportBtn.addEventListener('click', exportBooksToExcel);
         } else {
             console.error('未找到导出按钮: #exportBookBtn');
@@ -395,8 +387,6 @@
         }
     }
     async function exportBooksToExcel() {
-        console.log('点击了导出按钮');
-
         if (!window.ExportManager) {
             alert('导出功能未初始化，请刷新页面重试');
             return;
@@ -404,8 +394,6 @@
         const bookname = document.getElementById('searchBookname')?.value || '';
         const author = document.getElementById('searchAuthor')?.value || '';
         const categoryId = document.getElementById('searchCategory')?.value || '';
-
-        console.log('搜索参数:', { bookname, author, categoryId });
         const params = new URLSearchParams();
 
         if (bookname && bookname.trim() !== '') {
@@ -423,8 +411,6 @@
         if (params.toString()) {
             url += '?' + params.toString();
         }
-
-        console.log('导出URL:', url);
         const today = new Date();
         const dateStr = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
         const filename = `图书列表_${dateStr}.xlsx`;

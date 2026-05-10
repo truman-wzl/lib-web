@@ -11,7 +11,6 @@ const pendingModuleRegistrations = [];
 
 function registerModule(moduleName, moduleConfig) {
     ModuleRegistry[moduleName] = moduleConfig;
-    console.log(`模块注册成功: ${moduleName}`);
     const event = new CustomEvent('module-registered', {
         detail: { moduleName, moduleConfig }
     });
@@ -22,7 +21,6 @@ function safeRegisterModule(moduleName, moduleConfig) {
     if (typeof window.registerModule === 'function') {
         window.registerModule(moduleName, moduleConfig);
     } else {
-        console.log(`模块 ${moduleName} 等待注册，模块系统尚未就绪`);
         pendingModuleRegistrations.push({ moduleName, moduleConfig });
 
         if (!window.modules) window.modules = {};
@@ -30,11 +28,9 @@ function safeRegisterModule(moduleName, moduleConfig) {
     }
 }
 async function loadModule(moduleName) {
-    console.log(`开始加载模块: ${moduleName}`);
     console.log('ModuleRegistry:', Object.keys(ModuleRegistry));
 
     if (AppState.currentModule === moduleName) {
-        console.log(`模块 ${moduleName} 已是当前模块，无需重新加载`);
         return;
     }
 
@@ -53,10 +49,7 @@ async function loadModule(moduleName) {
     }
     if (!ModuleRegistry[moduleName]) {
         try {
-            console.log(`模块 ${moduleName} 未注册，开始加载JS文件...`);
-
             if (window.modules && window.modules[moduleName]) {
-                console.log(`从 window.modules 中找到模块 ${moduleName}`);
                 ModuleRegistry[moduleName] = window.modules[moduleName];
             } else {
                 await loadModuleScript(moduleName);
@@ -66,10 +59,8 @@ async function loadModule(moduleName) {
                 let moduleRegistered = false;
 
                 while (waitedTime < maxWaitTime && !moduleRegistered) {
-                    // 检查 ModuleRegistry
                     if (ModuleRegistry[moduleName]) {
                         moduleRegistered = true;
-                        console.log(`模块 ${moduleName} 已注册到 ModuleRegistry`);
                         break;
                     }
                     if (window.modules && window.modules[moduleName]) {
@@ -78,20 +69,14 @@ async function loadModule(moduleName) {
                         console.log(`模块 ${moduleName} 从 window.modules 移动到 ModuleRegistry`);
                         break;
                     }
-
-                    // 等待一段时间
                     await new Promise(resolve => setTimeout(resolve, checkInterval));
                     waitedTime += checkInterval;
                 }
 
                 if (!moduleRegistered) {
                     console.error(`模块 ${moduleName} 注册超时 (${maxWaitTime}ms)`);
-                    console.log('ModuleRegistry:', ModuleRegistry);
-                    console.log('window.modules:', window.modules);
-
                     const globalVarName = moduleName.replace(/-([a-z])/g, (match, p1) => p1.toUpperCase()) + 'Module';
                     if (window[globalVarName]) {
-                        console.log(`从全局变量 window.${globalVarName} 找到模块`);
                         ModuleRegistry[moduleName] = window[globalVarName];
                         moduleRegistered = true;
                     }
@@ -108,11 +93,8 @@ async function loadModule(moduleName) {
         }
     }
     if (ModuleRegistry[moduleName] && typeof ModuleRegistry[moduleName].render === 'function') {
-        console.log(`开始渲染模块: ${moduleName}`);
             contentArea.innerHTML = '';
             const html = ModuleRegistry[moduleName].render();
-            console.log(`模块返回HTML长度: ${typeof html === 'string' ? html.length : '非字符串'}`);
-
             if (html && typeof html === 'string') {
                 contentArea.innerHTML = html;
             } else {
@@ -135,7 +117,6 @@ async function loadModuleScript(moduleName) {
         const script = document.createElement('script');
         script.src = `js/modules/${moduleName}.js`;
         script.onload = () => {
-            console.log(`模块脚本加载成功: ${moduleName}`);
             resolve();
         };
         script.onerror = () => {
@@ -163,7 +144,6 @@ function showError(message) {
 isModuleSystemReady = true;
 
 if (pendingModuleRegistrations.length > 0) {
-    console.log(`处理 ${pendingModuleRegistrations.length} 个等待注册的模块`);
     pendingModuleRegistrations.forEach(({ moduleName, moduleConfig }) => {
         registerModule(moduleName, moduleConfig);
     });
@@ -185,9 +165,7 @@ window.dispatchEvent(new CustomEvent('module-system-ready', {
     }
     window.MessageBadgeManager = {
         updateBadge: function(count) {
-            console.log('updateBadge被调用，参数:', count, '类型:', typeof count);
             const unreadCount = parseInt(count) || 0;
-            console.log(`更新泡泡显示，未读消息数: ${unreadCount}`);
             let badge = document.getElementById('message-notification-badge') ||
                         document.querySelector('.message-badge');
 
@@ -231,8 +209,6 @@ window.dispatchEvent(new CustomEvent('module-system-ready', {
                 badge.style.opacity = '1';
                 badge.style.visibility = 'visible';
                 badge.style.transform = 'scale(1)';
-
-                console.log(`显示泡泡，数量: ${badge.textContent}`);
             } else {
                 badge.style.display = 'none';
             }
@@ -258,14 +234,11 @@ window.dispatchEvent(new CustomEvent('module-system-ready', {
                         'Content-Type': 'application/json'
                     }
                 });
-                console.log('API响应状态:', response.status);
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('API返回数据:', data);
                     let unreadCount = 0;
                     if (data.unreadCount !== undefined && data.unreadCount !== null) {
                         unreadCount = parseInt(data.unreadCount) || 0;
-                        console.log(`使用unreadCount字段: ${unreadCount}`);
                     }
                     else if (data.count !== undefined && data.count !== null) {
                         unreadCount = parseInt(data.count) || 0;
@@ -308,7 +281,6 @@ class ExportManager {
         }
         try {
             ExportManager.showLoading(`正在导出${moduleName}，请稍候...`);
-            //隐藏的a标签触发下载
             const a = document.createElement('a');
             a.href = url;
             a.download = filename;

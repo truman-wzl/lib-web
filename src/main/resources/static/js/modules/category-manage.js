@@ -431,7 +431,6 @@
             return;
         }
         const keyword = document.getElementById('searchKeyword')?.value || '';
-        console.log('搜索参数:', { keyword });
         const params = new URLSearchParams();
         if (keyword && keyword.trim() !== '') {
             params.append('keyword', keyword.trim());
@@ -440,16 +439,12 @@
         if (params.toString()) {
             url += '?' + params.toString();
         }
-
-        console.log('分类导出URL:', url);
         const today = new Date();
         const dateStr = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
         const filename = `分类列表_${dateStr}.xlsx`;
         window.ExportManager.exportToExcel(url, '分类数据', filename);
     }
-    function cleanup() {
-        console.log('清理分类管理模块资源');
-    }
+    function cleanup() {}
     function showSuccessToast(message) {
         const oldToast = document.getElementById('successToast');
         if (oldToast) {
@@ -494,7 +489,5 @@
             button.disabled = false;
         }
     }
-    function highlightTableRow(rowId, action = 'add') {
-        console.log('高亮行:', rowId, action);
-    }
+    function highlightTableRow(rowId, action = 'add') {}
 })();

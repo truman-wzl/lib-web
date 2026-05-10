@@ -231,7 +231,6 @@
                             totalUsersEl.textContent === '...' ||
                             totalUsersEl.textContent === '加载失败' ||
                             totalUsersEl.textContent === 'N/A')) {
-                            console.log('使用用户列表数据更新统计显示:', total);
                             totalUsersEl.textContent = total;
                             totalUsersEl.className = 'text-info fw-bold';
                         }

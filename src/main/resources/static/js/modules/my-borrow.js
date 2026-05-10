@@ -224,8 +224,6 @@
                 if (keyword) {
                     url += `&keyword=${encodeURIComponent(keyword)}`;
                 }
-
-                console.log('正在请求:', url);
                 const response = await fetch(url);
                 if (response.status === 401) {
                     this.showMessage("请先登录！", "warning");
@@ -242,23 +240,10 @@
                 const result = await response.json();
                 if (result.success) {
                     const data = result.data;
-                    console.log('后端返回数据详情:', {
-                        记录数: data.records ? data.records.length : 0,
-                        总条数: data.totalItems,
-                        总页数: data.totalPages,
-                        当前页: data.currentPage
-                    });
                     this.state.records = data.records || [];
                     this.state.totalItems = data.totalItems || 0;
                     this.state.totalPages = data.totalPages || 1;
-                    this.state.currentPage = (data.currentPage || 0) + 1;  // 转换为前端页码（从1开始）
-
-                    console.log('更新后的状态:', {
-                        记录数: this.state.records.length,
-                        总条数: this.state.totalItems,
-                        总页数: this.state.totalPages,
-                        当前页: this.state.currentPage
-                    });
+                    this.state.currentPage = (data.currentPage || 0) + 1;
                     this.renderTable();
                     this.renderPagination();
                     this.renderStats();
@@ -373,14 +358,6 @@
                     const bookId = this.dataset.bookId;
                     const bookName = this.dataset.bookName;
                     const dueTimeStr = this.dataset.dueTime;
-                    console.log('续借按钮数据:', {
-                        recordId,
-                        bookId,
-                        bookName,
-                        dueTimeStr,
-                        dataset: this.dataset
-                    });
-
                     self.showRenewModal(recordId, bookId, bookName, dueTimeStr);
                 });
             });
@@ -432,14 +409,6 @@
                 this.state.currentPage * this.state.pageSize,
                 this.state.totalItems
             );
-
-            console.log('渲染分页信息:', {
-                当前页: this.state.currentPage,
-                每页大小: this.state.pageSize,
-                总条数: this.state.totalItems,
-                开始记录: startRecord,
-                结束记录: endRecord
-            });
             pageInfo.innerHTML = `显示第 ${startRecord} 到 ${endRecord} 条，共 ${this.state.totalItems} 条记录`;
             this.renderPageButtons();
         },
@@ -531,7 +500,6 @@
                 if (page && !isNaN(page)) {
                     const pageNum = parseInt(page);
                     if (pageNum !== self.state.currentPage) {
-                        console.log('点击页码:', pageNum);
                         self.state.currentPage = pageNum;
                         self.loadBorrowRecords();
                     }
@@ -656,11 +624,9 @@
                     this.showMessage(result.message || "还书失败！", "error");
                 }
             } catch (error) {
-                console.error("还书失败:", error);
                 this.showMessage("还书失败: " + error.message, "error");
             }
         },
-
         showRenewModal: function(recordId, bookId, bookName, dueTimeStr) {
             const self = this;
             console.log('showRenewModal 参数:', {
@@ -738,13 +704,6 @@
 
             const currentDueTime = formatDateDisplay(dueTimeStr);
             const newDueTime = calculateNewDueTime(dueTimeStr);
-
-            console.log('续借对话框信息:', {
-                图书名称: bookName,
-                当前应还时间: currentDueTime,
-                新应还时间: newDueTime
-            });
-
             if (currentDueTime === '无效日期' || newDueTime === '' || newDueTime === '无效日期') {
                 this.showMessage('日期格式错误，无法续借', 'error');
                 return;
@@ -826,9 +785,7 @@
                 return '';
             }
         },
-        onDestroy: function() {
-            console.log('清理my-borrow模块资源');
-        }
+        onDestroy: function() {}
     };
     if (typeof window !== 'undefined') {
         if (typeof window.registerModule === 'function') {
@@ -843,20 +800,14 @@
         if (typeof ModuleRegistry !== 'undefined') {
             ModuleRegistry['my-borrow'] = myBorrowModule;
         }
-
-        console.log('my-borrow 模块注册完成，模块对象:', Object.keys(myBorrowModule));
     }
-    console.log('my-borrow.js 执行完成');
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('my-borrow.js: DOM加载完成');
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('module') === 'my-borrow') {
-            console.log('检测到URL参数包含my-borrow，尝试渲染');
             setTimeout(() => {
                 if (typeof window.loadModule === 'function') {
                     window.loadModule('my-borrow');
                 } else if (ModuleRegistry && ModuleRegistry['my-borrow']) {
-                    console.log('从ModuleRegistry直接渲染my-borrow');
                     ModuleRegistry['my-borrow'].render();
                 }
             }, 100);

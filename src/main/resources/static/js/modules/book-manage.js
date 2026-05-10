@@ -451,7 +451,6 @@
             document.getElementById('canBorrow').value = book.canBorrow;
 
             if (book.category && book.category.categoryId === 5) {
-                console.warn('图书属于中转分类（ID=5），不设置分类值，需要用户重新选择');
                 const categoryGroup = document.querySelector('label[for="categoryId"]').parentNode;
                 const note = document.createElement('div');
                 note.id = 'transferNote';

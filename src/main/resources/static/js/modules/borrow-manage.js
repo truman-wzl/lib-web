@@ -292,9 +292,6 @@
             const today = new Date();
             const dateStr = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
             const filename = `借阅记录_${dateStr}.xlsx`;
-
-            console.log('开始导出借阅记录，URL:', url);
-
             window.ExportManager.exportToExcel(url, '借阅记录', filename);
         },
         loadBorrowRecords: async function() {
@@ -361,12 +358,8 @@
                 this.state.loading = false;
             }
         },
-
-        // 加载统计信息
         loadBorrowStats: async function() {
             try {
-                console.log('正在加载统计信息...');
-
                 const response = await fetch(`${this.config.apiBase}/admin/borrows/stats`, {
                     method: 'GET',
                     headers: {
@@ -377,7 +370,6 @@
                 });
 
                 if (response.status === 401) {
-                    console.log('未授权，跳转到登录页');
                     this.showMessage("请先登录！", "warning");
                     setTimeout(() => {
                         window.location.href = 'login.html';

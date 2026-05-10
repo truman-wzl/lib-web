@@ -1,18 +1,14 @@
 const MessageModule = {
     name: '系统消息',
     render: function() {
-        console.log("渲染消息模块");
         return `
         <div class="container-fluid message-container">
         </div>`;
     },
     onRender: function(container) {
-        console.log("消息模块 onRender 被调用");
         this.initialize(container);
     },
     initialize: function(container) {
-        console.log("初始化消息模块");
-
         this.container = container || document.querySelector('.message-container');
         if (!this.container) {
             console.error("找不到消息容器");
@@ -38,12 +34,10 @@ const MessageModule = {
     },
 
     async loadMessages() {
-        console.log("开始加载消息");
         this.state.loading = true;
         this.renderMessages();
 
         try {
-            console.log("尝试从后端获取消息...");
             const response = await fetch('/api/messages/my-messages', {
                 method: 'GET',
                 credentials: 'include',
@@ -52,10 +46,8 @@ const MessageModule = {
                     'Accept': 'application/json'
                 }
             });
-            console.log("消息API响应状态:", response.status, response.statusText);
             if (response.ok) {
                 const data = await response.json();
-                console.log("消息数据获取成功:", data);
                 if (data.success !== false) {
                     this.state.messages = data.messages || data.data || [];
                     this.state.unreadCount = data.unreadCount || 0;
@@ -66,7 +58,6 @@ const MessageModule = {
                     });
 
                 } else {
-                    console.warn("后端返回错误:", data.message);
                     this.showError('加载失败', data.message || '未知错误');
                     this.loadMockData();
                 }
@@ -77,7 +68,6 @@ const MessageModule = {
                     window.location.href = 'index.html?module=login';
                 }, 2000);
             } else {
-                console.warn("消息API返回错误:", response.status, await response.text());
                 this.showError('加载失败', `HTTP ${response.status}: ${response.statusText}`);
                 this.loadMockData();
             }
@@ -561,13 +551,11 @@ const MessageModule = {
         }
     },
     onDestroy: function() {
-        console.log("消息模块销毁");
         this.container = null;
         this.state = null;
     }
 
 };
-console.log("定义消息模块完成");
 if (typeof window !== 'undefined') {
     if (typeof window.safeRegisterModule === 'function') {
         window.safeRegisterModule('message', MessageModule);

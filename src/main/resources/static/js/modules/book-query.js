@@ -407,8 +407,6 @@
         },
 
         changePage: function(page) {
-            console.log('切换页码，旧页码:', this.state.currentPage, '新页码:', page);
-
             if (page < 1) {
                 console.warn('页码不能小于1');
                 return;
@@ -419,8 +417,6 @@
             }
 
             this.state.currentPage = page;
-            console.log('更新当前页码为:', this.state.currentPage);
-
             this.loadBooks();
 
             const bookTable = document.querySelector('.table-responsive');
@@ -430,7 +426,6 @@
         },
 
         borrowBook: async function(bookId) {
-            console.log('尝试借阅图书，ID:', bookId);
             if (!window.AppState || !window.AppState.currentUser) {
                 alert('请先登录后再借阅图书');
                 return;
@@ -445,8 +440,6 @@
             }
 
             try {
-                console.log('发送借阅请求，用户ID:', userId, '图书ID:', bookId);
-
                 const response = await fetch('/api/borrow', {
                     method: 'POST',
                     headers: {
@@ -458,10 +451,7 @@
                         bookId: bookId
                     })
                 });
-
                 const result = await response.json();
-                console.log('借阅API响应:', result);
-
                 if (result.success) {
                     alert('借阅成功！请在30天内归还');
                     this.loadBooks();
@@ -472,7 +462,6 @@
                             month: 'long',
                             day: 'numeric'
                         });
-                        console.log(`借阅成功！应还日期: ${dueStr}`);
                     }
                 } else {
                     throw new Error(result.message || '借阅失败');
